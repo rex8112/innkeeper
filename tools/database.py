@@ -19,3 +19,7 @@ def addAdventurer(id, att):
 def getAdventurer(id):
   cursor.execute( """SELECT * FROM adventurers WHERE id = ?""", (id,) )
   return cursor.fetchone()
+
+def saveAdventurer(save):
+  cursor.execute( """UPDATE adventurers SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ? WHERE id = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
+  db.commit()

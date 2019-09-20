@@ -31,7 +31,7 @@ class Character:
     self.rawWisdom = rawAttributes[4]
     self.rawCharisma = rawAttributes[5]
 
-    skills = raw[8].split(',') #Get a list of skills
+    self.skills = raw[8].split(',') #Get a list of skills
 
     equipment = raw[9].split(',') #Get a list of equipped items
     self.mainhand = equipment[0]
@@ -43,14 +43,15 @@ class Character:
 
     self.inventory = raw[10].split(',')
 
-class Attribute:
-  def __init__(self, name, value):
-    self.name = name
-    self.set(value)
+  def save(self):
+    rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]
+    rawAttributes = ','.join(str(e) for e in rawAttributes)
+    skills = ','.join(self.skills)
+    equipment = ','.join([self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots])
+    inventory = ','.join(self.inventory)
 
-  def set(self, value):
-    self.value = value
-    self.mod = value // 2 - 5
+    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
+    db.saveAdventurer(save)
 
 class Equipment:
   def __init__(self, name):
@@ -58,8 +59,10 @@ class Equipment:
 
 x = Character(8112)
 x.load()
+x.save()
+x.load()
 
-print ("{} is {} with {}STR {}DEX {}CON {}INT {}WIS {}CHA\n\
+print ("{} is a level {} {} {} with {}STR {}DEX {}CON {}INT {}WIS {}CHA\n\
   Wearing: {}-MH {}-OH {}-HELM {}-ARM {}-GLV {}-BTS\n\
-    Has: {}".format(x.name, x.level, x.rawStrength, x.rawDexterity, x.rawConstitution, x.rawIntelligence, x.rawWisdom, x.rawCharisma, x.mainhand,\
+    Has: {}".format(x.name, x.level, x.race, x.cls, x.rawStrength, x.rawDexterity, x.rawConstitution, x.rawIntelligence, x.rawWisdom, x.rawCharisma, x.mainhand,\
       x.offhand, x.helmet, x.armor, x.gloves, x.boots, x.inventory))
