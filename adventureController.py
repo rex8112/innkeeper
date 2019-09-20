@@ -12,8 +12,34 @@ class Character:
   def __init__(self, id):
     self.id = id
 
-  def new(self, strength, dexterity, constitution, intelligence, wisdom, charisma):
-    pass
+  def new(self, name, cls, race, rawAttributes, skills):
+    self.name = name
+    self.cls = cls
+    self.race = race
+    self.level = 1
+    self.xp = 0
+    #Attributes
+    self.rawStrength = rawAttributes[0]
+    self.rawDexterity = rawAttributes[1]
+    self.rawConstitution = rawAttributes[2]
+    self.rawIntelligence = rawAttributes[3]
+    self.rawWisdom = rawAttributes[4]
+    self.rawCharisma = rawAttributes[5]
+    #Skills
+    self.skills = skills
+    #Equipment
+    self.mainhand = Equipment('empty')
+    self.offhand = Equipment('empty')
+    self.helmet = Equipment('empty')
+    self.armor = Equipment('empty')
+    self.gloves = Equipment('empty')
+    self.boots = Equipment('empty')
+
+    self.inventory = []
+    db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(skills))
+
+  def delete(self):
+    db.removeAdventurer(self.id)
 
   def load(self):
     raw = db.getAdventurer(self.id)
@@ -34,20 +60,21 @@ class Character:
     self.skills = raw[8].split(',') #Get a list of skills
 
     equipment = raw[9].split(',') #Get a list of equipped items
-    self.mainhand = equipment[0]
-    self.offhand = equipment[1]
-    self.helmet = equipment[2]
-    self.armor = equipment[3]
-    self.gloves = equipment[4]
-    self.boots = equipment[5]
+    self.mainhand = Equipment(equipment[0])
+    self.offhand = Equipment(equipment[1])
+    self.helmet = Equipment(equipment[2])
+    self.armor = Equipment(equipment[3])
+    self.gloves = Equipment(equipment[4])
+    self.boots = Equipment(equipment[5])
 
     self.inventory = raw[10].split(',')
+    logger.info('{} Loaded Successfully'.format(self.name))
 
   def save(self):
     rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]
     rawAttributes = ','.join(str(e) for e in rawAttributes)
     skills = ','.join(self.skills)
-    equipment = ','.join([self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots])
+    equipment = ','.join([self.mainhand.name, self.offhand.name, self.helmet.name, self.armor.name, self.gloves.name, self.boots.name])
     inventory = ','.join(self.inventory)
 
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
@@ -56,13 +83,9 @@ class Character:
 class Equipment:
   def __init__(self, name):
     self.name = name
-
-x = Character(8112)
-x.load()
-x.save()
-x.load()
-
-print ("{} is a level {} {} {} with {}STR {}DEX {}CON {}INT {}WIS {}CHA\n\
-  Wearing: {}-MH {}-OH {}-HELM {}-ARM {}-GLV {}-BTS\n\
-    Has: {}".format(x.name, x.level, x.race, x.cls, x.rawStrength, x.rawDexterity, x.rawConstitution, x.rawIntelligence, x.rawWisdom, x.rawCharisma, x.mainhand,\
-      x.offhand, x.helmet, x.armor, x.gloves, x.boots, x.inventory))
+    if name == 'new':
+      pass
+    elif name != 'empty': #Search for equipment in the database
+      pass
+    else:
+      self.name = 'Empty'

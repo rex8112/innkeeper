@@ -10,11 +10,16 @@ logger = logging.getLogger('database')
 
 
 def initDB():   #initialize the database
-  cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT)""" )
+  cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT)""" )
   db.commit()
   
-def addAdventurer(id, att):
-  pass
+def addAdventurer(id, name, cls, race, attributes, skills):
+  cursor.execute( """INSERT INTO adventurers(id, name, class, level, xp, race, attributes, skills) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (id, name, cls, 1, 0, race, attributes, skills))
+  db.commit()
+
+def removeAdventurer(id):
+  cursor.execute( """DELETE FROM adventurers WHERE id = ?""", (id,))
+  db.commit()
 
 def getAdventurer(id):
   cursor.execute( """SELECT * FROM adventurers WHERE id = ?""", (id,) )
