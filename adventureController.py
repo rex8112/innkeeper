@@ -28,12 +28,12 @@ class Character:
     #Skills
     self.skills = skills
     #Equipment
-    self.mainhand = Equipment('empty')
-    self.offhand = Equipment('empty')
-    self.helmet = Equipment('empty')
-    self.armor = Equipment('empty')
-    self.gloves = Equipment('empty')
-    self.boots = Equipment('empty')
+    self.mainhand = Equipment(1)
+    self.offhand = Equipment(1)
+    self.helmet = Equipment(1)
+    self.armor = Equipment(1)
+    self.gloves = Equipment(1)
+    self.boots = Equipment(1)
 
     self.inventory = []
     db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(skills))
@@ -81,11 +81,20 @@ class Character:
     db.saveAdventurer(save)
 
 class Equipment:
-  def __init__(self, name):
-    self.name = name
-    if name == 'new':
+  def __init__(self, id):
+    self.id = id
+    if id == 0:
       pass
-    elif name != 'empty': #Search for equipment in the database
+    else: #Search for equipment in the database
       pass
-    else:
-      self.name = 'Empty'
+
+  def load(self):
+    raw = db.getEquipment(self.id)
+    self.name = raw[1]
+    self.flavor = raw[2]
+    self.rarity = raw[3]
+    self.slot = raw[5]
+    self.price = raw[6]
+    rawMod = raw[4].split(',')
+    for mod in rawMod:
+      pass

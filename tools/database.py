@@ -11,6 +11,10 @@ logger = logging.getLogger('database')
 
 def initDB():   #initialize the database
   cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT)""" )
+  cursor.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, flavor TEXT, rarity TEXT, modifier TEXT, slot TEXT, price INTEGER)""" )
+  cursor.execute( """SELECT * FROM equipment WHERE indx = 1""" )
+  if not cursor.fetchone():
+    cursor.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", ('Empty', 'Nothing is equipped', 'Common', 'unsellable:1,empty:1', 'all', 0))
   db.commit()
   
 def addAdventurer(id, name, cls, race, attributes, skills):
@@ -28,3 +32,7 @@ def getAdventurer(id):
 def saveAdventurer(save):
   cursor.execute( """UPDATE adventurers SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ? WHERE id = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
   db.commit()
+
+def getEquipment(id):
+  cursor.execute( """SELECT * FROM equipment WHERE indx = ?""", (id,) )
+  return cursor.fetchone()
