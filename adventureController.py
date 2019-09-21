@@ -74,11 +74,11 @@ class Character:
     rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]
     rawAttributes = ','.join(str(e) for e in rawAttributes)
     skills = ','.join(self.skills)
-    equipment = ','.join([self.mainhand.name, self.offhand.name, self.helmet.name, self.armor.name, self.gloves.name, self.boots.name])
+    equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id])
     inventory = ','.join(self.inventory)
 
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
-    db.saveAdventurer(save)
+    return db.saveAdventurer(save)
 
 class Equipment:
   def __init__(self, id):
@@ -86,7 +86,7 @@ class Equipment:
     if id == 0:
       pass
     else: #Search for equipment in the database
-      pass
+      self.load()
 
   def load(self):
     raw = db.getEquipment(self.id)
@@ -96,5 +96,29 @@ class Equipment:
     self.slot = raw[5]
     self.price = raw[6]
     rawMod = raw[4].split(',')
+    mods = []
     for mod in rawMod:
-      pass
+      mods.append(tuple(mod.split(':')))
+    self.mods = dict(mods)
+    logger.info('{} Loaded Successfully'.format(self.name))
+
+  def save(self):
+    rawMod = []
+    for mod in self.mods:
+      rawMod.append('{}:{}'.format(mod, self.mods[mod]))
+    
+    save = [self.id, self.name, self.flavor, self.rarity, ','.join(rawMod), self.slot, self.price]
+    return db.saveEquipment(save)
+
+  def new(self, name, flavor, rarity, mods, slot, price):
+    self.name = name
+    self.flavor = flavor
+    self.rarity = rarity
+    self.slot = slot
+    self.price = price
+    rawMod = []
+    for mod in mods.split(','):
+      rawMod.append(tuple(mod.split(':')))
+    self.mods = dict(rawMod)
+    self.id = self.save()
+    logger.info('{} Created Successfully'.format(self.name))
