@@ -22,7 +22,7 @@ def addAdventurer(id, name, cls, race, attributes, skills):
   cursor.execute( """INSERT INTO adventurers(id, name, class, level, xp, race, attributes, skills) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (id, name, cls, 1, 0, race, attributes, skills))
   db.commit()
 
-def removeAdventurer(id):
+def deleteAdventurer(id):
   cursor.execute( """DELETE FROM adventurers WHERE id = ?""", (id,))
   db.commit()
 
@@ -47,4 +47,9 @@ def saveEquipment(save):
     cursor.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", (save[1],save[2],save[3],save[4],save[5],save[6]))
     id = cursor.lastrowid
   db.commit()
-  return id
+  return id  return id
+
+def deleteEquipment(id):
+  cursor.execute( """DELETE FROM equipment WHERE indx = ?""", (id,))
+  db.commit()
+

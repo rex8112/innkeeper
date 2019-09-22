@@ -39,7 +39,8 @@ class Character:
     db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(skills))
 
   def delete(self):
-    db.removeAdventurer(self.id)
+    db.deleteAdventurer(self.id)
+    logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
   def load(self):
     raw = db.getAdventurer(self.id)
@@ -122,3 +123,6 @@ class Equipment:
     self.mods = dict(rawMod)
     self.id = self.save()
     logger.info('{} Created Successfully'.format(self.name))
+
+  def delete(self):
+    db.deleteEquipment(self.id)
