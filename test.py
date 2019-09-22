@@ -25,7 +25,7 @@ def equipout(z: ac.Equipment):
   print('Slot: {}. Price: {}'.format(z.slot, z.price))
   print('----------')
 
-x = ac.Character(8112)
+x = ac.Player(8112)
 print('Generating New')
 x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12], ['Attack','Murder','Kill'])
 print('Saving')

@@ -15,7 +15,7 @@ logger.addHandler(handler2)
 
 db.initDB()
 
-class Character:
+class Player:
   def __init__(self, id):
     self.id = id
 
