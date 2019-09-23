@@ -23,7 +23,7 @@ class Colour:
   creationColour = discord.Colour(0x00DBEB)
   errorColour = discord.Colour(0xFF0000)
   successColour = discord.Colour(0x0DFF00)
-  infoColour = discord.Colour(0x0725B8)
+  infoColour = discord.Colour(0xFFA41C)
 
 
 class Adventure(commands.Cog):
@@ -166,12 +166,7 @@ class Adventure(commands.Cog):
       embed.add_field(
           name='Attributes', value='STR: **{0.rawStrength}**\nDEX: **{0.rawDexterity}**\nCON: **{0.rawConstitution}**\nINT: **{0.rawIntelligence}**\nWIS: **{0.rawWisdom}**\nCHA: **{0.rawCharisma}**'.format(adv))
       embed.add_field(
-          name='Equipment', value='Main Hand: {0[0].id:0>3}: **{0[0].name}**\n\
-                                   Off Hand:  {0[1].id:0>3}: **{0[1].name}**\n\
-                                   Helmet:    {0[2].id:0>3}: **{0[2].name}**\n\
-                                   Armor:     {0[3].id:0>3}: **{0[3].name}**\n\
-                                   Gloves:    {0[4].id:0>3}: **{0[4].name}**\n\
-                                   Boots:     {0[5].id:0>3}: **{0[5].name}**'.format(equipment))
+          name='Equipment', value='Main Hand: {0[0].id:0>3}: **{0[0].name}**\nOff Hand: {0[1].id:0>3}: **{0[1].name}**\nHelmet: {0[2].id:0>3}: **{0[2].name}**\nArmor: {0[3].id:0>3}: **{0[3].name}**\nGloves: {0[4].id:0>3}: **{0[4].name}**\nBoots: {0[5].id:0>3}: **{0[5].name}**'.format(equipment))
 
       invStr = '\n'.join(adv.inventory)
       if not invStr:
