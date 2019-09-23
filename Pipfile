@@ -5,6 +5,8 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+rope = "*"
+autopep8 = "*"
 
 [packages]
 configobj = "*"
