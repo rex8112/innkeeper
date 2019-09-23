@@ -19,7 +19,7 @@ class Player:
   def __init__(self, id):
     self.id = id
 
-  def new(self, name, cls, race, rawAttributes, skills):
+  def new(self, name, cls, race, rawAttributes):
     self.name = name
     self.cls = cls
     self.race = race
@@ -33,7 +33,7 @@ class Player:
     self.rawWisdom = rawAttributes[4]
     self.rawCharisma = rawAttributes[5]
     #Skills
-    self.skills = skills
+    self.skills = []
     #Equipment
     self.mainhand = Equipment(1)
     self.offhand = Equipment(1)
@@ -43,8 +43,10 @@ class Player:
     self.boots = Equipment(1)
 
     self.inventory = []
-    db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(str(e) for e in skills))
-    logger.info('{}:{} Created Successfully'.format(self.id, self.name))
+    if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
+      self.save()
+      logger.info('{}:{} Created Successfully'.format(self.id, self.name))
+      return True
 
   def delete(self):
     db.deleteAdventurer(self.id)

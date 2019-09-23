@@ -23,6 +23,7 @@ class Colour:
   creationColour = discord.Colour(0x00DBEB)
   errorColour = discord.Colour(0xFF0000)
   successColour = discord.Colour(0x0DFF00)
+  infoColour = discord.Colour(0x0725B8)
 
 
 class Adventure(commands.Cog):
@@ -80,24 +81,32 @@ class Adventure(commands.Cog):
           controlMessage = None
           logger.warning('Adventure Creator Timed Out')
         else:
-          attributes = valueMessage.content.split(' ')
-          await valueMessage.delete()
-          total = 0
-          if len(attributes) > 6:
-            del attributes[6:]
-          elif len(attributes) < 6:
-            for i in range(6 - len(attributes)):
-              attributes.append(0)
-
-          for att in attributes:
-            total += int(att)
-
-          if total > 5:
-            await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=Colour.errorColour), delete_after=3.0)
-          elif total < 5:
-            await ctx.send(embed=discord.Embed(title='Total number under 5, try again', colour=Colour.errorColour), delete_after=3.0)
+          try:
+            attributes = list(map(int, valueMessage.content.split(' ')))
+          except ValueError:
+            logger.warning('Invalid Response passed to attributes')
           else:
-            cont = True
+            total = 0
+            if len(attributes) > 6:
+              del attributes[6:]
+            elif len(attributes) < 6:
+              for i in range(6 - len(attributes)):
+                attributes.append(0)
+
+            for att in attributes:
+              total += att
+
+            attributes[:] = [x + 10 for x in attributes]
+            print(attributes)
+
+            if total > 5:
+              await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=Colour.errorColour), delete_after=3.0)
+            elif total < 5:
+              await ctx.send(embed=discord.Embed(title='Total number under 5, try again', colour=Colour.errorColour), delete_after=3.0)
+            else:
+              cont = True
+          finally:
+            await valueMessage.delete()
 
       if controlMessage == None:
         return
@@ -107,7 +116,8 @@ class Adventure(commands.Cog):
                       value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\nIntelligence: {1[3]}\nWisdom: {1[4]}\nCharisma: {1[5]}[WIP:Currently Unused But Required]'.format(name, attributes))
       embed.add_field(name='Next on the list:',
                       value='**ALL DONE!**\nTake a look at the information, is it all to your liking?')
-      embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+      embed.set_author(name=ctx.author.display_name,
+                       icon_url=ctx.author.avatar_url)
       embed.set_footer(text='You have 3 minutes to react your response')
       await controlMessage.edit(embed=embed)
       await controlMessage.add_reaction('✅')
@@ -122,27 +132,54 @@ class Adventure(commands.Cog):
         logger.warning('Adventure Creator Timed Out')
       else:
         if str(reaction) == '✅':
-          embed = discord.Embed(title='Adventurer Created!',
-                                colour=Colour.successColour, description='Welcome {}!'.format(name))
+          async with controlMessage.channel.typing():
+            if adv.new(name, 'Adventurer', 'Human', attributes):
+              embed = discord.Embed(title='Adventurer Created!',
+                                    colour=Colour.successColour, description='Welcome {}!'.format(name))
+            else:
+              embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
+                                    description='You can not make two!')
         else:
           embed = discord.Embed(title='Adventurer Scrapped!', colour=Colour.errorColour,
                                 description='Rerun the command to try again')
         await controlMessage.clear_reactions()
         await controlMessage.edit(embed=embed)
 
+  @commands.command()
+  @commands.guild_only()
+  async def adventurer(self, ctx):
+    """Get information on your Adventurer"""
+    adv = ac.Player(ctx.author.id)
+    if not adv.load():
+      embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                            description='Please contact rex8112#1200 if this is not the case.')
+      await ctx.send(embed=embed)
+      return
+    else:
+      equipment = []
+      for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots]:
+        equipment.append(e)
+      embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
+                            description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
+      embed.set_author(name=ctx.author.display_name,
+                       icon_url=ctx.author.avatar_url)
+      embed.add_field(
+          name='Attributes', value='STR: **{0.rawStrength}**\nDEX: **{0.rawDexterity}**\nCON: **{0.rawConstitution}**\nINT: **{0.rawIntelligence}**\nWIS: **{0.rawWisdom}**\nCHA: **{0.rawCharisma}**'.format(adv))
+      embed.add_field(
+          name='Equipment', value='Main Hand: {0[0].id:0>3}: **{0[0].name}**\n\
+                                   Off Hand:  {0[1].id:0>3}: **{0[1].name}**\n\
+                                   Helmet:    {0[2].id:0>3}: **{0[2].name}**\n\
+                                   Armor:     {0[3].id:0>3}: **{0[3].name}**\n\
+                                   Gloves:    {0[4].id:0>3}: **{0[4].name}**\n\
+                                   Boots:     {0[5].id:0>3}: **{0[5].name}**'.format(equipment))
+
+      invStr = '\n'.join(adv.inventory)
+      if not invStr:
+        invStr = 'Nothing'
+
+      embed.add_field(name='Inventory', value=invStr)
+      await ctx.send(embed=embed)
+
 
 def setup(bot):
   bot.add_cog(Adventure(bot))
-
-
-#message = await ctx.send('Test, react with ✅ or ❌')
-#await message.add_reaction('✅')
-#await message.add_reaction('❌')
-#def check(reaction, user):
-#    return user == ctx.message.author and message.id == reaction.message.id
-#try:
-#    reaction, user = await self.bot.wait_for('reaction_add', check=check, timeout=10.0)
-#except asyncio.TimeoutError:
-#    await ctx.send('Timeout')
-#else:
-#    await ctx.send('So far so good!')

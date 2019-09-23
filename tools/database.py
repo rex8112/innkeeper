@@ -19,9 +19,13 @@ def initDB():   #initialize the database
     cursor.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", ('Empty', 'Nothing is equipped', 'Common', 'unsellable:1,empty:1', 'all', 0))
   db.commit()
   
-def addAdventurer(id, name, cls, race, attributes, skills):
-  cursor.execute( """INSERT INTO adventurers(id, name, class, level, xp, race, attributes, skills) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (id, name, cls, 1, 0, race, attributes, skills))
-  db.commit()
+def addAdventurer(id, name, cls, race, attributes):
+  try:
+    cursor.execute( """INSERT INTO adventurers(id, name, class, level, xp, race, attributes) VALUES(?, ?, ?, ?, ?, ?, ?)""", (id, name, cls, 1, 0, race, attributes))
+    db.commit()
+    return True
+  except sqlite3.IntegrityError:
+    return False
 
 def deleteAdventurer(id):
   cursor.execute( """DELETE FROM adventurers WHERE id = ?""", (id,))
