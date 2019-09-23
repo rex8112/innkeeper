@@ -8,7 +8,7 @@ logger = logging.getLogger('adventureController')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='bot.log', encoding='utf-8')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='w')
+handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='a')
 handler2.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 logger.addHandler(handler2)
@@ -97,6 +97,7 @@ class Player:
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
+
 
 class Enemy:
   def __init__(self, id):
@@ -232,3 +233,13 @@ class Equipment:
   def delete(self):
     db.deleteEquipment(self.id)
     logger.warning('{}:{} Deleted'.format(self.id, self.name))
+
+
+class Encounter:
+  def __init__(self, players: list, enemies: list, pve = True):
+    self.players = players
+    self.enemies = enemies
+
+    self.rawLoot = []
+    for enemy in self.enemies:
+      self.rawLoot += enemy.inventory

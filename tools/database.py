@@ -12,11 +12,11 @@ logger = logging.getLogger('database')
 def initDB():   #initialize the database
   cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT)""" )
   cursor.execute( """CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT)""" )
-  cursor.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, flavor TEXT, rarity TEXT, modifier TEXT, slot TEXT, price INTEGER)""" )
+  cursor.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER)""" )
 
   cursor.execute( """SELECT * FROM equipment WHERE indx = 1""" )
   if not cursor.fetchone():
-    cursor.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", ('Empty', 'Nothing is equipped', 'Common', 'unsellable:1,empty:1', 'all', 0))
+    cursor.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", ('Empty', 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0))
   db.commit()
   
 def addAdventurer(id, name, cls, race, attributes):

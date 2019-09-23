@@ -6,6 +6,8 @@ logger = logging.getLogger('test')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='test.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='w')
+handler2.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
 def output(x):
@@ -25,9 +27,10 @@ def equipout(z: ac.Equipment):
   print('Slot: {}. Price: {}'.format(z.slot, z.price))
   print('----------')
 
+logger.info('Beginning Test')
 x = ac.Player(8112)
 print('Generating New')
-x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12], ['Attack','Murder','Kill'])
+x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12])
 print('Saving')
 x.save()
 print('Loading')
