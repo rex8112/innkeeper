@@ -157,16 +157,16 @@ class Adventure(commands.Cog):
       return
     else:
       equipment = []
-      for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots]:
+      for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
         equipment.append(e)
       embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
                             description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
       embed.set_author(name=ctx.author.display_name,
                        icon_url=ctx.author.avatar_url)
       embed.add_field(
-          name='Attributes', value='STR: **{0.rawStrength}**\nDEX: **{0.rawDexterity}**\nCON: **{0.rawConstitution}**\nINT: **{0.rawIntelligence}**\nWIS: **{0.rawWisdom}**\nCHA: **{0.rawCharisma}**'.format(adv))
+          name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
       embed.add_field(
-          name='Equipment', value='Main Hand: {0[0].id:0>3}: **{0[0].name}**\nOff Hand: {0[1].id:0>3}: **{0[1].name}**\nHelmet: {0[2].id:0>3}: **{0[2].name}**\nArmor: {0[3].id:0>3}: **{0[3].name}**\nGloves: {0[4].id:0>3}: **{0[4].name}**\nBoots: {0[5].id:0>3}: **{0[5].name}**'.format(equipment))
+          name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
       invStr = '\n'.join(adv.inventory)
       if not invStr:
