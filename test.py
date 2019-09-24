@@ -50,6 +50,14 @@ print('Loading')
 x.load()
 output(x)
 
+try:
+  if x.testingAtt:
+    print('I don\'t even know')
+  else:
+    print('It worked!')
+except AttributeError:
+    print('This Works Too')
+
 z = ac.Equipment(0)
 z.new('Gauntlet', 'A tough right-handed glove.', 'Common', 'ac:6,health:100', 'gloves', 20)
 z.load()

@@ -37,6 +37,8 @@ class Player:
     self.race = race
     self.level = 1
     self.xp = 0
+    self.available = True
+    self.dead = False
     #Attributes
     self.rawStrength = rawAttributes[0]
     self.rawDexterity = rawAttributes[1]
@@ -94,6 +96,9 @@ class Player:
       self.trinket = Equipment(equipment[6])
 
       self.inventory = raw[10].split(',')
+      self.available = bool(raw[11])
+      self.dead = bool(raw[12])
+
       self.calculate()
       logger.debug('{}:{} Loaded Successfully'.format(self.id, self.name))
       return True
@@ -109,7 +114,7 @@ class Player:
     equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
     inventory = ','.join(self.inventory)
 
-    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
+    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.dead)]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
 
@@ -121,6 +126,31 @@ class Player:
     self.intelligence = self.rawIntelligence
     self.wisdom = self.rawWisdom
     self.charisma = self.rawCharisma
+    self.maxHealth = 0
+    self.wc = 0
+    self.ac = 0
+    self.dmg = 0
+    self.strdmg = 0
+    self.dexdmg = 0
+    self.attackSpeed = 2 #Turns per attack
+
+    #TIME FOR EQUIPMENT CALCULATIONS
+    for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
+      self.wc += equip.mods.get('wc', 0)
+      self.ac += equip.mods.get('ac', 0)
+      self.maxHealth += equip.mods.get('health', 0)
+
+      self.strength += equip.mods.get('strength', 0)
+      self.dexterity += equip.mods.get('dexterity', 0)
+      self.constitution += equip.mods.get('constitution', 0)
+      self.intelligence += equip.mods.get('intelligence', 0)
+      self.wisdom += equip.mods.get('wisdom', 0)
+      self.charisma += equip.mods.get('charisma', 0)
+
+      self.dmg += equip.mods.get('dmg', 0)
+      self.strdmg += equip.mods.get('strdmg', 0)
+      self.dexdmg += equip.mods.get('dexdmg', 0)
+      self.attackSpeed += equip.mods.get('as', 0)
 
     #Strength Related Stats First
     self.unarmDamage = float(self.strength) * PerLevel.unarmDamage
@@ -146,7 +176,7 @@ class Player:
     logger.debug('{0.name} Crit Chance calculated to: {0.critChance}'.format(self))
 
     #Constitution related stats third
-    self.maxHealth = PerLevel.health * self.constitution + 100
+    self.maxHealth += PerLevel.health * self.constitution + 100
     logger.debug('{0.name} Max health calculated to: {0.maxHealth}'.format(self))
 
     #Intelligence related stats fourth
@@ -158,6 +188,17 @@ class Player:
 
     #Charisma related stats sixth
     self.discount = 0
+
+    #Set values to their maximum
+    self.attackCooldown = self.attackSpeed
+    if not self.dead:
+      self.health = self.maxHealth
+    else:
+      self.health = 0
+
+    self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
+    if self.dmg == 0:
+      self.dmg = self.unarmDamage
 
     logger.debug('{0.name} Calculation complete'.format(self))
 
@@ -306,3 +347,7 @@ class Encounter:
     self.rawLoot = []
     for enemy in self.enemies:
       self.rawLoot += enemy.inventory
+
+  def fight(self):
+    for player in self.players:
+      pass
