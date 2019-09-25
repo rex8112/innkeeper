@@ -137,21 +137,21 @@ class Player:
 
     #TIME FOR EQUIPMENT CALCULATIONS
     for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
-      self.wc += equip.mods.get('wc', 0)
-      self.ac += equip.mods.get('ac', 0)
-      self.maxHealth += equip.mods.get('health', 0)
+      self.wc += int(equip.mods.get('wc', 0))
+      self.ac += int(equip.mods.get('ac', 0))
+      self.maxHealth += int(equip.mods.get('health', 0))
 
-      self.strength += equip.mods.get('strength', 0)
-      self.dexterity += equip.mods.get('dexterity', 0)
-      self.constitution += equip.mods.get('constitution', 0)
-      self.intelligence += equip.mods.get('intelligence', 0)
-      self.wisdom += equip.mods.get('wisdom', 0)
-      self.charisma += equip.mods.get('charisma', 0)
+      self.strength += int(equip.mods.get('strength', 0))
+      self.dexterity += int(equip.mods.get('dexterity', 0))
+      self.constitution += int(equip.mods.get('constitution', 0))
+      self.intelligence += int(equip.mods.get('intelligence', 0))
+      self.wisdom += int(equip.mods.get('wisdom', 0))
+      self.charisma += int(equip.mods.get('charisma', 0))
 
-      self.dmg += equip.mods.get('dmg', 0)
-      self.strdmg += equip.mods.get('strdmg', 0)
-      self.dexdmg += equip.mods.get('dexdmg', 0)
-      self.attackSpeed += equip.mods.get('as', 0)
+      self.dmg += int(equip.mods.get('dmg', 0))
+      self.strdmg += int(equip.mods.get('strdmg', 0))
+      self.dexdmg += int(equip.mods.get('dexdmg', 0))
+      self.attackSpeed += int(equip.mods.get('as', 0))
 
     #Strength Related Stats First
     self.unarmDamage = float(self.strength) * PerLevel.unarmDamage
@@ -230,6 +230,7 @@ class Enemy:
     self.armor = Equipment(1)
     self.gloves = Equipment(1)
     self.boots = Equipment(1)
+    self.trinket = Equipment(1)
 
     self.inventory = []
     self.id = db.addEnemy(name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(str(e) for e in skills))
@@ -249,12 +250,12 @@ class Enemy:
       self.race = raw[5]
 
       rawAttributes = raw[6].split(',') #Get a list of the attributes
-      self.rawStrength = rawAttributes[0]
-      self.rawDexterity = rawAttributes[1]
-      self.rawConstitution = rawAttributes[2]
-      self.rawIntelligence = rawAttributes[3]
-      self.rawWisdom = rawAttributes[4]
-      self.rawCharisma = rawAttributes[5]
+      self.rawStrength = int(rawAttributes[0])
+      self.rawDexterity = int(rawAttributes[1])
+      self.rawConstitution = int(rawAttributes[2])
+      self.rawIntelligence = int(rawAttributes[3])
+      self.rawWisdom = int(rawAttributes[4])
+      self.rawCharisma = int(rawAttributes[5])
 
       self.skills = raw[7].split(',') #Get a list of skills
 
@@ -265,8 +266,10 @@ class Enemy:
       self.armor = Equipment(equipment[3])
       self.gloves = Equipment(equipment[4])
       self.boots = Equipment(equipment[5])
+      self.trinket = Equipment(equipment[6])
 
       self.inventory = raw[9].split(',')
+      self.calculate()
       logger.debug('{}:{} Loaded Successfully'.format(self.id, self.name))
       return True
     except Exception as e:
@@ -278,12 +281,93 @@ class Enemy:
     rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]
     rawAttributes = ','.join(str(e) for e in rawAttributes)
     skills = ','.join(self.skills)
-    equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id])
+    equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
     inventory = ','.join(self.inventory)
 
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveEnemy(save)
+
+  def calculate(self):
+    #Checks Race/Class for attribute changes
+    self.strength = self.rawStrength
+    self.dexterity = self.rawDexterity
+    self.constitution = self.rawConstitution
+    self.intelligence = self.rawIntelligence
+    self.wisdom = self.rawWisdom
+    self.charisma = self.rawCharisma
+    self.maxHealth = 0
+    self.wc = 0
+    self.ac = 0
+    self.dmg = 0
+    self.strdmg = 0
+    self.dexdmg = 0
+    self.attackSpeed = 2 #Turns per attack
+
+    #TIME FOR EQUIPMENT CALCULATIONS
+    for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
+      self.wc += int(equip.mods.get('wc', 0))
+      self.ac += int(equip.mods.get('ac', 0))
+      self.maxHealth += int(equip.mods.get('health', 0))
+
+      self.strength += int(equip.mods.get('strength', 0))
+      self.dexterity += int(equip.mods.get('dexterity', 0))
+      self.constitution += int(equip.mods.get('constitution', 0))
+      self.intelligence += int(equip.mods.get('intelligence', 0))
+      self.wisdom += int(equip.mods.get('wisdom', 0))
+      self.charisma += int(equip.mods.get('charisma', 0))
+
+      self.dmg += int(equip.mods.get('dmg', 0))
+      self.strdmg += int(equip.mods.get('strdmg', 0))
+      self.dexdmg += int(equip.mods.get('dexdmg', 0))
+      self.attackSpeed += int(equip.mods.get('as', 0))
+
+    #Strength Related Stats First
+    self.unarmDamage = float(self.strength) * PerLevel.unarmDamage
+    logger.debug('{0.name} Unarmed Damage calculated to: {0.unarmDamage}'.format(self))
+
+    self.inventoryCapacity = self.strength // PerLevel.invCap + (10 - (10 // PerLevel.invCap))
+    logger.debug('{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
+
+    #Dexterity related stats second
+    if self.dexterity <= 40: #Dexterity below 40
+      self.evasion = float(self.dexterity) * PerLevel.evasion
+      self.critChance = float(self.dexterity) * PerLevel.evasion
+
+    elif self.dexterity > 40 and self.dexterity <= 100: #Dexterity between 40 and 100
+      self.evasion = PerLevel.softCapEvasion * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.evasion
+      self.critChance = PerLevel.softCapCritChance * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.critChance
+
+    else: #Dexterity above 100
+      self.evasion = PerLevel.softCapEvasion * (100.0 - 40.0) + 40.0 * PerLevel.evasion
+      self.critChance = PerLevel.softCapCritChance * (100.0 - 40.0) + 40.0 * PerLevel.critChance
+      
+    logger.debug('{0.name} Evasion calculated to: {0.evasion}'.format(self))
+    logger.debug('{0.name} Crit Chance calculated to: {0.critChance}'.format(self))
+
+    #Constitution related stats third
+    self.maxHealth += PerLevel.health * self.constitution + 100
+    logger.debug('{0.name} Max health calculated to: {0.maxHealth}'.format(self))
+
+    #Intelligence related stats fourth
+    self.spellAmp = PerLevel.spellAmp * float(self.intelligence)
+    logger.debug('{0.name} Spell Amp calculated to: {0.spellAmp}'.format(self))
+
+    #Wisdom related stats fifth
+    self.secretChance = 0
+
+    #Charisma related stats sixth
+    self.discount = 0
+
+    #Set values to their maximum
+    self.attackCooldown = self.attackSpeed
+    self.health = self.maxHealth
+
+    self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
+    if self.dmg == 0:
+      self.dmg = self.unarmDamage
+
+    logger.debug('{0.name} Calculation complete'.format(self))
 
 
 class Equipment:
@@ -354,21 +438,24 @@ class Encounter:
   def nextTurn(self):
     for player in self.players:
       if self.enemies[-1:]:
+        logger.debug('Living Enemy detected')
         if player.attackCooldown <= 0:
           dmg = player.dmg
           critChance = player.critChance
           chanceToHit = 1 + (player.wc - self.enemies[-1].ac) / ((player.wc + self.enemies[-1].ac) * 0.5)
 
-          if chanceToHit <= 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
+          if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
             critChance += chanceToHit - 1.0
+            logger.debug('Player Crit Chance set to: {}'.format(critChance))
 
-          if random.random(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-            if random.random(0.0, 1.0) <= critChance:
+          if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+            if random.uniform(0.0, 1.0) <= critChance:
               dmg = dmg * 2
             self.enemies[-1].health -= dmg
+            logger.debug('Enemy hit for {} DMG'.format(dmg))
             player.attackCooldown = player.attackSpeed
           else: #You miss
-            pass
+            logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
 
           if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
             self.deadEnemies.append(self.enemies[-1])
@@ -378,16 +465,18 @@ class Encounter:
 
     for enemy in self.enemies:
       if self.players[-1:]:
+        logger.debug('Living Player detected')
         if enemy.attackCooldown <= 0:
           dmg = enemy.dmg
           critChance = enemy.critChance
           chanceToHit = 1 + (enemy.wc - self.players[-1].ac) / ((enemy.wc + self.players[-1].ac) * 0.5)
 
-          if chanceToHit <= 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
+          if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
             critChance += chanceToHit - 1.0
+            logger.debug('Enemy Crit Chance set to: {}'.format(critChance))
 
-          if random.random(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-            if random.random(0.0, 1.0) <= critChance:
+          if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+            if random.uniform(0.0, 1.0) <= critChance:
               dmg = dmg * 2
             self.players[-1].health -= dmg
             enemy.attackCooldown = enemy.attackSpeed

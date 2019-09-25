@@ -88,7 +88,22 @@ e.race = 'Straight'
 e.cls = 'Master'
 e.save()
 e.load()
+e.calculate()
 output(e)
+
+f = ac.Encounter([x], [e])
+print(f.players)
+print(f.enemies)
+print(f.deadPlayers)
+print(f.deadEnemies)
+for i in range(30):
+  f.nextTurn()
+print(f.players)
+print(f.enemies)
+print(f.deadPlayers)
+print(f.deadEnemies)
+print(x.health)
+print(e.health)
 
 x.delete()
 z.delete()
