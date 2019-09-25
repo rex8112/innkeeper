@@ -1,5 +1,6 @@
 import discord
 import logging
+import random
 
 from discord.ext import commands
 import tools.database as db
@@ -343,11 +344,58 @@ class Encounter:
   def __init__(self, players: list, enemies: list, pve = True):
     self.players = players
     self.enemies = enemies
+    self.deadPlayers = []
+    self.deadEnemies = []
 
     self.rawLoot = []
     for enemy in self.enemies:
       self.rawLoot += enemy.inventory
 
-  def fight(self):
+  def nextTurn(self):
     for player in self.players:
-      pass
+      if self.enemies[-1:]:
+        if player.attackCooldown <= 0:
+          dmg = player.dmg
+          critChance = player.critChance
+          chanceToHit = 1 + (player.wc - self.enemies[-1].ac) / ((player.wc + self.enemies[-1].ac) * 0.5)
+
+          if chanceToHit <= 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
+            critChance += chanceToHit - 1.0
+
+          if random.random(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+            if random.random(0.0, 1.0) <= critChance:
+              dmg = dmg * 2
+            self.enemies[-1].health -= dmg
+            player.attackCooldown = player.attackSpeed
+          else: #You miss
+            pass
+
+          if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
+            self.deadEnemies.append(self.enemies[-1])
+            self.enemies.pop()
+        else:
+          player.attackCooldown -= 1
+
+    for enemy in self.enemies:
+      if self.players[-1:]:
+        if enemy.attackCooldown <= 0:
+          dmg = enemy.dmg
+          critChance = enemy.critChance
+          chanceToHit = 1 + (enemy.wc - self.players[-1].ac) / ((enemy.wc + self.players[-1].ac) * 0.5)
+
+          if chanceToHit <= 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
+            critChance += chanceToHit - 1.0
+
+          if random.random(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+            if random.random(0.0, 1.0) <= critChance:
+              dmg = dmg * 2
+            self.players[-1].health -= dmg
+            enemy.attackCooldown = enemy.attackSpeed
+          else: #You miss
+            pass
+
+          if self.players[-1].health <= 0: #If the enemy is dead, remove him from active enemies
+            self.deadPlayers.append(self.players[-1])
+            self.players.pop()
+        else:
+          enemy.attackCooldown -= 1
