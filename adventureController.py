@@ -431,10 +431,6 @@ class Encounter:
     self.deadPlayers = []
     self.deadEnemies = []
 
-    self.rawLoot = []
-    for enemy in self.enemies:
-      self.rawLoot += enemy.inventory
-
   def nextTurn(self):
     for player in self.players:
       if self.enemies[-1:]:
@@ -448,14 +444,15 @@ class Encounter:
             critChance += chanceToHit - 1.0
             logger.debug('Player Crit Chance set to: {}'.format(critChance))
 
-          if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-            if random.uniform(0.0, 1.0) <= critChance:
-              dmg = dmg * 2
-            self.enemies[-1].health -= dmg
-            logger.debug('Enemy hit for {} DMG'.format(dmg))
-            player.attackCooldown = player.attackSpeed
-          else: #You miss
-            logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
+          if random.uniform(0.0, 1.0) <= player.evasion: #Evasion Check
+            if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+              if random.uniform(0.0, 1.0) <= critChance:
+                dmg = dmg * 2
+              self.enemies[-1].health -= dmg
+              logger.debug('Enemy hit for {} DMG'.format(dmg))
+              player.attackCooldown = player.attackSpeed
+            else: #You miss
+              logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
 
           if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
             self.deadEnemies.append(self.enemies[-1])
@@ -475,16 +472,24 @@ class Encounter:
             critChance += chanceToHit - 1.0
             logger.debug('Enemy Crit Chance set to: {}'.format(critChance))
 
-          if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-            if random.uniform(0.0, 1.0) <= critChance:
-              dmg = dmg * 2
-            self.players[-1].health -= dmg
-            enemy.attackCooldown = enemy.attackSpeed
-          else: #You miss
-            pass
+          if random.uniform(0.0, 1.0) <= player.evasion: #Evasion Check
+            if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+              if random.uniform(0.0, 1.0) <= critChance:
+                dmg = dmg * 2
+              self.players[-1].health -= dmg
+              enemy.attackCooldown = enemy.attackSpeed
+            else: #You miss
+              pass
 
           if self.players[-1].health <= 0: #If the enemy is dead, remove him from active enemies
             self.deadPlayers.append(self.players[-1])
             self.players.pop()
         else:
           enemy.attackCooldown -= 1
+    
+  def getLoot(self):
+    rawLoot = []
+    for enemy in self.deadEnemies:
+      for loot in enemy.inventory:
+        rawLoot.append(loot)
+    return rawLoot
