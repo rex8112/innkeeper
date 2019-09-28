@@ -444,7 +444,7 @@ class Encounter:
             critChance += chanceToHit - 1.0
             logger.debug('Player Crit Chance set to: {}'.format(critChance))
 
-          if random.uniform(0.0, 1.0) <= player.evasion: #Evasion Check
+          if random.uniform(0.0, 1.0) > player.evasion: #Evasion Check
             if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
               if random.uniform(0.0, 1.0) <= critChance:
                 dmg = dmg * 2
@@ -453,6 +453,8 @@ class Encounter:
               player.attackCooldown = player.attackSpeed
             else: #You miss
               logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
+          else: #You evaded
+            logger.debug('Player Evaded')
 
           if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
             self.deadEnemies.append(self.enemies[-1])
@@ -472,7 +474,7 @@ class Encounter:
             critChance += chanceToHit - 1.0
             logger.debug('Enemy Crit Chance set to: {}'.format(critChance))
 
-          if random.uniform(0.0, 1.0) <= player.evasion: #Evasion Check
+          if random.uniform(0.0, 1.0) > player.evasion: #Evasion Check
             if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
               if random.uniform(0.0, 1.0) <= critChance:
                 dmg = dmg * 2
@@ -493,3 +495,11 @@ class Encounter:
       for loot in enemy.inventory:
         rawLoot.append(loot)
     return rawLoot
+
+  def end(self):
+    for player in self.deadPlayers:
+      player.dead = True
+    if self.players.count > 0:
+      return True
+    else:
+      return False
