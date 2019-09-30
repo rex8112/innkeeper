@@ -98,7 +98,7 @@ class Player:
 
       self.inventory = raw[10].split(',')
       self.available = bool(raw[11])
-      self.dead = bool(raw[12])
+      self.dead = bool(int(raw[12]))
 
       self.calculate()
       logger.debug('{}:{} Loaded Successfully'.format(self.id, self.name))
@@ -128,8 +128,8 @@ class Player:
     self.wisdom = self.rawWisdom
     self.charisma = self.rawCharisma
     self.maxHealth = 0
-    self.wc = 0
-    self.ac = 0
+    self.wc = 3
+    self.ac = 4
     self.dmg = 0
     self.strdmg = 0
     self.dexdmg = 0
@@ -297,8 +297,8 @@ class Enemy:
     self.wisdom = self.rawWisdom
     self.charisma = self.rawCharisma
     self.maxHealth = 0
-    self.wc = 0
-    self.ac = 0
+    self.wc = 3
+    self.ac = 4
     self.dmg = 0
     self.strdmg = 0
     self.dexdmg = 0
@@ -435,60 +435,48 @@ class Encounter:
     for player in self.players:
       if self.enemies[-1:]:
         logger.debug('Living Enemy detected')
-        if player.attackCooldown <= 0:
-          dmg = player.dmg
-          critChance = player.critChance
-          chanceToHit = 1 + (player.wc - self.enemies[-1].ac) / ((player.wc + self.enemies[-1].ac) * 0.5)
+        self.attack(player, self.enemies[-1])
 
-          if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
-            critChance += chanceToHit - 1.0
-            logger.debug('Player Crit Chance set to: {}'.format(critChance))
-
-          if random.uniform(0.0, 1.0) > player.evasion: #Evasion Check
-            if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-              if random.uniform(0.0, 1.0) <= critChance:
-                dmg = dmg * 2
-              self.enemies[-1].health -= dmg
-              logger.debug('Enemy hit for {} DMG'.format(dmg))
-              player.attackCooldown = player.attackSpeed
-            else: #You miss
-              logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
-          else: #You evaded
-            logger.debug('Player Evaded')
-
-          if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
-            self.deadEnemies.append(self.enemies[-1])
-            self.enemies.pop()
-        else:
-          player.attackCooldown -= 1
+        if self.enemies[-1].health <= 0: #If the enemy is dead, remove him from active enemies
+          self.deadEnemies.append(self.enemies[-1])
+          self.enemies.pop()
 
     for enemy in self.enemies:
       if self.players[-1:]:
         logger.debug('Living Player detected')
-        if enemy.attackCooldown <= 0:
-          dmg = enemy.dmg
-          critChance = enemy.critChance
-          chanceToHit = 1 + (enemy.wc - self.players[-1].ac) / ((enemy.wc + self.players[-1].ac) * 0.5)
+        self.attack(enemy, self.players[-1])
 
-          if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
-            critChance += chanceToHit - 1.0
-            logger.debug('Enemy Crit Chance set to: {}'.format(critChance))
-
-          if random.uniform(0.0, 1.0) > player.evasion: #Evasion Check
-            if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
-              if random.uniform(0.0, 1.0) <= critChance:
-                dmg = dmg * 2
-              self.players[-1].health -= dmg
-              enemy.attackCooldown = enemy.attackSpeed
-            else: #You miss
-              pass
-
-          if self.players[-1].health <= 0: #If the enemy is dead, remove him from active enemies
-            self.deadPlayers.append(self.players[-1])
-            self.players.pop()
-        else:
-          enemy.attackCooldown -= 1
+        if self.players[-1].health <= 0: #If the enemy is dead, remove him from active enemies
+          self.deadPlayers.append(self.players[-1])
+          self.players.pop()
+        
     
+  def attack(self, attacker, defender):
+    if attacker.attackCooldown <= 0:
+      dmg = attacker.dmg
+      critChance = attacker.critChance
+      chanceToHit = 1 + (attacker.wc - defender.ac) / ((attacker.wc + defender.ac) * 0.5)
+      print (chanceToHit)
+
+      if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
+        critChance += chanceToHit - 1.0
+        logger.debug('Player Crit Chance set to: {}'.format(critChance))
+
+      if random.uniform(0.0, 1.0) > attacker.evasion: #Evasion Check
+        if random.uniform(0.0, 1.0) <= chanceToHit: #If random number is lower than the chance to hit, you hit
+          if random.uniform(0.0, 1.0) <= critChance:
+            dmg = dmg * 2
+          defender.health -= dmg
+          logger.debug('Enemy hit for {} DMG'.format(dmg))
+          attacker.attackCooldown = attacker.attackSpeed
+        else: #You miss
+          logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
+      else: #You evaded
+        logger.debug('Player Evaded')
+
+    else:
+      attacker.attackCooldown -= 1
+
   def getLoot(self):
     rawLoot = []
     for enemy in self.deadEnemies:

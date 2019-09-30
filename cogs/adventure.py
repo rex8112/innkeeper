@@ -177,6 +177,17 @@ class Adventure(commands.Cog):
       embed.add_field(name='Inventory', value=invStr)
       await ctx.send(embed=embed)
 
+  @commands.command()
+  @commands.guild_only()
+  async def fight(self, ctx, enemy):
+    """Testing Command"""
+    adv = ac.Player(ctx.author.id)
+    adv.load()
+    enm = ac.Enemy(enemy)
+    enm.load()
+    message = await ctx.send('Characters **Loaded**')
+    enc = ac.Encounter([adv], [enm])
+    pass
 
 def setup(bot):
   bot.add_cog(Adventure(bot))
