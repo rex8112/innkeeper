@@ -187,7 +187,25 @@ class Adventure(commands.Cog):
     enm.load()
     message = await ctx.send('Characters **Loaded**')
     enc = ac.Encounter([adv], [enm])
-    pass
+    cnt = 0
+    while len(enc.players) > 0 and len(enc.enemies) > 0:
+      string = ''
+      string2 = ''
+      cnt += 1
+      enc.nextTurn()
+      for ch in enc.players:
+        string += '{} {}\n'.format(ch.name, ch.health)
+      for ch in enc.enemies:
+        string2 += '{} {}\n'.format(ch.name, ch.health)
+      if not string:
+        string = 'Dead'
+      if not string2:
+        string2 = 'Dead'
+      embed = discord.Embed(title='Combat Information Test {}'.format(cnt), colour=Colour.errorColour)
+      embed.add_field(name='Players', value=string)
+      embed.add_field(name='Enemies', value=string2)
+      await message.edit(embed=embed)
+      await asyncio.sleep(2)
 
 def setup(bot):
   bot.add_cog(Adventure(bot))

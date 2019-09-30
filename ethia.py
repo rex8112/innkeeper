@@ -1,5 +1,6 @@
 import discord
 import logging
+import sys
 
 from discord.ext import commands
 from tools.configLoader import settings
@@ -45,6 +46,13 @@ async def ping(ctx, test=True):
     await ctx.send('Pong!')
   else:
     await ctx.send('Nope!')
+
+@bot.command()
+@commands.is_owner()
+async def shutdown(ctx):
+  """Turns the bot off"""
+  await bot.logout()
+  sys.exit()
 
 
 if __name__ == "__main__":

@@ -467,7 +467,7 @@ class Encounter:
           if random.uniform(0.0, 1.0) <= critChance:
             dmg = dmg * 2
           defender.health -= dmg
-          logger.debug('Enemy hit for {} DMG'.format(dmg))
+          logger.debug('Character hit for {} DMG'.format(dmg))
           attacker.attackCooldown = attacker.attackSpeed
         else: #You miss
           logger.debug('Missed with chanceToHit: {:.1%}'.format(chanceToHit))
