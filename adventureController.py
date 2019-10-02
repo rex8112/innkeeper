@@ -491,3 +491,7 @@ class Encounter:
       return True
     else:
       return False
+
+class RNGDungeon:
+  def __init__(self):
+    pass
