@@ -145,37 +145,42 @@ class Adventure(commands.Cog):
         await controlMessage.clear_reactions()
         await controlMessage.edit(embed=embed)
 
-  @commands.command()
+  @commands.group()
   @commands.guild_only()
   async def adventurer(self, ctx):
     """Get information on your Adventurer"""
-    adv = ac.Player(ctx.author.id)
-    if not adv.load():
-      embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
-                            description='Please contact rex8112#1200 if this is not the case.')
-      await ctx.send(embed=embed)
-      return
-    else:
-      equipment = []
-      for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
-        equipment.append(e)
-      embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
-                            description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
-      embed.set_author(name=ctx.author.display_name,
-                       icon_url=ctx.author.avatar_url)
-      embed.add_field(
-          name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
-      embed.add_field(
-          name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
-      embed.add_field(
-          name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
+    if ctx.invoked_subcommand is None:
+      adv = ac.Player(ctx.author.id)
+      if not adv.load():
+        embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                              description='Please contact rex8112#1200 if this is not the case.')
+        await ctx.send(embed=embed)
+        return
+      else:
+        equipment = []
+        for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
+          equipment.append(e)
+        embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
+                              description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
+        embed.set_author(name=ctx.author.display_name,
+                        icon_url=ctx.author.avatar_url)
+        embed.add_field(
+            name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
+        embed.add_field(
+            name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
+        embed.add_field(
+            name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
-      invStr = '\n'.join(adv.inventory)
-      if not invStr:
-        invStr = 'Nothing'
+        invStr = '\n'.join(adv.inventory)
+        if not invStr:
+          invStr = 'Nothing'
 
-      embed.add_field(name='Inventory', value=invStr)
-      await ctx.send(embed=embed)
+        embed.add_field(name='Inventory', value=invStr)
+        await ctx.send(embed=embed)
+
+  @adventurer.command(aliases=['attributes'])
+  async def stats(self, ctx):
+    pass
 
   @commands.command()
   @commands.guild_only()
