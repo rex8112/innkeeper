@@ -104,7 +104,7 @@ venv.bak/
 .mypy_cache/
 
 # database
-*.db
+ethiaData.db
 start.bat
 .vscode
 config.ini
