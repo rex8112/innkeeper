@@ -180,7 +180,22 @@ class Adventure(commands.Cog):
 
   @adventurer.command(aliases=['attributes'])
   async def stats(self, ctx):
-    pass
+    adv = ac.Player(ctx.author.id)
+    if not adv.load():
+      embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                            description='Please contact rex8112#1200 if this is not the case.')
+      await ctx.send(embed=embed)
+      return
+
+    embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Attributes and Stats')
+    embed.add_field(name='Strength: {}'.format(adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {0.unarmDamage}\nInventory Slots: {0.inventoryCapacity}'.format(adv))
+    embed.add_field(name='Dexterity: {}'.format(adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {0.evasion:.1%}\nCrit Chance: {0.critChance:.1%}'.format(adv))
+    embed.add_field(name='Constitution: {}'.format(adv.constitution), value='Base Constitution: {0.rawConstitution}\nMax Health: {0.maxHealth}'.format(adv))
+    embed.add_field(name='Intelligence: {}'.format(adv.intelligence), value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {0.spellAmp:.1%}'.format(adv))
+    embed.add_field(name='Wisdom: {}'.format(adv.wisdom), value='Base Wisdom: {0.rawWisdom}'.format(adv))
+    embed.add_field(name='Charisma: {}'.format(adv.charisma), value='Base Charisma: {0.rawCharisma}'.format(adv))
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
 
   @commands.command()
   @commands.guild_only()

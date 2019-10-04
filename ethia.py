@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 game = discord.Activity(
     name='An Adventure', type=discord.ActivityType.watching)
 bot = commands.Bot(description='A Wonderful Adventure',
-                   command_prefix=',', owner_id=int(settings.owner), activity=game)
+                   command_prefix='-', owner_id=int(settings.owner), activity=game)
 
 logger = logging.getLogger('core')
 logger.setLevel(logging.DEBUG)
