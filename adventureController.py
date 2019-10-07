@@ -97,6 +97,7 @@ class Player:
       self.trinket = Equipment(equipment[6])
 
       self.inventory = raw[10].split(',')
+      self.inventory.remove('')
       self.available = bool(raw[11])
       self.dead = bool(int(raw[12]))
 
@@ -118,6 +119,34 @@ class Player:
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.dead)]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
+
+  def equip(self, e: int):
+    eq = Equipment(e)
+    if eq.slot == 'mainhand':
+      uneq = self.mainhand
+      self.mainhand = eq
+    elif eq.slot == 'offhand':
+      uneq = self.offhand
+      self.offhand = eq
+    elif eq.slot == 'helmet':
+      uneq = self.helmet
+      self.helmet = eq
+    elif eq.slot == 'armor':
+      uneq = self.armor
+      self.armor = eq
+    elif eq.slot == 'gloves':
+      uneq = self.gloves
+      self.gloves = eq
+    elif eq.slot == 'boots':
+      uneq = self.boots
+      self.boots = eq
+    elif eq.slot == 'trinket':
+      uneq = self.trinket
+      self.trinket = eq
+    
+    if not uneq.mods.get('empty', False):
+      self.inventory.append(uneq.id)
+    self.calculate()
 
   def calculate(self):
     #Checks Race/Class for attribute changes

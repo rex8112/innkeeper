@@ -35,6 +35,7 @@ print('Saving')
 x.save()
 print('Loading')
 x.load()
+x.equip(2)
 output(x)
 x.rawStrength = 9
 x.rawConstitution = 2
@@ -105,6 +106,6 @@ print(f.deadEnemies)
 print(x.health)
 print(e.health)
 
-x.delete()
+#x.delete()
 z.delete()
 e.delete()
