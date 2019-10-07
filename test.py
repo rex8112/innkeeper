@@ -36,6 +36,7 @@ x.save()
 print('Loading')
 x.load()
 x.equip(2)
+x.unequip('helmet')
 output(x)
 x.rawStrength = 9
 x.rawConstitution = 2

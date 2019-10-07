@@ -64,7 +64,7 @@ def deleteEquipment(id):
 def addEnemy(name, cls, race, attributes, skills):
   cursor2.execute( """INSERT INTO enemies(name, class, level, xp, race, attributes, skills) VALUES(?, ?, ?, ?, ?, ?, ?)""", (name, cls, 1, 0, race, attributes, skills))
   db2.commit()
-  idToSend = cursor.lastrowid
+  idToSend = cursor2.lastrowid
   return idToSend
 
 def deleteEnemy(id):
@@ -73,7 +73,7 @@ def deleteEnemy(id):
 
 def getEnemy(id):
   cursor2.execute( """SELECT * FROM enemies WHERE indx = ?""", (id,) )
-  return cursor.fetchone()
+  return cursor2.fetchone()
 
 def saveEnemy(save):
   cursor2.execute( """UPDATE enemies SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ? WHERE indx = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))

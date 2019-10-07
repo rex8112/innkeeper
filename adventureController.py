@@ -97,7 +97,10 @@ class Player:
       self.trinket = Equipment(equipment[6])
 
       self.inventory = raw[10].split(',')
-      self.inventory.remove('')
+      try:
+        self.inventory.remove('')
+      except:
+        pass
       self.available = bool(raw[11])
       self.dead = bool(int(raw[12]))
 
@@ -114,7 +117,7 @@ class Player:
     rawAttributes = ','.join(str(e) for e in rawAttributes)
     skills = ','.join(self.skills) #Does the same for skills, though skills aren't currently used
     equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
-    inventory = ','.join(self.inventory)
+    inventory = ','.join(str(e) for e in self.inventory)
 
     save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.dead)]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
@@ -141,6 +144,34 @@ class Player:
       uneq = self.boots
       self.boots = eq
     elif eq.slot == 'trinket':
+      uneq = self.trinket
+      self.trinket = eq
+    
+    if not uneq.mods.get('empty', False):
+      self.inventory.append(uneq.id)
+    self.calculate()
+
+  def unequip(self, slot: str):
+    eq = Equipment(1)
+    if slot == 'mainhand':
+      uneq = self.mainhand
+      self.mainhand = eq
+    elif slot == 'offhand':
+      uneq = self.offhand
+      self.offhand = eq
+    elif slot == 'helmet':
+      uneq = self.helmet
+      self.helmet = eq
+    elif slot == 'armor':
+      uneq = self.armor
+      self.armor = eq
+    elif slot == 'gloves':
+      uneq = self.gloves
+      self.gloves = eq
+    elif slot == 'boots':
+      uneq = self.boots
+      self.boots = eq
+    elif slot == 'trinket':
       uneq = self.trinket
       self.trinket = eq
     
