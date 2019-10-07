@@ -132,13 +132,13 @@ class Adventure(commands.Cog):
         logger.warning('Adventure Creator Timed Out')
       else:
         if str(reaction) == '✅':
-          async with controlMessage.channel.typing():
-            if adv.new(name, 'Adventurer', 'Human', attributes):
-              embed = discord.Embed(title='Adventurer Created!',
-                                    colour=Colour.successColour, description='Welcome {}!'.format(name))
-            else:
-              embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
-                                    description='You can not make two!')
+          #async with controlMessage.channel.typing():
+          if adv.new(name, 'Adventurer', 'Human', attributes):
+            embed = discord.Embed(title='Adventurer Created!',
+                                  colour=Colour.successColour, description='Welcome {}!'.format(name))
+          else:
+            embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
+                                  description='You can not make two!')
         else:
           embed = discord.Embed(title='Adventurer Scrapped!', colour=Colour.errorColour,
                                 description='Rerun the command to try again')
@@ -195,6 +195,34 @@ class Adventure(commands.Cog):
     embed.add_field(name='Wisdom: {}'.format(adv.wisdom), value='Base Wisdom: {0.rawWisdom}'.format(adv))
     embed.add_field(name='Charisma: {}'.format(adv.charisma), value='Base Charisma: {0.rawCharisma}'.format(adv))
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
+
+  @adventurer.command()
+  async def equipment(self, ctx):
+    adv = ac.Player(ctx.author.id)
+    adv.load()
+    embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
+    for equip in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
+      info = ''
+      info += equip.flavor + '\n\n'
+      info += 'ID: **' + str(equip.id) + '**\n'
+      info += 'Price: **' + str(equip.price) + '**\n'
+
+      if equip.rarity == 0:
+        info += 'Rarity: **Common**\n'
+      elif equip.rarity == 1:
+        info += 'Rarity: **Uncommon**\n'
+      elif equip.rarity == 2:
+        info += 'Rarity: **Rare**\n'
+      elif equip.rarity == 3:
+        info += 'Rarity: **Epic**\n'
+      elif equip.rarity == 4:
+        info += 'Rarity: **Legendary**\n'
+      
+      for key, mod in equip.mods.items():
+        info += str(key).upper() +': **' + str(mod) + '**\n'
+      
+      embed.add_field(name='{0.slot}: {0.name}'.format(equip), value=info)
     await ctx.send(embed=embed)
 
   @commands.command()
