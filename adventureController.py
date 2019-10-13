@@ -39,7 +39,6 @@ class Player:
     self.level = 1
     self.xp = 0
     self.available = True
-    self.dead = False
     #Attributes
     self.rawStrength = rawAttributes[0]
     self.rawDexterity = rawAttributes[1]
@@ -102,7 +101,7 @@ class Player:
       except:
         pass
       self.available = bool(raw[11])
-      self.dead = bool(int(raw[12]))
+      self.health = int(raw[12])
 
       self.calculate()
       logger.debug('{}:{} Loaded Successfully'.format(self.id, self.name))
@@ -119,7 +118,7 @@ class Player:
     equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
     inventory = ','.join(str(e) for e in self.inventory)
 
-    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.dead)]
+    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.health)]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
 
@@ -252,16 +251,18 @@ class Player:
 
     #Set values to their maximum
     self.attackCooldown = self.attackSpeed
-    if not self.dead:
-      self.health = self.maxHealth
-    else:
-      self.health = 0
 
     self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
     if self.dmg == 0:
       self.dmg = self.unarmDamage
 
+    if self.maxHealth < self.health:
+      self.health = self.maxHealth
+
     logger.debug('{0.name} Calculation complete'.format(self))
+  
+  def rest(self): #Reset anything that needs to on rest
+    self.health = self.maxHealth
 
 
 class Enemy:
@@ -545,8 +546,6 @@ class Encounter:
     return rawLoot
 
   def end(self):
-    for player in self.deadPlayers:
-      player.dead = True
     if self.players.count > 0:
       return True
     else:
@@ -554,4 +553,6 @@ class Encounter:
 
 class RNGDungeon:
   def __init__(self):
+    pass
+  def new(self, difficulty: str):
     pass
