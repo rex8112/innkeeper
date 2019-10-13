@@ -30,7 +30,8 @@ def equipout(z: ac.Equipment):
 logger.info('Beginning Test')
 x = ac.Player(8112)
 print('Generating New')
-x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12])
+if not x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12]):
+  x.load()
 print('Saving')
 x.save()
 print('Loading')

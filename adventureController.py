@@ -38,6 +38,7 @@ class Player:
     self.race = race
     self.level = 1
     self.xp = 0
+    self.maxHealth = 100
     self.available = True
     #Attributes
     self.rawStrength = rawAttributes[0]
@@ -59,9 +60,14 @@ class Player:
 
     self.inventory = []
     if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
+      self.rest()
+      self.calculate()
+      self.rest()
       self.save()
       logger.info('{}:{} Created Successfully'.format(self.id, self.name))
       return True
+    else:
+      return False
 
   def delete(self):
     db.deleteAdventurer(self.id)
@@ -118,7 +124,7 @@ class Player:
     equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
     inventory = ','.join(str(e) for e in self.inventory)
 
-    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), int(self.health)]
+    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
 
