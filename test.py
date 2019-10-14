@@ -77,7 +77,7 @@ z.load()
 equipout(z)
 
 e = ac.Enemy(0)
-e.new('Skeleton Archer', 'Archer', 'Skeleton', [14,11,13,9,10,12], ['Attack','Murder','Kill'])
+e.new('Skeleton Archer', 'Archer', 'Skeleton', [14,11,13,9,10,12], ['Attack','Murder','Kill'], True)
 e.save()
 e.load()
 output(e)
@@ -107,6 +107,9 @@ print(f.deadPlayers)
 print(f.deadEnemies)
 print(x.health)
 print(e.health)
+
+b = ac.RNGDungeon()
+b.new(1, 'medium')
 
 #x.delete()
 z.delete()

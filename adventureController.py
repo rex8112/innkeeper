@@ -275,7 +275,7 @@ class Enemy:
   def __init__(self, id):
     self.id = id
 
-  def new(self, name, cls, race, rawAttributes, skills):
+  def new(self, name, cls, race, rawAttributes, skills, rng):
     self.name = name
     self.cls = cls
     self.race = race
@@ -300,7 +300,7 @@ class Enemy:
     self.trinket = Equipment(1)
 
     self.inventory = []
-    self.id = db.addEnemy(name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(str(e) for e in skills))
+    self.id = db.addEnemy(name, cls, race, ','.join(str(e) for e in rawAttributes), ','.join(str(e) for e in skills), int(rng))
     logger.info('{}:{} Created Successfully'.format(self.id, self.name))
 
   def delete(self):
@@ -558,7 +558,37 @@ class Encounter:
       return False
 
 class RNGDungeon:
-  def __init__(self):
-    pass
-  def new(self, difficulty: str):
-    pass
+  def __init__(self, dID = 0):
+    self.id = dID
+
+  def new(self, level: int, difficulty: str):
+    if difficulty == 'easy':
+      self.stages = 2
+    elif difficulty == 'medium':
+      self.stages = 5
+    elif difficulty == 'hard':
+      self.stages = 9
+    else:
+      self.stages = 1
+    
+    self.enemies = []
+    for i in range(1, self.stages + 1):
+      if i > 6:
+        bossToAdd = random.choice(db.getEnemyRNG(level, 2, 0))[0]
+      elif i > 2:
+        bossToAdd = random.choice(db.getEnemyRNG(level, 1, 0))[0]
+      else:
+        bossToAdd = None
+
+      if bossToAdd:
+        stageEnemies = [bossToAdd]
+      else:
+        stageEnemies = []
+
+      pool = db.getEnemyRNG(level)
+      randMax = random.randint(1, 3)
+      for _ in range(1, randMax + 1):
+        stageEnemies.append(random.choice(pool)[0])
+      
+      self.enemies.append(stageEnemies)
+    print(self.enemies)
