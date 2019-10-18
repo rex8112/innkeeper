@@ -6,6 +6,8 @@ logger = logging.getLogger('test')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='test.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='w')
+handler2.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
 def output(x):
@@ -25,13 +27,17 @@ def equipout(z: ac.Equipment):
   print('Slot: {}. Price: {}'.format(z.slot, z.price))
   print('----------')
 
+logger.info('Beginning Test')
 x = ac.Player(8112)
 print('Generating New')
-x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12], ['Attack','Murder','Kill'])
+if not x.new('Erika', 'Adventurer', 'Human', [14,11,13,9,10,12]):
+  x.load()
 print('Saving')
 x.save()
 print('Loading')
 x.load()
+x.equip(2)
+x.unequip('helmet')
 output(x)
 x.rawStrength = 9
 x.rawConstitution = 2
@@ -46,6 +52,14 @@ x.save()
 print('Loading')
 x.load()
 output(x)
+
+try:
+  if x.testingAtt:
+    print('I don\'t even know')
+  else:
+    print('It worked!')
+except AttributeError:
+    print('This Works Too')
 
 z = ac.Equipment(0)
 z.new('Gauntlet', 'A tough right-handed glove.', 'Common', 'ac:6,health:100', 'gloves', 20)
@@ -63,7 +77,7 @@ z.load()
 equipout(z)
 
 e = ac.Enemy(0)
-e.new('Skeleton Archer', 'Archer', 'Skeleton', [14,11,13,9,10,12], ['Attack','Murder','Kill'])
+e.new('Skeleton Archer', 'Archer', 'Skeleton', [14,11,13,9,10,12], ['Attack','Murder','Kill'], True)
 e.save()
 e.load()
 output(e)
@@ -77,8 +91,26 @@ e.race = 'Straight'
 e.cls = 'Master'
 e.save()
 e.load()
+e.calculate()
 output(e)
 
-x.delete()
+f = ac.Encounter([x], [e])
+print(f.players)
+print(f.enemies)
+print(f.deadPlayers)
+print(f.deadEnemies)
+for i in range(30):
+  f.nextTurn()
+print(f.players)
+print(f.enemies)
+print(f.deadPlayers)
+print(f.deadEnemies)
+print(x.health)
+print(e.health)
+
+b = ac.RNGDungeon()
+b.new(1, 'medium')
+
+#x.delete()
 z.delete()
 e.delete()

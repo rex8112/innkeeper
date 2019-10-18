@@ -1,5 +1,6 @@
 import discord
 import logging
+import sys
 
 from discord.ext import commands
 from tools.configLoader import settings
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 game = discord.Activity(
     name='An Adventure', type=discord.ActivityType.watching)
 bot = commands.Bot(description='A Wonderful Adventure',
-                   command_prefix=',', owner_id=int(settings.owner), activity=game)
+                   command_prefix='-', owner_id=int(settings.owner), activity=game)
 
 logger = logging.getLogger('core')
 logger.setLevel(logging.DEBUG)
@@ -45,6 +46,13 @@ async def ping(ctx, test=True):
     await ctx.send('Pong!')
   else:
     await ctx.send('Nope!')
+
+@bot.command()
+@commands.is_owner()
+async def shutdown(ctx):
+  """Turns the bot off"""
+  await bot.logout()
+  sys.exit()
 
 
 if __name__ == "__main__":

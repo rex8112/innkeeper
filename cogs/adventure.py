@@ -132,49 +132,128 @@ class Adventure(commands.Cog):
         logger.warning('Adventure Creator Timed Out')
       else:
         if str(reaction) == '✅':
-          async with controlMessage.channel.typing():
-            if adv.new(name, 'Adventurer', 'Human', attributes):
-              embed = discord.Embed(title='Adventurer Created!',
-                                    colour=Colour.successColour, description='Welcome {}!'.format(name))
-            else:
-              embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
-                                    description='You can not make two!')
+          #async with controlMessage.channel.typing():
+          if adv.new(name, 'Adventurer', 'Human', attributes):
+            embed = discord.Embed(title='Adventurer Created!',
+                                  colour=Colour.successColour, description='Welcome {}!'.format(name))
+          else:
+            embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
+                                  description='You can not make two!')
         else:
           embed = discord.Embed(title='Adventurer Scrapped!', colour=Colour.errorColour,
                                 description='Rerun the command to try again')
         await controlMessage.clear_reactions()
         await controlMessage.edit(embed=embed)
 
-  @commands.command()
+  @commands.group()
   @commands.guild_only()
   async def adventurer(self, ctx):
     """Get information on your Adventurer"""
+    if ctx.invoked_subcommand is None:
+      adv = ac.Player(ctx.author.id)
+      if not adv.load():
+        embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                              description='Please contact rex8112#1200 if this is not the case.')
+        await ctx.send(embed=embed)
+        return
+      else:
+        equipment = []
+        for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
+          equipment.append(e)
+        embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
+                              description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
+        embed.set_author(name=ctx.author.display_name,
+                        icon_url=ctx.author.avatar_url)
+        embed.add_field(
+            name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
+        embed.add_field(
+            name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
+        embed.add_field(
+            name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
+
+        invStr = '\n'.join(adv.inventory)
+        if not invStr:
+          invStr = 'Nothing'
+
+        embed.add_field(name='Inventory', value=invStr)
+        await ctx.send(embed=embed)
+
+  @adventurer.command(aliases=['attributes'])
+  async def stats(self, ctx):
     adv = ac.Player(ctx.author.id)
     if not adv.load():
       embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
                             description='Please contact rex8112#1200 if this is not the case.')
       await ctx.send(embed=embed)
       return
-    else:
-      equipment = []
-      for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots]:
-        equipment.append(e)
-      embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
-                            description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
-      embed.set_author(name=ctx.author.display_name,
-                       icon_url=ctx.author.avatar_url)
-      embed.add_field(
-          name='Attributes', value='STR: **{0.rawStrength}**\nDEX: **{0.rawDexterity}**\nCON: **{0.rawConstitution}**\nINT: **{0.rawIntelligence}**\nWIS: **{0.rawWisdom}**\nCHA: **{0.rawCharisma}**'.format(adv))
-      embed.add_field(
-          name='Equipment', value='Main Hand: {0[0].id:0>3}: **{0[0].name}**\nOff Hand: {0[1].id:0>3}: **{0[1].name}**\nHelmet: {0[2].id:0>3}: **{0[2].name}**\nArmor: {0[3].id:0>3}: **{0[3].name}**\nGloves: {0[4].id:0>3}: **{0[4].name}**\nBoots: {0[5].id:0>3}: **{0[5].name}**'.format(equipment))
 
-      invStr = '\n'.join(adv.inventory)
-      if not invStr:
-        invStr = 'Nothing'
+    embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Attributes and Stats')
+    embed.add_field(name='Strength: {}'.format(adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {0.unarmDamage}\nInventory Slots: {0.inventoryCapacity}'.format(adv))
+    embed.add_field(name='Dexterity: {}'.format(adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {0.evasion:.1%}\nCrit Chance: {0.critChance:.1%}'.format(adv))
+    embed.add_field(name='Constitution: {}'.format(adv.constitution), value='Base Constitution: {0.rawConstitution}\nMax Health: {0.maxHealth}'.format(adv))
+    embed.add_field(name='Intelligence: {}'.format(adv.intelligence), value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {0.spellAmp:.1%}'.format(adv))
+    embed.add_field(name='Wisdom: {}'.format(adv.wisdom), value='Base Wisdom: {0.rawWisdom}'.format(adv))
+    embed.add_field(name='Charisma: {}'.format(adv.charisma), value='Base Charisma: {0.rawCharisma}'.format(adv))
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    await ctx.send(embed=embed)
 
-      embed.add_field(name='Inventory', value=invStr)
-      await ctx.send(embed=embed)
+  @adventurer.command()
+  async def equipment(self, ctx):
+    adv = ac.Player(ctx.author.id)
+    adv.load()
+    embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
+    for equip in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
+      info = ''
+      info += equip.flavor + '\n\n'
+      info += 'ID: **' + str(equip.id) + '**\n'
+      info += 'Price: **' + str(equip.price) + '**\n'
 
+      if equip.rarity == 0:
+        info += 'Rarity: **Common**\n'
+      elif equip.rarity == 1:
+        info += 'Rarity: **Uncommon**\n'
+      elif equip.rarity == 2:
+        info += 'Rarity: **Rare**\n'
+      elif equip.rarity == 3:
+        info += 'Rarity: **Epic**\n'
+      elif equip.rarity == 4:
+        info += 'Rarity: **Legendary**\n'
+      
+      for key, mod in equip.mods.items():
+        info += str(key).upper() +': **' + str(mod) + '**\n'
+      
+      embed.add_field(name='{0.slot}: {0.name}'.format(equip), value=info)
+    await ctx.send(embed=embed)
+
+  @commands.command()
+  @commands.guild_only()
+  async def fight(self, ctx, enemy):
+    """Testing Command"""
+    adv = ac.Player(ctx.author.id)
+    adv.load()
+    enm = ac.Enemy(enemy)
+    enm.load()
+    message = await ctx.send('Characters **Loaded**')
+    enc = ac.Encounter([adv], [enm])
+    cnt = 0
+    while len(enc.players) > 0 and len(enc.enemies) > 0:
+      string = ''
+      string2 = ''
+      cnt += 1
+      enc.nextTurn()
+      for ch in enc.players:
+        string += '{} {}\n'.format(ch.name, ch.health)
+      for ch in enc.enemies:
+        string2 += '{} {}\n'.format(ch.name, ch.health)
+      if not string:
+        string = 'Dead'
+      if not string2:
+        string2 = 'Dead'
+      embed = discord.Embed(title='Combat Information Test {}'.format(cnt), colour=Colour.errorColour)
+      embed.add_field(name='Players', value=string)
+      embed.add_field(name='Enemies', value=string2)
+      await message.edit(embed=embed)
+      await asyncio.sleep(2)
 
 def setup(bot):
   bot.add_cog(Adventure(bot))
