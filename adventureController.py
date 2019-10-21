@@ -563,10 +563,15 @@ class Encounter:
 
 class RNGDungeon:
   def __init__(self, dID = 0):
-    self.id = dID
+    if dID == 0:
+      self.id = db.addRNG()
+    else:
+      self.id = dID
 
   def new(self, aID: int, level: int, difficulty: str):
     self.adv = Player(aID)
+    self.stage = 1
+    self.active = True
 
     if difficulty == 'easy':
       self.stages = 2
@@ -606,7 +611,7 @@ class RNGDungeon:
     elif difficulty == 'hard':
       self.lootInt = 4
     else:
-      self.lootInt = 1
+      self.lootInt = 0
 
     lPool = db.getEquipmentRNG(level)
     for _ in range(1, self.lootInt + 1):
@@ -616,10 +621,27 @@ class RNGDungeon:
     print(self.loot)
 
   def save(self):
-    pass
+    loot = ','.join(str(e) for e in self.loot)
+    tmp = []
+    for stage in self.enemies:
+      tmp.append(','.join(str(e) for e in stage))
+    enemies = ';'.join(tmp)
+    save = [self.id, self.adv.id, int(self.active), self.stage, self.stages, enemies, loot]
+    db.saveRNG(save)
 
-  def load(self):
-    pass
+  def loadActive(self, aID):
+    save = db.getActiveRNG(aID)
+    self.loot = save[5].split(',')
+    
+    self.enemies = []
+    tmp = save[4].split(';')
+    for stage in tmp:
+      self.enemies.append(stage.split(','))
+    
+    self.adv = Player(save[0])
+    self.active = bool(save[1])
+    self.stage = save[2]
+    self.stages = save[3]
 
   def nextStage(self):
     pass

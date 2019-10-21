@@ -109,7 +109,8 @@ print(x.health)
 print(e.health)
 
 b = ac.RNGDungeon()
-b.new(1, 'medium')
+b.new(1, 1,'medium')
+b.save()
 
 #x.delete()
 z.delete()

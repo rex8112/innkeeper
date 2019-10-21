@@ -94,7 +94,16 @@ def saveEnemy(save):
   db2.commit()
   return save[0]
 
-def addRNG(adv, stages, enemies, loot):
-  cursor.execute( """INSERT INTO rngdungeons(adv, active, stage, stages, enemies, loot) VALUES(?, 1, 1, ?, ?, ?)""", (adv, stages, enemies, loot))
+def addRNG():
+  cursor.execute( """INSERT INTO rngdungeons""")
   db.commit()
   return cursor.lastrowid
+
+def saveRNG(save):
+  cursor.execute
+
+def getRNG(id):
+  pass
+
+def getActiveRNG(aID):
+  pass
