@@ -15,11 +15,11 @@ def initDB():   #initialize the database
   cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""" )
   cursor.execute( """CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT)""")
   cursor2.execute( """CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""" )
-  cursor2.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER)""" )
+  cursor2.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""" )
 
   cursor2.execute( """SELECT * FROM equipment WHERE indx = 1""" )
   if not cursor2.fetchone():
-    cursor2.execute( """INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""", ('Empty', 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0))
+    cursor2.execute( """INSERT INTO equipment(name, level, flavor, rarity, modifier, slot, price, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", ('Empty', 0, 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0, 0))
   db.commit()
   db2.commit()
   
@@ -47,6 +47,13 @@ def saveAdventurer(save):
 def getEquipment(id):
   cursor2.execute( """SELECT * FROM equipment WHERE indx = ?""", (id,) )
   return cursor2.fetchone()
+
+def getEquipmentRNG(lvl: int, offset = 1, rnge = 1):
+  maximum = lvl + offset
+  minimum = maximum - rnge
+  cursor2.execute( """SELECT * FROM equipment WHERE rng = 1 AND level BETWEEN ? AND ?""", (minimum, maximum))
+  equipment = cursor2.fetchall()
+  return equipment
 
 def saveEquipment(save):
   if save[0] > 0:
@@ -87,5 +94,7 @@ def saveEnemy(save):
   db2.commit()
   return save[0]
 
-def addRNG():
-  pass
+def addRNG(adv, stages, enemies, loot):
+  cursor.execute( """INSERT INTO rngdungeons(adv, active, stage, stages, enemies, loot) VALUES(?, 1, 1, ?, ?, ?)""", (adv, stages, enemies, loot))
+  db.commit()
+  return cursor.lastrowid

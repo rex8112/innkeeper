@@ -90,7 +90,10 @@ class Player:
       self.rawWisdom = int(rawAttributes[4])
       self.rawCharisma = int(rawAttributes[5])
 
-      self.skills = raw[8].split(',') #Get a list of skills
+      try:
+        self.skills = raw[8].split(',') #Get a list of skills
+      except AttributeError:
+        self.skills = []
 
       equipment = raw[9].split(',') #Get a list of equipped items
       self.mainhand = Equipment(equipment[0])
@@ -449,11 +452,12 @@ class Equipment:
     try:
       raw = db.getEquipment(self.id)
       self.name = raw[1]
-      self.flavor = raw[2]
-      self.rarity = raw[3]
-      self.slot = raw[5]
-      self.price = raw[6]
-      rawMod = raw[4].split(',')
+      self.level = raw[2]
+      self.flavor = raw[3]
+      self.rarity = raw[4]
+      self.slot = raw[6]
+      self.price = raw[7]
+      rawMod = raw[5].split(',')
       mods = []
       for mod in rawMod:
         mods.append(tuple(mod.split(':')))
@@ -561,7 +565,9 @@ class RNGDungeon:
   def __init__(self, dID = 0):
     self.id = dID
 
-  def new(self, level: int, difficulty: str):
+  def new(self, aID: int, level: int, difficulty: str):
+    self.adv = Player(aID)
+
     if difficulty == 'easy':
       self.stages = 2
     elif difficulty == 'medium':
@@ -591,4 +597,29 @@ class RNGDungeon:
         stageEnemies.append(random.choice(pool)[0])
       
       self.enemies.append(stageEnemies)
+
+    self.loot = []
+    if difficulty == 'easy':
+      self.lootInt = 2
+    elif difficulty == 'medium':
+      self.lootInt = 3
+    elif difficulty == 'hard':
+      self.lootInt = 4
+    else:
+      self.lootInt = 1
+
+    lPool = db.getEquipmentRNG(level)
+    for _ in range(1, self.lootInt + 1):
+      self.loot.append(random.choice(lPool)[0])
+      
     print(self.enemies)
+    print(self.loot)
+
+  def save(self):
+    pass
+
+  def load(self):
+    pass
+
+  def nextStage(self):
+    pass
