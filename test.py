@@ -111,6 +111,8 @@ print(e.health)
 b = ac.RNGDungeon()
 b.new(1, 1,'medium')
 b.save()
+b.loadActive(1)
+b.save()
 
 #x.delete()
 z.delete()

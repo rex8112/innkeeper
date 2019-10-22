@@ -20,6 +20,8 @@ def initDB():   #initialize the database
   cursor2.execute( """SELECT * FROM equipment WHERE indx = 1""" )
   if not cursor2.fetchone():
     cursor2.execute( """INSERT INTO equipment(name, level, flavor, rarity, modifier, slot, price, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", ('Empty', 0, 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0, 0))
+  
+  cursor.execute( """DELETE FROM rngdungeons WHERE adv IS NULL""" )
   db.commit()
   db2.commit()
   
@@ -95,15 +97,20 @@ def saveEnemy(save):
   return save[0]
 
 def addRNG():
-  cursor.execute( """INSERT INTO rngdungeons""")
+  cursor.execute( """INSERT INTO rngdungeons DEFAULT VALUES""")
   db.commit()
   return cursor.lastrowid
 
 def saveRNG(save):
-  cursor.execute
+  if save[0] == 0:
+    save[0] = addRNG()
+  cursor.execute( """UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ? WHERE indx = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[0]))
+  db.commit()
+  return save[0]
 
 def getRNG(id):
   pass
 
 def getActiveRNG(aID):
-  pass
+  cursor.execute( """SELECT * FROM rngdungeons WHERE active = 1 AND adv = ?""", (aID,))
+  return cursor.fetchone()
