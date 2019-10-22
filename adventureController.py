@@ -517,7 +517,7 @@ class Encounter:
         logger.debug('Living Player detected')
         self.attack(enemy, self.players[-1])
 
-        if self.players[-1].health <= 0: #If the enemy is dead, remove him from active enemies
+        if self.players[-1].health <= 0: #If the player is dead, remove him from active players
           self.deadPlayers.append(self.players[-1])
           self.players.pop()
         
@@ -613,6 +613,8 @@ class RNGDungeon:
     lPool = db.getEquipmentRNG(level)
     for _ in range(1, self.lootInt + 1):
       self.loot.append(random.choice(lPool)[0])
+
+    self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
     
     self.save()
       
@@ -641,6 +643,32 @@ class RNGDungeon:
     self.active = bool(save[2])
     self.stage = save[3]
     self.stages = save[4]
+    self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+
+  def buildEncounter(players: list, enemies: list):
+    bPlayers = []
+    bEnemies = []
+    for player in players:
+      tmp = Player(player)
+      tmp.load()
+      bPlayers.append(tmp)
+
+    for enemy in enemies:
+      tmp = Enemy(enemy)
+      tmp.load()
+      bEnemies.append(tmp)
+    return Encounter(bPlayers, bEnemies)
 
   def nextStage(self):
-    pass
+    self.stage += 1
+    if self.stage > self.stages:
+      self.end(True)
+    else:
+      self.adv.load()
+      self.adv.rest()
+      self.adv.save()
+      self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+
+  def end(self, result: bool):
+    if result == True:
+      pass
