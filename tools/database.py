@@ -39,6 +39,7 @@ def deleteAdventurer(id):
 
 def getAdventurer(id):
   cursor.execute( """SELECT * FROM adventurers WHERE id = ?""", (id,) )
+  print('{}'.format(id))
   return cursor.fetchone()
 
 def saveAdventurer(save):

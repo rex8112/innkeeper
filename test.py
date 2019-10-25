@@ -109,10 +109,20 @@ print(x.health)
 print(e.health)
 
 b = ac.RNGDungeon()
-b.new(1, 1,'medium')
+b.new(8112, 1,'medium')
 b.save()
-b.loadActive(1)
-b.save()
+b.loadActive(8112)
+while b.stage <= b.stages:
+  while len(b.encounter.enemies) > 0 and len(b.encounter.players) > 0:
+    b.encounter.nextTurn()
+  if b.encounter.end():
+    b.adv.rest()
+    b.adv.save()
+    b.nextStage()
+  else:
+    print('Dead')
+
+print(ac.Equipment(1).rarity)
 
 #x.delete()
 z.delete()

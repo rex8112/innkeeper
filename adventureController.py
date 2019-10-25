@@ -190,7 +190,7 @@ class Player:
 
   def addInv(self, id: int):
     try:
-      if self.inventory.count < self.inventoryCapacity:
+      if len(self.inventory) < self.inventoryCapacity:
         self.inventory.append(id)
         return True
       else:
@@ -484,6 +484,13 @@ class Equipment:
     else: #Search for equipment in the database
       self.load()
 
+  @staticmethod
+  def calculateWeight(loot: list):
+    weight = []
+    for l in loot:
+      weight.append = Equipment(l).rarity
+    return weight
+
   def load(self):
     try:
       raw = db.getEquipment(self.id)
@@ -595,9 +602,10 @@ class Encounter:
     totalXP = 0
     for e in self.deadEnemies:
       totalXP += e.baseXP * math.exp(e.xpRate * e.level)
+    return totalXP
 
   def end(self):
-    if self.players.count > 0:
+    if len(self.players) > 0:
       return True
     else:
       return False
@@ -613,6 +621,7 @@ class RNGDungeon:
     self.adv.save()
     self.stage = 1
     self.active = True
+    self.xp = 0
 
     if difficulty == 'easy':
       self.stages = 2
@@ -693,8 +702,12 @@ class RNGDungeon:
     bPlayers = []
     bEnemies = []
     for player in players:
-      tmp = Player(player)
-      tmp.load()
+      if player is int:
+        tmp = Player(player)
+        tmp.load()
+      else:
+        tmp = player
+        tmp.load()
       bPlayers.append(tmp)
 
     for enemy in enemies:
@@ -705,6 +718,8 @@ class RNGDungeon:
 
   def nextStage(self):
     self.stage += 1
+    self.xp += self.encounter.getExp()
+    self.loot += self.encounter.getLoot()
     if self.stage > self.stages:
       self.end(True)
     else:
