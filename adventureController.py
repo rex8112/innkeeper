@@ -1,6 +1,7 @@
 import discord
 import logging
 import random
+import math
 
 from discord.ext import commands
 import tools.database as db
@@ -187,6 +188,39 @@ class Player:
       self.inventory.append(uneq.id)
     self.calculate()
 
+  def addInv(self, id: int):
+    try:
+      if self.inventory.count < self.inventoryCapacity:
+        self.inventory.append(id)
+        return True
+      else:
+        return False
+    except AttributeError:
+      self.calculate()
+      return self.addInv(id)
+
+  def remInv(self, id: int):
+    try:
+      self.inventory.remove(id)
+      return True
+    except ValueError:
+      return False
+
+  def addExp(self, count: int):
+    self.xp += count
+    return True
+
+  def remExp(self, count: int, force = False):
+    if self.xp - count >= 0:
+      self.xp -= count
+      return True
+    else:
+      if force:
+        self.xp = 0
+        return True
+      else:
+        return False
+
   def calculate(self):
     #Checks Race/Class for attribute changes
     self.strength = self.rawStrength
@@ -275,6 +309,8 @@ class Player:
 
 
 class Enemy:
+  xpRate = 0.03
+  baseXP = 50
   def __init__(self, id):
     self.id = id
 
@@ -555,6 +591,11 @@ class Encounter:
         rawLoot.append(loot)
     return rawLoot
 
+  def getExp(self):
+    totalXP = 0
+    for e in self.deadEnemies:
+      totalXP += e.baseXP * math.exp(e.xpRate * e.level)
+
   def end(self):
     if self.players.count > 0:
       return True
@@ -567,6 +608,9 @@ class RNGDungeon:
 
   def new(self, aID: int, level: int, difficulty: str):
     self.adv = Player(aID)
+    self.adv.load()
+    self.adv.available = False
+    self.adv.save()
     self.stage = 1
     self.active = True
 
@@ -645,7 +689,7 @@ class RNGDungeon:
     self.stages = save[4]
     self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
 
-  def buildEncounter(players: list, enemies: list):
+  def buildEncounter(self, players: list, enemies: list):
     bPlayers = []
     bEnemies = []
     for player in players:
@@ -670,5 +714,14 @@ class RNGDungeon:
       self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
 
   def end(self, result: bool):
+    self.adv.load()
+    self.active = False
+
     if result == True:
-      pass
+      self.adv.available = True
+      self.adv.rest()
+      for l in self.loot:
+        self.adv.addInv(l)
+    else:
+      self.adv.available = True #TEMPORARY UNTIL RECOVERY IS CODED
+      self.adv.rest()

@@ -46,6 +46,10 @@ def saveAdventurer(save):
   db.commit()
   return save[0]
 
+def statusAdventurer(id, available: bool):
+  cursor.execute( """UPDATE adventurers SET available = ? WHERE id = ?""", (int(available), id))
+  db.commit()
+
 def getEquipment(id):
   cursor2.execute( """SELECT * FROM equipment WHERE indx = ?""", (id,) )
   return cursor2.fetchone()
