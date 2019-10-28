@@ -2,6 +2,7 @@ import discord
 import logging
 import random
 import math
+import numpy as np
 
 from discord.ext import commands
 import tools.database as db
@@ -133,32 +134,37 @@ class Player:
     return db.saveAdventurer(save)
 
   def equip(self, e: int):
-    eq = Equipment(e)
-    if eq.slot == 'mainhand':
-      uneq = self.mainhand
-      self.mainhand = eq
-    elif eq.slot == 'offhand':
-      uneq = self.offhand
-      self.offhand = eq
-    elif eq.slot == 'helmet':
-      uneq = self.helmet
-      self.helmet = eq
-    elif eq.slot == 'armor':
-      uneq = self.armor
-      self.armor = eq
-    elif eq.slot == 'gloves':
-      uneq = self.gloves
-      self.gloves = eq
-    elif eq.slot == 'boots':
-      uneq = self.boots
-      self.boots = eq
-    elif eq.slot == 'trinket':
-      uneq = self.trinket
-      self.trinket = eq
-    
-    if not uneq.mods.get('empty', False):
-      self.inventory.append(uneq.id)
-    self.calculate()
+    if e in self.inventory:
+      self.remInv(e)
+      eq = Equipment(e)
+      if eq.slot == 'mainhand':
+        uneq = self.mainhand
+        self.mainhand = eq
+      elif eq.slot == 'offhand':
+        uneq = self.offhand
+        self.offhand = eq
+      elif eq.slot == 'helmet':
+        uneq = self.helmet
+        self.helmet = eq
+      elif eq.slot == 'armor':
+        uneq = self.armor
+        self.armor = eq
+      elif eq.slot == 'gloves':
+        uneq = self.gloves
+        self.gloves = eq
+      elif eq.slot == 'boots':
+        uneq = self.boots
+        self.boots = eq
+      elif eq.slot == 'trinket':
+        uneq = self.trinket
+        self.trinket = eq
+      
+      if not uneq.mods.get('empty', False):
+        self.inventory.append(uneq.id)
+      self.calculate()
+      return True
+    else:
+      return False
 
   def unequip(self, slot: str):
     eq = Equipment(1)
@@ -192,6 +198,7 @@ class Player:
     try:
       if len(self.inventory) < self.inventoryCapacity:
         self.inventory.append(id)
+        logger.debug('Adding {} to Inventory'.format(id))
         return True
       else:
         return False
@@ -487,8 +494,28 @@ class Equipment:
   @staticmethod
   def calculateWeight(loot: list):
     weight = []
+    tmp = []
+    total = 0
     for l in loot:
-      weight.append = Equipment(l).rarity
+      e = Equipment(l)
+      r = e.rarity
+
+      if r == 0:
+        r = 5
+      elif r == 1:
+        r = 4
+      elif r == 2:
+        r = 3
+      elif r == 3:
+        r = 2
+      elif r == 4:
+        r = 1
+
+      tmp.append(r)
+    for l in tmp:
+      total += l
+    for l in tmp:
+      weight.append(l / total)
     return weight
 
   def load(self):
@@ -520,7 +547,7 @@ class Equipment:
     save = [self.id, self.name, self.flavor, self.rarity, ','.join(rawMod), self.slot, self.price]
     return db.saveEquipment(save)
 
-  def new(self, name, flavor, rarity, mods, slot, price):
+  def new(self, name, flavor, rarity: int, mods, slot, price):
     self.name = name
     self.flavor = flavor
     self.rarity = rarity
@@ -664,8 +691,13 @@ class RNGDungeon:
       self.lootInt = 0
 
     lPool = db.getEquipmentRNG(level)
-    for _ in range(1, self.lootInt + 1):
-      self.loot.append(random.choice(lPool)[0])
+    weights = np.asarray(Equipment.calculateWeight(lPool))
+    try:
+      for _ in range(1, self.lootInt + 1):
+        self.loot.append(np.random.choice(lPool, p=weights))
+    except Exception as e:
+      exc = '{}: {}'.format(type(e).__name__, e)
+      logger.error('RNG Loot Failed to Load with weights: {}\n{}:{}'.format(weights, type(self).__name__, exc))
 
     self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
     
@@ -673,6 +705,7 @@ class RNGDungeon:
       
     print(self.enemies)
     print(self.loot)
+    print(weights)
 
   def save(self):
     loot = ','.join(str(e) for e in self.loot)
@@ -717,16 +750,19 @@ class RNGDungeon:
     return Encounter(bPlayers, bEnemies)
 
   def nextStage(self):
-    self.stage += 1
-    self.xp += self.encounter.getExp()
-    self.loot += self.encounter.getLoot()
-    if self.stage > self.stages:
-      self.end(True)
+    if self.adv.health > 0:
+      self.stage += 1
+      self.xp += self.encounter.getExp()
+      self.loot += self.encounter.getLoot()
+      if self.stage > self.stages:
+        self.end(True)
+      else:
+        self.adv.load()
+        self.adv.rest()
+        self.adv.save()
+        self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
     else:
-      self.adv.load()
-      self.adv.rest()
-      self.adv.save()
-      self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+      self.end(False)
 
   def end(self, result: bool):
     self.adv.load()
@@ -735,8 +771,12 @@ class RNGDungeon:
     if result == True:
       self.adv.available = True
       self.adv.rest()
+      self.adv.addExp(self.xp)
       for l in self.loot:
         self.adv.addInv(l)
     else:
       self.adv.available = True #TEMPORARY UNTIL RECOVERY IS CODED
       self.adv.rest()
+
+    self.adv.save()
+    self.save()

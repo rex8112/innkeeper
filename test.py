@@ -44,7 +44,7 @@ x.rawConstitution = 2
 x.rawDexterity = 2
 x.name = 'Eric'
 x.level = 2
-x.xp = 321
+x.xp = 0
 x.race = 'Gay'
 x.cls = 'Slave'
 print('Saving')
@@ -112,15 +112,15 @@ b = ac.RNGDungeon()
 b.new(8112, 1,'medium')
 b.save()
 b.loadActive(8112)
-while b.stage <= b.stages:
+while b.stage <= b.stages and b.active == True:
   while len(b.encounter.enemies) > 0 and len(b.encounter.players) > 0:
+    print('--------------------------------New Turn')
     b.encounter.nextTurn()
-  if b.encounter.end():
-    b.adv.rest()
-    b.adv.save()
-    b.nextStage()
-  else:
-    print('Dead')
+  print('----------------------------------New Stage: {} | {.health}'.format(b.stage + 1, b.adv))
+  b.nextStage()
+
+print('All Done: {.health}'.format(b.adv))
+
 
 print(ac.Equipment(1).rarity)
 

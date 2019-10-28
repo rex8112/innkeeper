@@ -2,6 +2,7 @@ import datetime
 import sqlite3
 import discord
 import logging
+import numpy as np
 
 
 db = sqlite3.connect('ethiaData.db')
@@ -60,7 +61,10 @@ def getEquipmentRNG(lvl: int, offset = 1, rnge = 1):
   minimum = maximum - rnge
   cursor2.execute( """SELECT * FROM equipment WHERE rng = 1 AND level BETWEEN ? AND ?""", (minimum, maximum))
   equipment = cursor2.fetchall()
-  return equipment
+  tmp = []
+  for e in equipment:
+    tmp.append(e[0])
+  return tmp
 
 def saveEquipment(save):
   if save[0] > 0:

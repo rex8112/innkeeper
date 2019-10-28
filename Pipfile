@@ -12,6 +12,7 @@ autopep8 = "*"
 configobj = "*"
 pytz = "*"
 discord-py = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"
