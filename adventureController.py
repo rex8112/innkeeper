@@ -717,19 +717,24 @@ class RNGDungeon:
     self.id = db.saveRNG(save)
 
   def loadActive(self, aID):
-    save = db.getActiveRNG(aID)
-    self.loot = save[6].split(',')
-    
-    self.enemies = []
-    tmp = save[5].split(';')
-    for stage in tmp:
-      self.enemies.append(stage.split(','))
-    
-    self.adv = Player(save[1])
-    self.active = bool(save[2])
-    self.stage = save[3]
-    self.stages = save[4]
-    self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+    try:
+      save = db.getActiveRNG(aID)
+      self.loot = save[6].split(',')
+      
+      self.enemies = []
+      tmp = save[5].split(';')
+      for stage in tmp:
+        self.enemies.append(stage.split(','))
+      
+      self.id = save[0]
+      self.adv = Player(save[1])
+      self.active = bool(save[2])
+      self.stage = save[3]
+      self.stages = save[4]
+      self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+      return True
+    except Exception as e:
+      logger.error('Failed to load dungeon {}')
 
   def buildEncounter(self, players: list, enemies: list):
     bPlayers = []

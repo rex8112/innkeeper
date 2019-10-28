@@ -227,6 +227,24 @@ class Adventure(commands.Cog):
 
   @commands.command()
   @commands.guild_only()
+  async def dungeon(self, ctx):
+    if ctx.invoked_subcommand is None:
+      rng = ac.RNGDungeon()
+      rng.loadActive(ctx.author.id)
+      embed = discord.Embed(title='**{}** Stage Dungeon'.format(rng.stages), colour=Colour.infoColour)
+      embed.set_footer(text='ID = {}'.format(rng.id))
+      embed.add_field(name='Current Progress', value='Current Stage: {}\nStages Completed: {}\nTotal Stages: {}'.format(rng.stage, rng.stage - 1, rng.stages))
+      
+      enemies = ''
+      for e in rng.enemies:
+        t = ac.Enemy(e)
+        t.load()
+        enemies += 'Lv {}, {}'.format(t.level, t.name)
+
+      embed.add_field(name='Current Enemies', value=enemies)
+
+  @commands.command()
+  @commands.guild_only()
   async def fight(self, ctx, enemy):
     """Testing Command"""
     adv = ac.Player(ctx.author.id)
