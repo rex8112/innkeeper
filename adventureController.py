@@ -641,7 +641,7 @@ class RNGDungeon:
   def __init__(self, dID = 0):
     self.id = dID
 
-  def new(self, aID: int, level: int, difficulty: str):
+  def new(self, aID: int, difficulty: str):
     self.adv = Player(aID)
     self.adv.load()
     self.adv.available = False
@@ -662,9 +662,9 @@ class RNGDungeon:
     self.enemies = []
     for i in range(1, self.stages + 1):
       if i > 6:
-        bossToAdd = random.choice(db.getEnemyRNG(level, 2, 0))[0]
+        bossToAdd = random.choice(db.getEnemyRNG(self.adv.level, 2, 0))[0]
       elif i > 2:
-        bossToAdd = random.choice(db.getEnemyRNG(level, 1, 0))[0]
+        bossToAdd = random.choice(db.getEnemyRNG(self.adv.level, 1, 0))[0]
       else:
         bossToAdd = None
 
@@ -673,7 +673,7 @@ class RNGDungeon:
       else:
         stageEnemies = []
 
-      pool = db.getEnemyRNG(level)
+      pool = db.getEnemyRNG(self.adv.level)
       randMax = random.randint(1, 3)
       for _ in range(1, randMax + 1):
         stageEnemies.append(random.choice(pool)[0])
@@ -690,7 +690,7 @@ class RNGDungeon:
     else:
       self.lootInt = 0
 
-    lPool = db.getEquipmentRNG(level)
+    lPool = db.getEquipmentRNG(self.adv.level)
     weights = np.asarray(Equipment.calculateWeight(lPool))
     try:
       for _ in range(1, self.lootInt + 1):

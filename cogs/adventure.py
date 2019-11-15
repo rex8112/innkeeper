@@ -225,13 +225,13 @@ class Adventure(commands.Cog):
       embed.add_field(name='{0.slot}: {0.name}'.format(equip), value=info)
     await ctx.send(embed=embed)
 
-  @commands.command()
+  @commands.group()
   @commands.guild_only()
-  async def dungeon(self, ctx):
+  async def quest(self, ctx):
     if ctx.invoked_subcommand is None:
       rng = ac.RNGDungeon()
       if rng.loadActive(ctx.author.id):
-        embed = discord.Embed(title='**{}** Stage Dungeon'.format(rng.stages), colour=Colour.infoColour)
+        embed = discord.Embed(title='**{}** Stage Quest'.format(rng.stages), colour=Colour.infoColour)
         embed.set_footer(text='ID = {}'.format(rng.id))
         embed.add_field(name='Current Progress', value='Current Stage: {}\nStages Completed: {}\nTotal Stages: {}'.format(rng.stage, rng.stage - 1, rng.stages))
         
@@ -243,9 +243,25 @@ class Adventure(commands.Cog):
 
         embed.add_field(name='Current Enemies', value=enemies)
       else:
-        embed = discord.Embed(title='No Active Dungeon', colour=Colour.errorColour)
+        embed = discord.Embed(title='No Active Quest', colour=Colour.errorColour)
 
       await ctx.send(embed=embed)
+
+  @quest.command()
+  async def start(self, ctx, difficulty: str):
+    rng = ac.RNGDungeon()
+    rng.new(ctx.author.id, difficulty)
+
+    embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper()), colour=Colour.successColour, description='**{}** Stages'.format(rng.stages))
+
+    enemies = ''
+    for e in rng.enemies:
+      t = ac.Enemy(e)
+      t.load()
+      enemies += 'Lv {}, {}'.format(t.level, t.name)
+
+    embed.add_field(name='Current Enemies', value=enemies)
+    await ctx.send(embed=embed)
 
   @commands.command()
   @commands.guild_only()
