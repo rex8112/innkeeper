@@ -30,6 +30,13 @@ class Adventure(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
+  def is_available(self):
+    def predicate(self, ctx):
+      adv = ac.Player(ctx.author.id)
+      adv.load(False)
+      return adv.available
+    return commands.check(predicate)
+
   @commands.command()
   @commands.guild_only()
   async def begin(self, ctx):
@@ -248,6 +255,7 @@ class Adventure(commands.Cog):
       await ctx.send(embed=embed)
 
   @quest.command()
+  @is_available()
   async def start(self, ctx, difficulty: str):
     rng = ac.RNGDungeon()
     rng.new(ctx.author.id, difficulty)
@@ -255,10 +263,11 @@ class Adventure(commands.Cog):
     embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper()), colour=Colour.successColour, description='**{}** Stages'.format(rng.stages))
 
     enemies = ''
-    for e in rng.enemies:
-      t = ac.Enemy(e)
-      t.load()
-      enemies += 'Lv {}, {}'.format(t.level, t.name)
+    for enm in rng.enemies:
+      for e in enm:
+        t = ac.Enemy(e)
+        t.load()
+        enemies += 'Lv {}, {}'.format(t.level, t.name)
 
     embed.add_field(name='Current Enemies', value=enemies)
     await ctx.send(embed=embed)

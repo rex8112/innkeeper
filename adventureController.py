@@ -75,7 +75,7 @@ class Player:
     db.deleteAdventurer(self.id)
     logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
-  def load(self):
+  def load(self, calculate = True):
     try:
       raw = db.getAdventurer(self.id)
       self.name = raw[2]
@@ -114,7 +114,8 @@ class Player:
       self.available = bool(raw[11])
       self.health = int(raw[12])
 
-      self.calculate()
+      if calculate:
+        self.calculate()
       logger.debug('{}:{} Loaded Successfully'.format(self.id, self.name))
       return True
     except Exception as e:
