@@ -736,7 +736,7 @@ class RNGDungeon:
       self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
       return True
     except Exception as e:
-      logger.error('Failed to load dungeon {}')
+      logger.error('Failed to load dungeon {}\n{}:{}:{}'.format(self.id, type(self).__name__, type(e).__name__, e))
       return False
 
   def buildEncounter(self, players: list, enemies: list):
