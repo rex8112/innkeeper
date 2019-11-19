@@ -30,8 +30,8 @@ class Adventure(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  def is_available(self):
-    def predicate(self, ctx):
+  def is_available():
+    def predicate(ctx):
       adv = ac.Player(ctx.author.id)
       adv.load(False)
       return adv.available
@@ -243,10 +243,10 @@ class Adventure(commands.Cog):
         embed.add_field(name='Current Progress', value='Current Stage: {}\nStages Completed: {}\nTotal Stages: {}'.format(rng.stage, rng.stage - 1, rng.stages))
         
         enemies = ''
-        for e in rng.enemies:
+        for e in rng.enemies[rng.stage - 1]:
           t = ac.Enemy(e)
-          t.load()
-          enemies += 'Lv {}, {}'.format(t.level, t.name)
+          t.load(False)
+          enemies += '**Lv {}** {}\n'.format(t.level, t.name)
 
         embed.add_field(name='Current Enemies', value=enemies)
       else:
@@ -266,8 +266,9 @@ class Adventure(commands.Cog):
     for enm in rng.enemies:
       for e in enm:
         t = ac.Enemy(e)
-        t.load()
-        enemies += 'Lv {}, {}'.format(t.level, t.name)
+        t.load(False)
+        enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
+      enemies += '\n'
 
     embed.add_field(name='Current Enemies', value=enemies)
     await ctx.send(embed=embed)
