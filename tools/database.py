@@ -14,7 +14,7 @@ logger = logging.getLogger('database')
 
 def initDB():   #initialize the database
   cursor.execute( """CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""" )
-  cursor.execute( """CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT)""")
+  cursor.execute( """CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT)""")
   cursor2.execute( """CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""" )
   cursor2.execute( """CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""" )
 
@@ -113,7 +113,7 @@ def addRNG():
 def saveRNG(save):
   if save[0] == 0:
     save[0] = addRNG()
-  cursor.execute( """UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ? WHERE indx = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[0]))
+  cursor.execute( """UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ?, time = ? WHERE indx = ?""", (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[0]))
   db.commit()
   return save[0]
 

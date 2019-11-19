@@ -240,7 +240,7 @@ class Adventure(commands.Cog):
       if rng.loadActive(ctx.author.id):
         embed = discord.Embed(title='**{}** Stage Quest'.format(rng.stages), colour=Colour.infoColour)
         embed.set_footer(text='ID = {}'.format(rng.id))
-        embed.add_field(name='Current Progress', value='Current Stage: {}\nStages Completed: {}\nTotal Stages: {}'.format(rng.stage, rng.stage - 1, rng.stages))
+        embed.add_field(name='Current Progress', value='Current Stage: **{}**\nStages Completed: **{}**\nTotal Stages: **{}**'.format(rng.stage, rng.stage - 1, rng.stages))
         
         enemies = ''
         for e in rng.enemies[rng.stage - 1]:

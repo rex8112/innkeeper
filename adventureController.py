@@ -3,6 +3,7 @@ import logging
 import random
 import math
 import numpy as np
+import datetime
 
 from discord.ext import commands
 import tools.database as db
@@ -640,6 +641,8 @@ class Encounter:
       return False
 
 class RNGDungeon:
+  stageTime = 10 #Time it takes for each stage, in seconds
+
   def __init__(self, dID = 0):
     self.id = dID
 
@@ -651,6 +654,7 @@ class RNGDungeon:
     self.stage = 1
     self.active = True
     self.xp = 0
+    self.calculateTime(RNGDungeon.stageTime)
 
     if difficulty == 'easy':
       self.stages = 2
@@ -715,7 +719,7 @@ class RNGDungeon:
     for stage in self.enemies:
       tmp.append(','.join(str(e) for e in stage))
     enemies = ';'.join(tmp)
-    save = [self.id, self.adv.id, int(self.active), self.stage, self.stages, enemies, loot]
+    save = [self.id, self.adv.id, int(self.active), self.stage, self.stages, enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S')]
     self.id = db.saveRNG(save)
 
   def loadActive(self, aID):
@@ -733,11 +737,17 @@ class RNGDungeon:
       self.active = bool(save[2])
       self.stage = save[3]
       self.stages = save[4]
+      self.time = datetime.datetime.strptime(save[7], '%Y-%m-%d %H:%M:%S')
       self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
       return True
     except Exception as e:
       logger.error('Failed to load dungeon {}\n{}:{}:{}'.format(self.id, type(self).__name__, type(e).__name__, e))
       return False
+
+  def calculateTime(self, time: int):
+    timeToAdd = datetime.timedelta(days=0, seconds=time)
+    self.time = datetime.datetime.now() + timeToAdd
+    logger.debug('Time calculated to {}'.format(self.time.strftime('%Y-%m-%d %H:%M:%S')))
 
   def buildEncounter(self, players: list, enemies: list):
     bPlayers = []
