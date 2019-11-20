@@ -4,10 +4,10 @@ import asyncio
 import adventureController as ac
 import tools.database as db
 
-from discord.ext import commands
+from discord.ext import tasks, commands
 
 logger = logging.getLogger('adventureCog')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='bot.log', encoding='utf-8')
 handler.setFormatter(logging.Formatter(
     '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
@@ -26,16 +26,18 @@ class Colour:
   infoColour = discord.Colour(0xFFA41C)
 
 
+def is_available():
+  def predicate(ctx):
+    adv = ac.Player(ctx.author.id)
+    adv.load(False)
+    return adv.available
+  return commands.check(predicate)
+
 class Adventure(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
+    self.questCheck.start()
 
-  def is_available():
-    def predicate(ctx):
-      adv = ac.Player(ctx.author.id)
-      adv.load(False)
-      return adv.available
-    return commands.check(predicate)
 
   @commands.command()
   @commands.guild_only()
@@ -178,8 +180,11 @@ class Adventure(commands.Cog):
         embed.add_field(
             name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
-        invStr = '\n'.join(adv.inventory)
-        if not invStr:
+        invStr = ''
+        for i in adv.inventory:
+          tmp = ac.Equipment(i)
+          invStr += '**{}** {}, Level **{}**\n'.format(tmp.rarity, tmp.name, tmp.level)
+        if invStr == '':
           invStr = 'Nothing'
 
         embed.add_field(name='Inventory', value=invStr)
@@ -302,6 +307,37 @@ class Adventure(commands.Cog):
       embed.add_field(name='Enemies', value=string2)
       await message.edit(embed=embed)
       await asyncio.sleep(2)
+
+  @tasks.loop(minutes=1)
+  async def questCheck(self):
+    qtu = db.getTimeRNG()
+    for q in qtu:
+      rng = ac.RNGDungeon()
+      if rng.loadActive(q[1]): #If quest loaded successfully
+        limiter = 200
+        while len(rng.encounter.enemies) > 0 and len(rng.encounter.players) > 0 and limiter > 0: #While enemies or the player exists
+          rng.encounter.nextTurn()
+          limiter -= 1
+        
+        rng.nextStage()
+        rng.save()
+        if not rng.active: #Check if the quest is done
+          mem = self.bot.get_user(rng.adv.id)
+          if rng.stage > rng.stages:
+            embed = discord.Embed(title='Quest Completed', colour=Colour.successColour, description='{} stage quest completed successfully!\nXP: **{}**'.format(rng.stages, rng.xp))
+            lootStr = ''
+            for l in rng.loot:
+              tmp = ac.Equipment(l)
+              lootStr += 'Level {0.level} {0.rarity} {0.name}\n'.format(tmp)
+            embed.add_field(name='Loot', value=lootStr)
+            await mem.send(embed=embed)
+          else:
+            await mem.send('You Bad')
+
+  @questCheck.before_loop
+  async def before_questCheck(self):
+    await self.bot.wait_until_ready()
+
 
 def setup(bot):
   bot.add_cog(Adventure(bot))

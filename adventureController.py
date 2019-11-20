@@ -9,7 +9,7 @@ from discord.ext import commands
 import tools.database as db
 
 logger = logging.getLogger('adventureController')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='bot.log', encoding='utf-8')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='a')
@@ -600,7 +600,6 @@ class Encounter:
       dmg = attacker.dmg
       critChance = attacker.critChance
       chanceToHit = 1 + (attacker.wc - defender.ac) / ((attacker.wc + defender.ac) * 0.5)
-      print (chanceToHit)
 
       if chanceToHit > 1: #If you have a chance to hit higher than 100% convert overflow into crit chance
         critChance += chanceToHit - 1.0
@@ -625,7 +624,8 @@ class Encounter:
     rawLoot = []
     for enemy in self.deadEnemies:
       for loot in enemy.inventory:
-        rawLoot.append(loot)
+        if loot:
+          rawLoot.append(loot)
     return rawLoot
 
   def getExp(self):
@@ -708,10 +708,6 @@ class RNGDungeon:
     self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
     
     self.save()
-      
-    print(self.enemies)
-    print(self.loot)
-    print(weights)
 
   def save(self):
     loot = ','.join(str(e) for e in self.loot)
@@ -719,7 +715,7 @@ class RNGDungeon:
     for stage in self.enemies:
       tmp.append(','.join(str(e) for e in stage))
     enemies = ';'.join(tmp)
-    save = [self.id, self.adv.id, int(self.active), self.stage, self.stages, enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S')]
+    save = [self.id, self.adv.id, int(self.active), self.stage, self.stages, enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S'), self.xp]
     self.id = db.saveRNG(save)
 
   def loadActive(self, aID):
@@ -738,6 +734,7 @@ class RNGDungeon:
       self.stage = save[3]
       self.stages = save[4]
       self.time = datetime.datetime.strptime(save[7], '%Y-%m-%d %H:%M:%S')
+      self.xp = int(save[8])
       self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
       return True
     except Exception as e:
@@ -770,7 +767,7 @@ class RNGDungeon:
   def nextStage(self):
     if self.adv.health > 0:
       self.stage += 1
-      self.xp += self.encounter.getExp()
+      self.xp += int(self.encounter.getExp())
       self.loot += self.encounter.getLoot()
       if self.stage > self.stages:
         self.end(True)
@@ -779,6 +776,7 @@ class RNGDungeon:
         self.adv.rest()
         self.adv.save()
         self.encounter = self.buildEncounter([self.adv], self.enemies[self.stage - 1])
+        self.calculateTime(RNGDungeon.stageTime)
     else:
       self.end(False)
 
