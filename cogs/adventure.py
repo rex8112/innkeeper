@@ -154,9 +154,9 @@ class Adventure(commands.Cog):
         await controlMessage.clear_reactions()
         await controlMessage.edit(embed=embed)
 
-  @commands.group()
+  @commands.group(aliases=['character'])
   @commands.guild_only()
-  async def adventurer(self, ctx):
+  async def profile(self, ctx):
     """Get information on your Adventurer"""
     if ctx.invoked_subcommand is None:
       adv = ac.Player(ctx.author.id)
@@ -190,7 +190,7 @@ class Adventure(commands.Cog):
         embed.add_field(name='Inventory', value=invStr)
         await ctx.send(embed=embed)
 
-  @adventurer.command(aliases=['attributes'])
+  @profile.command(aliases=['attributes'])
   async def stats(self, ctx):
     adv = ac.Player(ctx.author.id)
     if not adv.load():
@@ -209,11 +209,13 @@ class Adventure(commands.Cog):
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
     await ctx.send(embed=embed)
 
-  @adventurer.command()
+  @commands.command()
+  @commands.guild_only()
   async def equipment(self, ctx):
     adv = ac.Player(ctx.author.id)
     adv.load()
     embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
     for equip in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
       info = ''
       info += equip.flavor + '\n\n'
@@ -239,11 +241,29 @@ class Adventure(commands.Cog):
 
   @commands.group()
   @commands.guild_only()
+  async def inventory(self, ctx):
+    if ctx.invoked_subcommand is None:
+      adv = ac.Player(ctx.author.id)
+      adv.load()
+      count = 0
+      embed = discord.Embed(title='{}\'s Inventory'.format(adv.name), colour=Colour.infoColour)
+      embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+      embed.set_footer(text='{} / {}'.format(len(adv.inventory), adv.inventoryCapacity))
+      for i in adv.inventory:
+        e = ac.Equipment(i)
+        count += 1
+        embed.add_field(name='Slot {}'.format(count), value='{} {}\nLv {}'.format(e.rarity,e.name,e.level))
+        
+      await ctx.send(embed=embed)
+
+  @commands.group()
+  @commands.guild_only()
   async def quest(self, ctx):
     if ctx.invoked_subcommand is None:
       rng = ac.RNGDungeon()
       if rng.loadActive(ctx.author.id):
         embed = discord.Embed(title='**{}** Stage Quest'.format(rng.stages), colour=Colour.infoColour)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         embed.set_footer(text='ID = {}'.format(rng.id))
         embed.add_field(name='Current Progress', value='Current Stage: **{}**\nStages Completed: **{}**\nTotal Stages: **{}**'.format(rng.stage, rng.stage - 1, rng.stages))
         
@@ -256,6 +276,7 @@ class Adventure(commands.Cog):
         embed.add_field(name='Current Enemies', value=enemies)
       else:
         embed = discord.Embed(title='No Active Quest', colour=Colour.errorColour)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
       await ctx.send(embed=embed)
 
@@ -265,7 +286,8 @@ class Adventure(commands.Cog):
     rng = ac.RNGDungeon()
     rng.new(ctx.author.id, difficulty)
 
-    embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper()), colour=Colour.successColour, description='**{}** Stages'.format(rng.stages))
+    embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper()), colour=Colour.creationColour, description='**{}** Stages'.format(rng.stages))
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
     enemies = ''
     for enm in rng.enemies:
