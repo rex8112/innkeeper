@@ -332,7 +332,8 @@ class Adventure(commands.Cog):
             embed.add_field(name='Loot', value=lootStr)
             await mem.send(embed=embed)
           else:
-            await mem.send('You Bad')
+            embed = discord.Embed(title='Quest Failed', colour=Colour.errorColour, description='{} died on stage {}'.format(rng.adv.name, rng.stage))
+            await mem.send(embed=embed)
 
   @questCheck.before_loop
   async def before_questCheck(self):
