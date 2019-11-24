@@ -47,7 +47,7 @@ async def ping(ctx, test=True):
   else:
     await ctx.send('Nope!')
 
-@bot.command()
+@bot.command(hidden=True)
 @commands.is_owner()
 async def shutdown(ctx):
   """Turns the bot off"""

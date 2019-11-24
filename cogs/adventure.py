@@ -42,7 +42,8 @@ class Adventure(commands.Cog):
   @commands.command()
   @commands.guild_only()
   async def begin(self, ctx):
-    """Begin your adventure!"""
+    """Begin your adventure!
+    Ultimately, the character creator."""
     adv = ac.Player(ctx.author.id)
     embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
                           description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
@@ -192,6 +193,7 @@ class Adventure(commands.Cog):
 
   @profile.command(aliases=['attributes'])
   async def stats(self, ctx):
+    """Get a bit more detail about your current stats and attributes"""
     adv = ac.Player(ctx.author.id)
     if not adv.load():
       embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
@@ -212,6 +214,7 @@ class Adventure(commands.Cog):
   @commands.command()
   @commands.guild_only()
   async def equipment(self, ctx):
+    """Get your currently equipped gear and info"""
     adv = ac.Player(ctx.author.id)
     adv.load()
     embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
@@ -230,6 +233,8 @@ class Adventure(commands.Cog):
   @commands.group()
   @commands.guild_only()
   async def inventory(self, ctx):
+    """Command group to manage your inventory
+    If ran with no subcommands, will get your current inventory."""
     if ctx.invoked_subcommand is None:
       adv = ac.Player(ctx.author.id)
       adv.load()
@@ -245,7 +250,10 @@ class Adventure(commands.Cog):
       await ctx.send(embed=embed)
 
   @inventory.command()
+  @is_available()
   async def equip(self, ctx, slot: int):
+    """Equip a piece of equipment from your inventory
+    Must give the number of the inventory slot the equipment resides in."""
     try:
       adv = ac.Player(ctx.author.id)
       adv.load(False)
@@ -258,10 +266,11 @@ class Adventure(commands.Cog):
       logger.warning('Equipping Failed',exc_info=True)
       await ctx.message.add_reaction('⛔')
 
-
   @commands.group()
   @commands.guild_only()
   async def quest(self, ctx):
+    """Command group to manage quests
+    If ran with no subcommands, will output current quest information."""
     if ctx.invoked_subcommand is None:
       rng = ac.RNGDungeon()
       if rng.loadActive(ctx.author.id):
@@ -285,7 +294,11 @@ class Adventure(commands.Cog):
 
   @quest.command()
   @is_available()
-  async def start(self, ctx, difficulty: str):
+  async def start(self, ctx, difficulty: str): #Generates a new dungeon based on the inputted difficulty
+    """Generates a new dungeon based on the given difficulty
+    Available difficulties: easy, medium, and hard.
+    
+    Difficulty increases the amount of stages done in one round while also getting more difficult in the later stages."""
     rng = ac.RNGDungeon()
     rng.new(ctx.author.id, difficulty)
 
@@ -293,45 +306,18 @@ class Adventure(commands.Cog):
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
     enemies = ''
-    for enm in rng.enemies:
-      for e in enm:
-        t = ac.Enemy(e)
-        t.load(False)
-        enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
-      enemies += '\n'
+    for e in rng.enemies[rng.stage - 1]:
+      t = ac.Enemy(e)
+      t.load(False)
+      enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
 
     embed.add_field(name='Current Enemies', value=enemies)
     await ctx.send(embed=embed)
 
   @commands.command()
   @commands.guild_only()
-  async def fight(self, ctx, enemy):
-    """Testing Command"""
-    adv = ac.Player(ctx.author.id)
-    adv.load()
-    enm = ac.Enemy(enemy)
-    enm.load()
-    message = await ctx.send('Characters **Loaded**')
-    enc = ac.Encounter([adv], [enm])
-    cnt = 0
-    while len(enc.players) > 0 and len(enc.enemies) > 0:
-      string = ''
-      string2 = ''
-      cnt += 1
-      enc.nextTurn()
-      for ch in enc.players:
-        string += '{} {}\n'.format(ch.name, ch.health)
-      for ch in enc.enemies:
-        string2 += '{} {}\n'.format(ch.name, ch.health)
-      if not string:
-        string = 'Dead'
-      if not string2:
-        string2 = 'Dead'
-      embed = discord.Embed(title='Combat Information Test {}'.format(cnt), colour=Colour.errorColour)
-      embed.add_field(name='Players', value=string)
-      embed.add_field(name='Enemies', value=string2)
-      await message.edit(embed=embed)
-      await asyncio.sleep(2)
+  async def shop(self, ctx):
+    pass
 
   @tasks.loop(minutes=1)
   async def questCheck(self):
