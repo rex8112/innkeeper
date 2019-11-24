@@ -136,9 +136,9 @@ class Player:
     return db.saveAdventurer(save)
 
   def equip(self, e: int):
-    if e in self.inventory:
+    try:
+      eq = Equipment(self.inventory[e-1])
       self.remInv(e)
-      eq = Equipment(e)
       if eq.slot == 'mainhand':
         uneq = self.mainhand
         self.mainhand = eq
@@ -165,7 +165,7 @@ class Player:
         self.inventory.append(uneq.id)
       self.calculate()
       return True
-    else:
+    except IndexError:
       return False
 
   def unequip(self, slot: str):
@@ -208,9 +208,9 @@ class Player:
       self.calculate()
       return self.addInv(id)
 
-  def remInv(self, id: int):
+  def remInv(self, e: int):
     try:
-      self.inventory.remove(id)
+      self.inventory.pop(e-1)
       return True
     except ValueError:
       return False
@@ -520,6 +520,29 @@ class Equipment:
     for l in tmp:
       weight.append(l / total)
     return weight
+
+  def getRarity(self):
+    if self.name == 'Empty':
+      return ''
+    elif self.rarity == 0:
+      return 'Common'
+    elif self.rarity == 1:
+      return 'Uncommon'
+    elif self.rarity == 2:
+      return 'Rare'
+    elif self.rarity == 3:
+      return 'Epic'
+    elif self.rarity == 4:
+      return 'Legendary'
+
+  def getInfo(self):
+    if self.name == 'Empty':
+      info = '{}'.format(self.name)
+    else:
+      info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
+      for key, mod in self.mods.items():
+        info += str(key).upper() + ': **' + str(mod) + '**\n'
+    return info
 
   def load(self):
     try:

@@ -216,27 +216,15 @@ class Adventure(commands.Cog):
     adv.load()
     embed = discord.Embed(title=str(adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-    for equip in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
-      info = ''
-      info += equip.flavor + '\n\n'
-      info += 'ID: **' + str(equip.id) + '**\n'
-      info += 'Price: **' + str(equip.price) + '**\n'
+    
+    embed.add_field(name='Mainhand', value=adv.mainhand.getInfo())
+    embed.add_field(name='Offhand', value=adv.offhand.getInfo())
+    embed.add_field(name='Helmet', value=adv.helmet.getInfo())
+    embed.add_field(name='Armor', value=adv.armor.getInfo())
+    embed.add_field(name='Gloves', value=adv.gloves.getInfo())
+    embed.add_field(name='Boots', value=adv.boots.getInfo())
+    embed.add_field(name='Trinket', value=adv.trinket.getInfo())
 
-      if equip.rarity == 0:
-        info += 'Rarity: **Common**\n'
-      elif equip.rarity == 1:
-        info += 'Rarity: **Uncommon**\n'
-      elif equip.rarity == 2:
-        info += 'Rarity: **Rare**\n'
-      elif equip.rarity == 3:
-        info += 'Rarity: **Epic**\n'
-      elif equip.rarity == 4:
-        info += 'Rarity: **Legendary**\n'
-      
-      for key, mod in equip.mods.items():
-        info += str(key).upper() +': **' + str(mod) + '**\n'
-      
-      embed.add_field(name='{0.slot}: {0.name}'.format(equip), value=info)
     await ctx.send(embed=embed)
 
   @commands.group()
@@ -252,9 +240,24 @@ class Adventure(commands.Cog):
       for i in adv.inventory:
         e = ac.Equipment(i)
         count += 1
-        embed.add_field(name='Slot {}'.format(count), value='{} {}\nLv {}'.format(e.rarity,e.name,e.level))
+        embed.add_field(name='Slot **{}**'.format(count), value=e.getInfo())
         
       await ctx.send(embed=embed)
+
+  @inventory.command()
+  async def equip(self, ctx, slot: int):
+    try:
+      adv = ac.Player(ctx.author.id)
+      adv.load(False)
+      if adv.equip(slot):
+        adv.save()
+        await ctx.message.add_reaction('✅')
+      else:
+        await ctx.message.add_reaction('⛔')
+    except Exception as e:
+      logger.warning('Equipping Failed',exc_info=True)
+      await ctx.message.add_reaction('⛔')
+
 
   @commands.group()
   @commands.guild_only()
