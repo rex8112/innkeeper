@@ -36,6 +36,7 @@ def is_available():
 class Adventure(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
+    self.bot.xpName = 'Souls'
     self.questCheck.start()
 
 
@@ -316,8 +317,52 @@ class Adventure(commands.Cog):
 
   @commands.command()
   @commands.guild_only()
+  @is_available()
   async def shop(self, ctx):
-    pass
+    adv = ac.Player(ctx.author.id)
+    adv.load(False)
+    adv.available = False
+    adv.save()
+    mainExit = False
+    embed = discord.Embed(title='Generating Shop', colour=Colour.creationColour)
+    shopMessage = await ctx.send(embed=embed)
+    while mainExit == False:
+      embed = discord.Embed(title='The Innkeeper\'s Shop', colour=Colour.infoColour, description='Welcome {},\nWhat brings you here today?'.format(adv.name))
+      embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+      embed.add_field(name='1. Potion of Peritia', value='A fine concoction, my own recipe in fact. It will permanently boost the magnitude of your abilities. Some might even call it, a level up, perhaps.')
+      embed.add_field(name='2. Purchase Equipment', value='Choose from a variety of my wares, at least, wares I find fitting for you.')
+      embed.add_field(name='3. Sell Equipment', value='I will buy some equipment from you, if you no longer want it.')
+      await shopMessage.edit(embed=embed)
+      await shopMessage.clear_reactions()
+      await shopMessage.add_reaction('1️⃣')
+      await shopMessage.add_reaction('2️⃣')
+      await shopMessage.add_reaction('3️⃣')
+      await shopMessage.add_reaction('❌')
+      try:
+        reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
+
+      except asyncio.TimeoutError:
+        embed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        mainExit = True
+        await shopMessage.edit(embed=embed)
+        await shopMessage.clear_reactions()
+      else:
+
+        if str(reaction) == '1️⃣': #Looking at a Potion of Peritia
+          embed = discord.Embed(title='Potion of Peritia', colour=Colour.infoColour, description='Interested in more power, {}? That is fine but it is not free.'.format(adv.name))
+          embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+          embed.add_field(name='Cost to Purchase', value='{} {}'.format(adv.getXPToLevel(), self.bot.xpName))
+          await shopMessage.edit(embed=embed)
+          await shopMessage.clear_reactions()
+          if adv.xp >= adv.getXPToLevel():
+            await shopMessage.add_reaction('✅')
+          await shopMessage.add_reaction('🔙')
+          await shopMessage.add_reaction('❌')
+
+      finally: #No matter what, adventurer should be set available again and saved.
+        adv.available = True
+        adv.save()
 
   @tasks.loop(minutes=1)
   async def questCheck(self):
