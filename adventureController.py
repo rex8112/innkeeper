@@ -32,6 +32,9 @@ class PerLevel:
 
 
 class Player:
+  baseXP = 100
+  xpRate = 0.03
+
   def __init__(self, id):
     self.id = id
 
@@ -215,11 +218,11 @@ class Player:
     except ValueError:
       return False
 
-  def addExp(self, count: int):
+  def addXP(self, count: int):
     self.xp += count
     return True
 
-  def remExp(self, count: int, force = False):
+  def remXP(self, count: int, force = False):
     if self.xp - count >= 0:
       self.xp -= count
       return True
@@ -229,6 +232,25 @@ class Player:
         return True
       else:
         return False
+
+  def getXPToLevel(self):
+    reqXP = self.baseXP * math.exp(self.xpRate * self.level - 1)
+    return reqXP
+
+  def addLevel(self, count = 1, force = False):
+    xpToTake = 0
+    levelToAdd = 0
+    if not force:
+      for _ in range(0, count):
+        reqXP = self.getXPToLevel()
+        if self.xp - xpToTake >= reqXP:
+          xpToTake += reqXP
+          levelToAdd += 1
+      
+      self.level += levelToAdd
+      self.xp -= xpToTake
+    else:
+      self.level += count
 
   def calculate(self):
     #Checks Race/Class for attribute changes
@@ -810,7 +832,7 @@ class RNGDungeon:
     if result == True:
       self.adv.available = True
       self.adv.rest()
-      self.adv.addExp(self.xp)
+      self.adv.addXP(self.xp)
       for l in self.loot:
         self.adv.addInv(l)
     else:
