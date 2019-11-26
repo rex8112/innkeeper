@@ -132,6 +132,7 @@ class Adventure(commands.Cog):
       embed.set_footer(text='You have 3 minutes to react your response')
       await controlMessage.edit(embed=embed)
       await controlMessage.add_reaction('✅')
+      await asyncio.sleep(0.26)
       await controlMessage.add_reaction('❌')
 
       try:
@@ -334,12 +335,16 @@ class Adventure(commands.Cog):
       embed.add_field(name='3. Sell Equipment', value='I will buy some equipment from you, if you no longer want it.')
       await shopMessage.edit(embed=embed)
       await shopMessage.clear_reactions()
+      await asyncio.sleep(0.26)
       await shopMessage.add_reaction('1️⃣')
+      await asyncio.sleep(0.26)
       await shopMessage.add_reaction('2️⃣')
+      await asyncio.sleep(0.26)
       await shopMessage.add_reaction('3️⃣')
+      await asyncio.sleep(0.26)
       await shopMessage.add_reaction('❌')
       try:
-        reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
+        reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
 
       except asyncio.TimeoutError:
         embed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
@@ -353,12 +358,59 @@ class Adventure(commands.Cog):
           embed = discord.Embed(title='Potion of Peritia', colour=Colour.infoColour, description='Interested in more power, {}? That is fine but it is not free.'.format(adv.name))
           embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
           embed.add_field(name='Cost to Purchase', value='{} {}'.format(adv.getXPToLevel(), self.bot.xpName))
+          embed.add_field(name='Current {}'.format(self.bot.xpName), value=str(adv.xp))
           await shopMessage.edit(embed=embed)
           await shopMessage.clear_reactions()
+          await asyncio.sleep(0.26)
           if adv.xp >= adv.getXPToLevel():
             await shopMessage.add_reaction('✅')
+            await asyncio.sleep(0.26)
           await shopMessage.add_reaction('🔙')
+          await asyncio.sleep(0.26)
           await shopMessage.add_reaction('❌')
+          try:
+            reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
+          except asyncio.TimeoutError:
+            embed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            mainExit = True
+            await shopMessage.edit(embed=embed)
+            await shopMessage.clear_reactions()
+          else:
+            if str(reaction) == '✅': #If purchase is accepted
+              if adv.addLevel(): #If adding a level was successful
+                embed = discord.Embed(title='Level Up!', colour=Colour.successColour, description='**Congratulations!**\nYou have achieved level **{}**!\nDo not forget to choose a skill point.'.format(adv.level))
+                embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+                embed.set_footer(text='To spend your skill point, use the {}profile command'.format(self.bot.CP))
+
+              else:
+                embed = discord.Embed(title='Insufficient {}'.format(self.bot.xpName), colour=Colour.errorColour)
+                embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+              mainExit = True
+              await shopMessage.edit(embed=embed)
+              await shopMessage.clear_reactions()
+
+            elif str(reaction) == '🔙': #Go back
+              pass #Pass to return to the main menu
+
+            else: #Cancel
+              embed = discord.Embed(title='Goodbye {}'.format(adv.name), colour=Colour.infoColour)
+              embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+              mainExit = True
+              await shopMessage.edit(embed=embed)
+              await shopMessage.clear_reactions()
+
+        elif str(reaction) == '2️⃣': #Purchase Equipment
+          pass
+        elif str(reaction) == '3️⃣': #Sell Equipment
+          pass
+        else:
+          embed = discord.Embed(title='Goodbye {}'.format(adv.name), colour=Colour.infoColour)
+          embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+          mainExit = True
+          await shopMessage.edit(embed=embed)
+          await shopMessage.clear_reactions()
 
       finally: #No matter what, adventurer should be set available again and saved.
         adv.available = True

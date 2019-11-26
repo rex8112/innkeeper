@@ -134,7 +134,7 @@ class Player:
     equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id, self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
     inventory = ','.join(str(e) for e in self.inventory)
 
-    save = [self.id, self.name, self.cls, self.level, self.xp, self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
+    save = [self.id, self.name, self.cls, self.level, int(self.xp), self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
     logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
     return db.saveAdventurer(save)
 
@@ -235,7 +235,7 @@ class Player:
 
   def getXPToLevel(self):
     reqXP = self.baseXP * math.exp(self.xpRate * self.level - 1)
-    return reqXP
+    return int(reqXP)
 
   def addLevel(self, count = 1, force = False):
     xpToTake = 0
@@ -247,10 +247,15 @@ class Player:
           xpToTake += reqXP
           levelToAdd += 1
       
-      self.level += levelToAdd
-      self.xp -= xpToTake
+      if levelToAdd == count:
+        self.level += levelToAdd
+        self.xp -= xpToTake
+        return True
+      else:
+        return False
     else:
       self.level += count
+      return True
 
   def calculate(self):
     #Checks Race/Class for attribute changes
