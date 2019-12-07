@@ -325,7 +325,13 @@ class Adventure(commands.Cog):
     adv.available = False
     adv.save()
     mainExit = False
+
     embed = discord.Embed(title='Generating Shop', colour=Colour.creationColour)
+    timeoutEmbed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+    timeoutEmbed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    goodbyeEmbed = discord.Embed(title='Goodbye {}'.format(adv.name), colour=Colour.infoColour)
+    goodbyeEmbed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
     shopMessage = await ctx.send(embed=embed)
     while mainExit == False:
       embed = discord.Embed(title='The Innkeeper\'s Shop', colour=Colour.infoColour, description='Welcome {},\nWhat brings you here today?'.format(adv.name))
@@ -347,13 +353,11 @@ class Adventure(commands.Cog):
         reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
 
       except asyncio.TimeoutError:
-        embed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         mainExit = True
-        await shopMessage.edit(embed=embed)
+        await shopMessage.edit(embed=timeoutEmbed)
         await shopMessage.clear_reactions()
-      else:
 
+      else:
         if str(reaction) == '1️⃣': #Looking at a Potion of Peritia
           embed = discord.Embed(title='Potion of Peritia', colour=Colour.infoColour, description='Interested in more power, {}? That is fine but it is not free.'.format(adv.name))
           embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
@@ -362,19 +366,20 @@ class Adventure(commands.Cog):
           await shopMessage.edit(embed=embed)
           await shopMessage.clear_reactions()
           await asyncio.sleep(0.26)
+
           if adv.xp >= adv.getXPToLevel():
             await shopMessage.add_reaction('✅')
             await asyncio.sleep(0.26)
+
           await shopMessage.add_reaction('🔙')
           await asyncio.sleep(0.26)
           await shopMessage.add_reaction('❌')
+
           try:
             reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
           except asyncio.TimeoutError:
-            embed = discord.Embed(title='Timed Out', colour=Colour.errorColour)
-            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
             mainExit = True
-            await shopMessage.edit(embed=embed)
+            await shopMessage.edit(embed=timeoutEmbed)
             await shopMessage.clear_reactions()
           else:
             if str(reaction) == '✅': #If purchase is accepted
@@ -395,21 +400,42 @@ class Adventure(commands.Cog):
               pass #Pass to return to the main menu
 
             else: #Cancel
-              embed = discord.Embed(title='Goodbye {}'.format(adv.name), colour=Colour.infoColour)
-              embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
               mainExit = True
-              await shopMessage.edit(embed=embed)
+              await shopMessage.edit(embed=goodbyeEmbed)
               await shopMessage.clear_reactions()
 
         elif str(reaction) == '2️⃣': #Purchase Equipment
           pass
         elif str(reaction) == '3️⃣': #Sell Equipment
-          pass
-        else:
-          embed = discord.Embed(title='Goodbye {}'.format(adv.name), colour=Colour.infoColour)
-          embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-          mainExit = True
+          embed = discord.Embed(title='Selling Equipment', colour=Colour.infoColour, description='Due to limitation, you will have to respond, in a message, with the item you wish to sell.')
+          number = 0
+          for i in adv.inventory:
+            number += 1
+            e = ac.Equipment(i)
+            if not e.mods.get('unsellable', False):
+              embed.add_field(name='{}. {} {}'.format(number, e.getRarity(), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
           await shopMessage.edit(embed=embed)
+
+          sellExit == False
+          while sellExit == False:
+            try:
+              vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+            except asyncio.TimeoutError:
+              await shopMessage.edit(embed=timeoutEmbed)
+              await shopMessage.clear_reactions()
+            else:
+              try:
+                num = adv.inventory[int(vMessage.content) - 1]
+              except ValueError:
+                await vMessage.delete()
+              else:
+                e = ac.Equipment(num)
+                if not e.mods.get('unsellable', False): #In case they type in a number that wasn't listed, which happens to be one of their equipments
+                  pass
+
+        else:
+          mainExit = True
+          await shopMessage.edit(embed=goodbyeEmbed)
           await shopMessage.clear_reactions()
 
       finally: #No matter what, adventurer should be set available again and saved.

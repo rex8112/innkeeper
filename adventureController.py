@@ -846,3 +846,6 @@ class RNGDungeon:
 
     self.adv.save()
     self.save()
+
+class Shop():
+  pass
