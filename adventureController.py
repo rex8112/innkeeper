@@ -909,8 +909,10 @@ class RNGDungeon:
 
 class Shop():
     def __init__(self, aid: int, load=True):
-        adv = Player(aid)
-        adv.load(False)
+        self.adv = Player(aid)
+        self.adv.load(False)
+        self.inventory = []
+        self.buyback = []
         if load:
             self.loadActive()
 
@@ -921,4 +923,7 @@ class Shop():
         pass
 
     def buy(self):
+        pass
+
+    def sell(self):
         pass
