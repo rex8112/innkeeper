@@ -15,6 +15,7 @@ logger = logging.getLogger('database')
 def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""")
 
@@ -66,9 +67,9 @@ def getEquipment(id):
     return cursor2.fetchone()
 
 
-def getEquipmentRNG(lvl: int, offset=1, rnge=1):
+def getEquipmentRNG(lvl: int, offset=1, range_=1):
     maximum = lvl + offset
-    minimum = maximum - rnge
+    minimum = maximum - range_
     cursor2.execute(
         """SELECT * FROM equipment WHERE rng = 1 AND level BETWEEN ? AND ?""", (minimum, maximum))
     equipment = cursor2.fetchall()
@@ -159,3 +160,26 @@ def getTimeRNG():
     cursor.execute(
         """SELECT * FROM rngdungeons WHERE active = 1 AND time <= datetime('now', 'localtime')""")
     return cursor.fetchall()
+
+def AddShop():
+    cursor.execute(
+        """INSERT INTO shop DEFAULT VALUES""")
+    db.commit()
+    return cursor.lastrowid
+
+def SaveShop(save):
+    if save[0] == 0:
+        save[0] = AddShop()
+    cursor.execute(
+        """UPDATE shop SET adv = ?, inventory = ?, buyback = ?, refresh = ? WHERE indx = ?""",
+        (save[1], save[2], save[3], save[4], save[0])
+    )
+    db.commit()
+    return save[0]
+
+def GetActiveShop(id):
+    cursor.execute(
+        """SELECT * FROM shop WHERE adv = ? AND refresh > datetime('now', 'localtime')""",
+        (id,)
+    )
+    return cursor.fetchone()

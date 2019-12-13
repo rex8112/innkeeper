@@ -350,6 +350,7 @@ class Adventure(commands.Cog):
         adv.load(False)
         adv.available = False
         adv.save()
+        shop = ac.Shop(adv)
         mainExit = False
 
         embed = discord.Embed(title='Generating Shop',
@@ -450,10 +451,43 @@ class Adventure(commands.Cog):
                             await shopMessage.clear_reactions()
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
-                    pass
+                    embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
+                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
+                    number = 0
+                    for i in shop.inventory:
+                        number += 1
+                        e = ac.Equipment(i)
+                        embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
+                        ), e.name), value='Buying Cost: **{}** {}'.format(e.price, self.bot.xpName))
+                    await shopMessage.edit(embed=embed)
+                    await shopMessage.clear_reactions()
+
+                    buyExit = False
+                    while buyExit == False:
+                        try:
+                            vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+                        except asyncio.TimeoutError:
+                            await shopMessage.edit(embed=timeoutEmbed)
+                            await shopMessage.clear_reactions()
+                        else:
+                            try:
+                                if int(vMessage.content) < 1:
+                                    raise(InterruptedError)
+                                num = shop.inventory[int(vMessage.content) - 1]
+                            except (ValueError, IndexError) as e:
+                                pass
+                            except InterruptedError:
+                                buyExit = True
+                            else:
+                                shop.buy(num)
+                                shop.save()
+                                buyExit = True
+                            finally:
+                                await vMessage.delete()
+                                
                 elif str(reaction) == '3️⃣':  # Sell Equipment
                     embed = discord.Embed(title='Selling Equipment', colour=Colour.infoColour,
-                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell.')
+                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. Use `0` to go back.')
                     number = 0
                     for i in adv.inventory:
                         number += 1
@@ -462,8 +496,9 @@ class Adventure(commands.Cog):
                             embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
                             ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
                     await shopMessage.edit(embed=embed)
+                    await shopMessage.clear_reactions()
 
-                    sellExit == False
+                    sellExit = False
                     while sellExit == False:
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
@@ -472,14 +507,21 @@ class Adventure(commands.Cog):
                             await shopMessage.clear_reactions()
                         else:
                             try:
+                                if int(vMessage.content) < 1:
+                                    raise(InterruptedError)
                                 num = adv.inventory[int(vMessage.content) - 1]
-                            except ValueError:
-                                await vMessage.delete()
+                            except (ValueError, IndexError) as e:
+                                pass
+                            except InterruptedError:
+                                sellExit = True
                             else:
-                                e = ac.Equipment(num)
                                 # In case they type in a number that wasn't listed, which happens to be one of their equipments
                                 if not e.mods.get('unsellable', False):
-                                    pass
+                                    shop.sell(num)
+                                    shop.save()
+                                    sellExit = True
+                            finally:
+                                await vMessage.delete()
 
                 else:
                     mainExit = True

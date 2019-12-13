@@ -908,22 +908,65 @@ class RNGDungeon:
 
 
 class Shop():
-    def __init__(self, aid: int, load=True):
-        self.adv = Player(aid)
-        self.adv.load(False)
+    def __init__(self, adv, load=True):
+        self.id = 0
+        self.adv = adv
+        self.adv.load()
         self.inventory = []
         self.buyback = []
+        self.refresh = datetime.datetime.now()
         if load:
             self.loadActive()
+        else:
+            self.new()
+            self.save()
+
+    def new(self):
+        equipment = db.getEquipmentRNG(self.adv.level)
+        for _ in range(10):
+            self.inventory.append(random.choice(equipment))
+        self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
     def save(self):
-        pass
+        equipment_string = '|'.join(str(e) for e in self.inventory)
+        buyback_string = '|'.join(str(e) for e in self.buyback)
+        refresh_string = self.refresh.strftime('%Y-%m-%d %H:%M:%S')
+        save = [self.id, self.adv.id, equipment_string, buyback_string, refresh_string]
+        self.id = db.SaveShop(save)
 
     def loadActive(self):
-        pass
+        save = db.GetActiveShop(self.adv.id)
+        if save:
+            self.id = save[0]
+            tmp = save[2].split('|')
+            equipment = list(map(lambda x: int(x), tmp))
+            try:
+                buypack = save[3].split('|')
+            except AttributeError:
+                buypack = []
+            self.inventory = equipment
+            self.buyback = buypack
+            self.refresh = datetime.datetime.strptime(save[4], '%Y-%m-%d %H:%M:%S')
+        else:
+            self.new()
+            self.save()
 
-    def buy(self):
-        pass
 
-    def sell(self):
-        pass
+    def buy(self, index: int): # Index has to be the index in list
+        index = int(index)
+        equipment = Equipment(self.inventory[index])
+        if self.adv.addInv(equipment.id):
+            self.adv.remXP(equipment.price)
+            self.inventory.pop(index)
+            return True
+        else:
+            return False
+
+    def sell(self, index: int):
+        index = int(index)
+        equipment = Equipment(self.adv.inventory[index])
+        if self.adv.remInv(index + 1):
+            self.adv.addXP(equipment.price)
+            return True
+        else:
+            return False
