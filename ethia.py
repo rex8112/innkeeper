@@ -6,7 +6,8 @@ from discord.ext import commands
 from tools.configLoader import settings
 
 commandPrefix = '-'
-startup_extensions = ['cogs.adventure']
+startup_extensions = ['cogs.adventure',
+                        'cogs.admin']
 logging.basicConfig(level=logging.INFO)
 
 game = discord.Activity(
