@@ -451,19 +451,19 @@ class Adventure(commands.Cog):
                             await shopMessage.clear_reactions()
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
-                    embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     number = 0
                     for i in shop.inventory:
                         number += 1
                         e = ac.Equipment(i)
-                        embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
+                        buy_embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
                         ), e.name), value='Buying Cost: **{}** {}'.format(e.price, self.bot.xpName))
-                    await shopMessage.edit(embed=embed)
-                    await shopMessage.clear_reactions()
 
                     buyExit = False
                     while buyExit == False:
+                        await shopMessage.edit(embed=buy_embed)
+                        await shopMessage.clear_reactions()
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
@@ -479,9 +479,26 @@ class Adventure(commands.Cog):
                             except InterruptedError:
                                 buyExit = True
                             else:
-                                shop.buy(num)
-                                shop.save()
-                                buyExit = True
+                                e = ac.Equipment(num)
+                                embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
+                                                      colour=Colour.infoColour, 
+                                                      description=e.getInfo())
+                                await shopMessage.edit(embed=embed)
+                                await shopMessage.add_reaction('✅')
+                                await asyncio.sleep(0.26)
+                                await shopMessage.add_reaction('❌')
+                                try:
+                                    reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
+                                except asyncio.TimeoutError:
+                                    mainExit = True
+                                    buyExit = True
+                                    await shopMessage.edit(embed=timeoutEmbed)
+                                    await shopMessage.clear_reactions()
+                                else:
+                                    if str(reaction) == '✅':
+                                        shop.buy(num)
+                                        shop.save()
+                                        buyExit = True
                             finally:
                                 await vMessage.delete()
                                 
