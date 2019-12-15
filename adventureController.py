@@ -614,6 +614,7 @@ class Equipment:
     def load(self):
         try:
             raw = db.getEquipment(self.id)
+            self.loaded = True
             self.name = raw[1]
             self.level = raw[2]
             self.flavor = raw[3]
@@ -627,11 +628,15 @@ class Equipment:
             self.mods = dict(mods)
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
+
+            self.loaded = True
             return True
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             logger.error('{} Failed to Load\n{}:{}'.format(
                 self.id, type(self).__name__, exc))
+
+            self.loaded = False
             return False
 
     def save(self):
@@ -928,8 +933,14 @@ class Shop():
         self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
     def save(self):
-        equipment_string = '|'.join(str(e) for e in self.inventory)
-        buyback_string = '|'.join(str(e) for e in self.buyback)
+        if len(self.inventory) > 0:
+            equipment_string = '|'.join(str(e) for e in self.inventory)
+        else:
+            equipment_string = None
+        if len(self.buyback) > 0:
+            buyback_string = '|'.join(str(e) for e in self.buyback)
+        else:
+            buyback_string = None
         refresh_string = self.refresh.strftime('%Y-%m-%d %H:%M:%S')
         save = [self.id, self.adv.id, equipment_string, buyback_string, refresh_string]
         self.id = db.SaveShop(save)
@@ -941,7 +952,7 @@ class Shop():
             tmp = save[2].split('|')
             equipment = list(map(lambda x: int(x), tmp))
             try:
-                buypack = save[3].split('|')
+                buypack = list(map(lambda x: int(x), save[3].split('|')))
             except AttributeError:
                 buypack = []
             self.inventory = equipment
@@ -962,10 +973,21 @@ class Shop():
         else:
             return False
 
+    def buyB(self, index: int): # Index has to be the index in list
+        index = int(index)
+        equipment = Equipment(self.buyback[index])
+        if self.adv.addInv(equipment.id):
+            self.adv.remXP(equipment.price)
+            self.buyback.pop(index)
+            return True
+        else:
+            return False
+
     def sell(self, index: int):
         index = int(index)
         equipment = Equipment(self.adv.inventory[index])
         if self.adv.remInv(index + 1):
+            self.buyback.append(index)
             self.adv.addXP(equipment.price)
             return True
         else:

@@ -374,8 +374,11 @@ class Adventure(commands.Cog):
                             value='A fine concoction, my own recipe in fact. It will permanently boost the magnitude of your abilities. Some might even call it, a level up, perhaps.')
             embed.add_field(name='2. Purchase Equipment',
                             value='Choose from a variety of my wares, at least, wares I find fitting for you.')
-            embed.add_field(name='3. Sell Equipment',
+            embed.add_field(name='3. Buyback Equipment',
+                            value='Accidentally sell something you did not want to sell? Buy it back here.')
+            embed.add_field(name='4. Sell Equipment',
                             value='I will buy some equipment from you, if you no longer want it.')
+            embed.set_footer(text='Shop Refresh at: {}'.format(shop.refresh.strftime('%H:%M')))
             await shopMessage.edit(embed=embed)
             await shopMessage.clear_reactions()
             await asyncio.sleep(0.26)
@@ -384,6 +387,8 @@ class Adventure(commands.Cog):
             await shopMessage.add_reaction('2️⃣')
             await asyncio.sleep(0.26)
             await shopMessage.add_reaction('3️⃣')
+            await asyncio.sleep(0.26)
+            await shopMessage.add_reaction('4️⃣')
             await asyncio.sleep(0.26)
             await shopMessage.add_reaction('❌')
             try:
@@ -473,7 +478,8 @@ class Adventure(commands.Cog):
                             try:
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
-                                num = shop.inventory[int(vMessage.content) - 1]
+                                index = int(vMessage.content) - 1
+                                num = shop.buyback[index]
                             except (ValueError, IndexError) as e:
                                 pass
                             except InterruptedError:
@@ -496,13 +502,66 @@ class Adventure(commands.Cog):
                                     await shopMessage.clear_reactions()
                                 else:
                                     if str(reaction) == '✅':
-                                        shop.buy(num)
+                                        shop.buy(index)
                                         shop.save()
                                         buyExit = True
                             finally:
                                 await vMessage.delete()
                                 
-                elif str(reaction) == '3️⃣':  # Sell Equipment
+                elif str(reaction) == '3️⃣': # Buyback Equipment
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
+                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
+                    number = 0
+                    for i in shop.buyback:
+                        number += 1
+                        e = ac.Equipment(i)
+                        buy_embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
+                        ), e.name), value='Buying Cost: **{}** {}'.format(e.price, self.bot.xpName))
+
+                    buyExit = False
+                    while buyExit == False:
+                        await shopMessage.edit(embed=buy_embed)
+                        await shopMessage.clear_reactions()
+                        try:
+                            vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+                        except asyncio.TimeoutError:
+                            await shopMessage.edit(embed=timeoutEmbed)
+                            await shopMessage.clear_reactions()
+                        else:
+                            try:
+                                if int(vMessage.content) < 1:
+                                    raise(InterruptedError)
+                                index = int(vMessage.content) - 1
+                                num = shop.buyback[index]
+                            except (ValueError, IndexError) as e:
+                                pass
+                            except InterruptedError:
+                                buyExit = True
+                            else:
+                                e = ac.Equipment(num)
+                                embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
+                                                      colour=Colour.infoColour, 
+                                                      description=e.getInfo())
+                                await shopMessage.edit(embed=embed)
+                                await shopMessage.add_reaction('✅')
+                                await asyncio.sleep(0.26)
+                                await shopMessage.add_reaction('❌')
+                                try:
+                                    reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and shopMessage.id == reaction.message.id)
+                                except asyncio.TimeoutError:
+                                    mainExit = True
+                                    buyExit = True
+                                    await shopMessage.edit(embed=timeoutEmbed)
+                                    await shopMessage.clear_reactions()
+                                else:
+                                    if str(reaction) == '✅':
+                                        shop.buyB(index)
+                                        shop.save()
+                                        buyExit = True
+                            finally:
+                                await vMessage.delete()
+
+                elif str(reaction) == '4️⃣':  # Sell Equipment
                     embed = discord.Embed(title='Selling Equipment', colour=Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. Use `0` to go back.')
                     number = 0
@@ -540,7 +599,7 @@ class Adventure(commands.Cog):
                             finally:
                                 await vMessage.delete()
 
-                else:
+                elif str(reaction) == '❌':
                     mainExit = True
                     await shopMessage.edit(embed=goodbyeEmbed)
                     await shopMessage.clear_reactions()
@@ -551,8 +610,8 @@ class Adventure(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def questCheck(self):
-        qtu = db.getTimeRNG()
-        for q in qtu:
+        quest_to_update = db.getTimeRNG()
+        for q in quest_to_update:
             rng = ac.RNGDungeon()
             if rng.loadActive(q[1]):  # If quest loaded successfully
                 limiter = 200
