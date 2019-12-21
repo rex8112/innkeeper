@@ -993,11 +993,3 @@ class Shop():
             return True
         else:
             return False
-
-class Skill():
-    def __init__(self, name: str):
-        self.id = name
-        self.cooldown = None # In Turns
-        self.type = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
-        self.cleave = None # 0 = No, 1 = Surrounding, 2 = All
-        self.use = None
