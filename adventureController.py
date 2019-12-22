@@ -25,14 +25,14 @@ db.initDB()
 
 
 class PerLevel:
-    unarmDamage = 3.5  # Flat increase
-    invCap = 5  # Amount of strength to gain one inventory slot
+    unarm_damage = 3.5  # Flat increase
+    inventory_cap = 5  # Amount of strength to gain one inventory slot
     evasion = 0.004  # Evasion Chance
-    softCapEvasion = 0.0023  # Evasion Chance after soft cap
-    critChance = 0.0025
-    softCapCritChance = 0.0016
+    softcap_evasion = 0.0023  # Evasion Chance after soft cap
+    crit_chance = 0.0025
+    softcap_crit_chance = 0.0016
     health = 10
-    spellAmp = 0.01
+    spell_amp = 0.01
 
 
 class Character:
@@ -167,6 +167,16 @@ class Character:
         reqXP = self.baseXP * math.exp(self.xpRate * self.level - 1)
         return int(reqXP)
 
+    def get_unspent_points(self):
+        total_points = (self.rawStrength
+                        + self.rawDexterity
+                        + self.rawConstitution
+                        + self.rawIntelligence
+                        + self.rawWisdom
+                        + self.rawCharisma)
+        unspent_points = (self.level - 1) - (total_points - 65)
+        return unspent_points
+
     def addLevel(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0
@@ -201,7 +211,6 @@ class Character:
         self.dmg = 0
         self.strdmg = 0
         self.dexdmg = 0
-        self.attackSpeed = 2  # Turns per attack
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
@@ -219,15 +228,14 @@ class Character:
             self.dmg += int(equip.mods.get('dmg', 0))
             self.strdmg += int(equip.mods.get('strdmg', 0))
             self.dexdmg += int(equip.mods.get('dexdmg', 0))
-            self.attackSpeed += int(equip.mods.get('as', 0))
 
         # Strength Related Stats First
-        self.unarmDamage = float(self.strength) * PerLevel.unarmDamage
+        self.unarmDamage = float(self.strength) * PerLevel.unarm_damage
         logger.debug(
             '{0.name} Unarmed Damage calculated to: {0.unarmDamage}'.format(self))
 
-        self.inventoryCapacity = self.strength // PerLevel.invCap + \
-            (10 - (10 // PerLevel.invCap))
+        self.inventoryCapacity = self.strength // PerLevel.inventory_cap + \
+            (10 - (10 // PerLevel.inventory_cap))
         logger.debug(
             '{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
 
@@ -237,16 +245,16 @@ class Character:
             self.critChance = float(self.dexterity) * PerLevel.evasion
 
         elif self.dexterity > 40 and self.dexterity <= 100:  # Dexterity between 40 and 100
-            self.evasion = PerLevel.softCapEvasion * \
+            self.evasion = PerLevel.softcap_evasion * \
                 (float(self.dexterity) - 40.0) + 40.0 * PerLevel.evasion
-            self.critChance = PerLevel.softCapCritChance * \
-                (float(self.dexterity) - 40.0) + 40.0 * PerLevel.critChance
+            self.critChance = PerLevel.softcap_crit_chance * \
+                (float(self.dexterity) - 40.0) + 40.0 * PerLevel.crit_chance
 
         else:  # Dexterity above 100
-            self.evasion = PerLevel.softCapEvasion * \
+            self.evasion = PerLevel.softcap_evasion * \
                 (100.0 - 40.0) + 40.0 * PerLevel.evasion
-            self.critChance = PerLevel.softCapCritChance * \
-                (100.0 - 40.0) + 40.0 * PerLevel.critChance
+            self.critChance = PerLevel.softcap_crit_chance * \
+                (100.0 - 40.0) + 40.0 * PerLevel.crit_chance
 
         logger.debug(
             '{0.name} Evasion calculated to: {0.evasion}'.format(self))
@@ -259,7 +267,7 @@ class Character:
             '{0.name} Max health calculated to: {0.maxHealth}'.format(self))
 
         # Intelligence related stats fourth
-        self.spellAmp = PerLevel.spellAmp * float(self.intelligence)
+        self.spellAmp = PerLevel.spell_amp * float(self.intelligence)
         logger.debug(
             '{0.name} Spell Amp calculated to: {0.spellAmp}'.format(self))
 
@@ -270,8 +278,6 @@ class Character:
         self.discount = 0
 
         # Set values to their maximum
-        self.attackCooldown = self.attackSpeed
-
         self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
         if self.dmg == 0:
             self.dmg = self.unarmDamage

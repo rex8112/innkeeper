@@ -104,7 +104,7 @@ class Adventure(commands.Cog):
                         if len(attributes) > 6:
                             del attributes[6:]
                         elif len(attributes) < 6:
-                            for i in range(6 - len(attributes)):
+                            for _ in range(6 - len(attributes)):
                                 attributes.append(0)
 
                         for att in attributes:
@@ -140,7 +140,7 @@ class Adventure(commands.Cog):
 
             try:
                 logger.debug('Waiting for confirmation')
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and controlMessage.id == reaction.message.id)
+                reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and controlMessage.id == reaction.message.id)
             except asyncio.TimeoutError:
                 await controlMessage.edit(embed=tout)
                 await controlMessage.clear_reactions()
@@ -166,35 +166,100 @@ class Adventure(commands.Cog):
         """Get information on your Adventurer"""
         if ctx.invoked_subcommand is None:
             adv = ac.Player(ctx.author.id)
+            profile_message = None
+            tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+            first = True
+            escape = False
+
             if not adv.load():
                 embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
                                       description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
+            while adv.get_unspent_points() > 0 and escape == False:
+                embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
+                                      colour=Colour.infoColour,
+                                      description='What would you like to spend them on?\n'
+                                      + '1. Strength\n'
+                                      + '2. Dexterity\n'
+                                      + '3. Constitution\n'
+                                      + '4. Intelligence\n'
+                                      + '5. Wisdom\n'
+                                      + '6. Charisma')
+                if profile_message:
+                    await profile_message.edit(embed=embed)
+                else:
+                    profile_message = await ctx.send(embed=embed)
+                if first:
+                    await profile_message.clear_reactions()
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('1️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('2️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('3️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('4️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('5️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('6️⃣')
+                    await asyncio.sleep(0.26)
+                    await profile_message.add_reaction('❌')
+                    first = False
+                try:
+                    reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and profile_message.id == reaction.message.id)
+                    if str(reaction) == '1️⃣':
+                        adv.rawStrength += 1
+                    elif str(reaction) == '2️⃣':
+                        adv.rawDexterity += 1
+                    elif str(reaction) == '3️⃣':
+                        adv.rawConstitution += 1
+                    elif str(reaction) == '4️⃣':
+                        adv.rawIntelligence += 1
+                    elif str(reaction) == '5️⃣':
+                        adv.rawWisdom += 1
+                    elif str(reaction) == '6️⃣':
+                        adv.rawCharisma += 1
+                    else:
+                        escape = True
+                    await reaction.remove(user)
+                except asyncio.TimeoutError:
+                    await profile_message.edit(embed=tout)
+                    await profile_message.clear_reactions()
+                    return
+                finally:
+                    adv.calculate()
+                    adv.save()
+
+            if profile_message:
+                await profile_message.clear_reactions()
+            equipment = []
+            for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
+                equipment.append(e)
+            embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
+                                    description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
+            embed.set_author(name=ctx.author.display_name,
+                                icon_url=ctx.author.avatar_url)
+            embed.add_field(
+                name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
+            embed.add_field(
+                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
+            embed.add_field(
+                name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
+
+            invStr = ''
+            for i in adv.inventory:
+                tmp = ac.Equipment(i)
+                invStr += '**{}** {}, Level **{}**\n'.format(
+                    tmp.rarity, tmp.name, tmp.level)
+            if invStr == '':
+                invStr = 'Nothing'
+
+            embed.add_field(name='Inventory', value=invStr)
+            if profile_message:
+                await profile_message.edit(embed=embed)
             else:
-                equipment = []
-                for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
-                    equipment.append(e)
-                embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
-                                      description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
-                embed.set_author(name=ctx.author.display_name,
-                                 icon_url=ctx.author.avatar_url)
-                embed.add_field(
-                    name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
-                embed.add_field(
-                    name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
-                embed.add_field(
-                    name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
-
-                invStr = ''
-                for i in adv.inventory:
-                    tmp = ac.Equipment(i)
-                    invStr += '**{}** {}, Level **{}**\n'.format(
-                        tmp.rarity, tmp.name, tmp.level)
-                if invStr == '':
-                    invStr = 'Nothing'
-
-                embed.add_field(name='Inventory', value=invStr)
                 await ctx.send(embed=embed)
 
     @profile.command(aliases=['attributes'])
@@ -282,7 +347,7 @@ class Adventure(commands.Cog):
                 await ctx.message.add_reaction('✅')
             else:
                 await ctx.message.add_reaction('⛔')
-        except Exception as e:
+        except Exception as _:
             logger.warning('Equipping Failed', exc_info=True)
             await ctx.message.add_reaction('⛔')
 
@@ -402,7 +467,7 @@ class Adventure(commands.Cog):
             else:
                 if str(reaction) == '1️⃣':  # Looking at a Potion of Peritia
                     embed = discord.Embed(title='Potion of Peritia', colour=Colour.infoColour,
-                                          description='Interested in more power, {}? That is fine but it is not free.'.format(adv.name))
+                                          description='Interested in more power, {}? It will come with a cost.'.format(adv.name))
                     embed.set_author(name=ctx.author.display_name,
                                      icon_url=ctx.author.avatar_url)
                     embed.add_field(name='Cost to Purchase', value='{} {}'.format(
@@ -436,7 +501,6 @@ class Adventure(commands.Cog):
                                     name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
                                 embed.set_footer(
                                     text='To spend your skill point, use the {}profile command'.format(self.bot.CP))
-
                             else:
                                 embed = discord.Embed(title='Insufficient {}'.format(
                                     self.bot.xpName), colour=Colour.errorColour)
