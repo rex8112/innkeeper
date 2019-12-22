@@ -6,7 +6,7 @@ import numpy as np
 import datetime
 
 from discord.ext import commands
-from tools.skills import get_skill
+import tools.skills as Skills
 import tools.database as db
 
 logger = logging.getLogger('adventureController')
@@ -678,7 +678,8 @@ class Encounter:
         for player in self.players:
             if self.enemies[-1:]:
                 logger.debug('Living Enemy detected')
-                self.attack(player, self.enemies[-1])
+                skill = Skills.Skill.get_skill('attack')
+                skill().use(player, self.enemies[-1], self.enemies)
 
                 # If the enemy is dead, remove him from active enemies
                 if self.enemies[-1].health <= 0:
@@ -688,41 +689,13 @@ class Encounter:
         for enemy in self.enemies:
             if self.players[-1:]:
                 logger.debug('Living Player detected')
-                self.attack(enemy, self.players[-1])
+                skill = Skills.Skill.get_skill('attack')
+                skill().use(enemy, self.players[-1], self.players)
 
                 # If the player is dead, remove him from active players
                 if self.players[-1].health <= 0:
                     self.deadPlayers.append(self.players[-1])
                     self.players.pop()
-
-    def attack(self, attacker, defender):
-        if attacker.attackCooldown <= 0:
-            dmg = attacker.dmg
-            critChance = attacker.critChance
-            chanceToHit = 1 + (attacker.wc - defender.ac) / \
-                ((attacker.wc + defender.ac) * 0.5)
-
-            if chanceToHit > 1:  # If you have a chance to hit higher than 100% convert overflow into crit chance
-                critChance += chanceToHit - 1.0
-                logger.debug(
-                    'Player Crit Chance set to: {}'.format(critChance))
-
-            if random.uniform(0.0, 1.0) > attacker.evasion:  # Evasion Check
-                # If random number is lower than the chance to hit, you hit
-                if random.uniform(0.0, 1.0) <= chanceToHit:
-                    if random.uniform(0.0, 1.0) <= critChance:
-                        dmg = dmg * 2
-                    defender.health -= dmg
-                    logger.debug('Character hit for {} DMG'.format(dmg))
-                    attacker.attackCooldown = attacker.attackSpeed
-                else:  # You miss
-                    logger.debug(
-                        'Missed with chanceToHit: {:.1%}'.format(chanceToHit))
-            else:  # You evaded
-                logger.debug('Player Evaded')
-
-        else:
-            attacker.attackCooldown -= 1
 
     def getLoot(self):
         rawLoot = []
