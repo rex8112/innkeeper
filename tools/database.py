@@ -16,8 +16,11 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
+
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER)""")
 
     cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
     if not cursor2.fetchone():
@@ -183,3 +186,17 @@ def GetActiveShop(id):
         (id,)
     )
     return cursor.fetchone()
+
+def get_raid_boss(indx: int):
+    cursor2.execute(
+        """SELECT * FROM raid WHERE indx = ?""",
+        (indx,)
+    )
+    return cursor2.fetchone()
+
+def add_raid():
+    cursor.execute(
+        """INSERT INTO raid DEFAULT VALUES"""
+    )
+    db.commit()
+    return cursor.lastrowid

@@ -41,6 +41,7 @@ class Character:
 
     def __init__(self, ID):
         self.id = ID
+        self.loaded = False
 
     def new(self, name, cls, race, rawAttributes, skills, rng): # This should be overridden
         self.name = name
@@ -67,6 +68,7 @@ class Character:
         self.trinket = Equipment(1)
 
         self.inventory = []
+        self.loaded = True
 
     def equip(self, e: int):
         try:
@@ -177,6 +179,12 @@ class Character:
         unspent_points = (self.level - 1) - (total_points - 65)
         return unspent_points
 
+    def get_skill(self, skill: str):
+        if skill in self.skills:
+            return Skills.Skill.get_skill(skill)
+        else:
+            return False
+
     def addLevel(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0
@@ -214,6 +222,8 @@ class Character:
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
+            if equip == None:
+                equip = Equipment(1)
             self.wc += int(equip.mods.get('wc', 0))
             self.ac += int(equip.mods.get('ac', 0))
             self.maxHealth += int(equip.mods.get('health', 0))
@@ -383,12 +393,13 @@ class Player(Character):
                 self.calculate()
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
-            return True
+            self.loaded = True
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Failed to Load\n{}:{}'.format(
+            logger.error('{} Failed to Load Player\n{}:{}'.format(
                 self.id, type(self).__name__, exc))
-            return False
+        finally:
+            return self.loaded
 
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence,
@@ -484,12 +495,13 @@ class Enemy(Character):
                 self.calculate()
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
-            return True
+            self.loaded = True
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Failed to Load\n{}:{}'.format(
+            logger.error('{} Failed to Load Enemy\n{}:{}'.format(
                 self.id, type(self).__name__, exc))
-            return False
+        finally:
+            return self.loaded
 
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution,
@@ -504,6 +516,47 @@ class Enemy(Character):
                 self.race, rawAttributes, skills, equipment, inventory]
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return db.saveEnemy(save)
+
+
+class RaidBoss(Character):
+    def __init__(self, boss_id):
+        self.id = boss_id
+        if self.id > 0:
+            self.load()
+
+    def load(self):
+        try:
+            data = db.get_raid_boss(self.id)
+            self.name = data[1]
+            self.level = data[2]
+            self.flavor = data[3]
+            
+            rawAttributes = data[4].split(',')  # Get a list of the attributes
+            self.rawStrength = int(rawAttributes[0])
+            self.rawDexterity = int(rawAttributes[1])
+            self.rawConstitution = int(rawAttributes[2])
+            self.rawIntelligence = int(rawAttributes[3])
+            self.rawWisdom = int(rawAttributes[4])
+            self.rawCharisma = int(rawAttributes[5])
+
+            self.skills = data[5].split(',')
+            self.maxHealth = int(data[6])
+
+            self.mainhand = None
+            self.offhand = None
+            self.helmet = None
+            self.armor = None
+            self.gloves = None
+            self.boots = None
+            self.trinket = None
+
+            return True
+        except Exception as e:
+            exc = '{}: {}'.format(type(e).__name__, e)
+            logger.error('{} Raid Boss Failed to Load\n{}:{}'.format(
+                self.id, type(self).__name__, exc))
+            return False
+
 
 
 class Equipment:
@@ -919,3 +972,28 @@ class Shop():
             return True
         else:
             return False
+
+
+class Raid():
+    def __init__(self, players, boss = 0):
+        self.id = 0
+        self.boss = None
+        self.enemies = []
+        self.players = []
+        if boss == 0:
+            pass
+        else:
+            self.new(players, boss)
+    
+    def new(self, players, boss):
+        self.boss = RaidBoss(boss)
+        if self.boss.loaded == False:
+            return False
+        self.players = players
+        
+        count = 0
+        total = 0
+        for player in self.players:
+            count += 1
+            total += player.level
+        rawLoot = db.getEquipmentRNG(total / count, 3, 3)
