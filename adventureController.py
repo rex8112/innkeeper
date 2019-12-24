@@ -568,6 +568,21 @@ class Equipment:
             self.load()
 
     @staticmethod
+    def calculate_drop_rarity():
+        result = 0
+        if random.random() <= 0.05:
+            result = 4
+        elif random.random() <= 0.10:
+            result = 3
+        elif random.random() <= 0.25:
+            result = 2
+        elif random.random() <= 0.40:
+            result = 1
+
+        return result
+            
+
+    @staticmethod
     def calculateWeight(loot: list):
         weight = []
         tmp = []
