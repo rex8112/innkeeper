@@ -185,6 +185,9 @@ class Character:
         else:
             return False
 
+    def roll_initiative(self):
+        return random.randint(1, 20) + self.level
+
     def addLevel(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0
@@ -701,6 +704,42 @@ class Encounter:
         self.enemies = enemies
         self.deadPlayers = []
         self.deadEnemies = []
+        self.turn_order = []
+        for L in [self.players, self.enemies]:
+            for c in L:
+                self.turn_order.append(c)
+        self.turn_order.sort(key=lambda character: character.roll_initiative())
+        self.current_turn = 0
+
+    def use_skill(self, user, skill_id: str, target_int: int):
+        skill = user.get_skill(skill_id)
+        if skill:
+            if skill.targetable == 0:
+                target_group = self.players
+                target = user
+            elif skill.targetable == 1:
+                target_group = self.players
+                target = target_group[target_int - 1]
+            else:
+                target_group = self.enemies
+                target = target_group[target_int - 1]
+
+            info, result = skill.use(user, target, target_group)
+            if result:
+                self.next_turn()
+        else:
+            info = '`{}` not found in your skills.'.format(skill_id)
+        return info, result
+                
+
+    def next_turn(self):
+        if self.current_turn + 1 < len(self.turn_order):
+            self.current_turn += 1
+        else:
+            self.current_turn = 0
+        check = self.turn_order[self.current_turn]
+        if check in self.deadEnemies or check in self.deadPlayers:
+            self.next_turn()
 
     def nextTurn(self):
         for player in self.players:
@@ -1029,5 +1068,5 @@ class Raid():
         
         self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
 
-    def build_encounter():
+    def build_encounter(self):
         pass

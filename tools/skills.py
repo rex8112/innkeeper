@@ -63,18 +63,20 @@ class AttackSkill(Skill):
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     if random.uniform(0.0, 1.0) <= critChance:
                         dmg = dmg * 2
-                        self.log = '**{}** crit **{}** for **{}** Damage'.format(user.name, target.name, dmg)
+                        self.log = '**{}** crit **{}** for **{}** Damage.'.format(user.name, target.name, dmg)
                     target.health -= dmg
                     logger.debug('Character hit for {} DMG'.format(dmg))
-                    self.log = '**{}** hit **{}** for **{}** Damage'.format(user.name, target.name, dmg)
+                    self.log = '**{}** hit **{}** for **{}** Damage.'.format(user.name, target.name, dmg)
                     self.cooldown = self.max_cooldown
                 else:  # You miss
                     logger.debug(
                         'Missed with chanceToHit: {:.1%}'.format(chanceToHit))
-                    self.log = '{} missed trying to hit {}'.format(user.name, target.name)
+                    self.log = '{} missed trying to hit {}.'.format(user.name, target.name)
             else:  # You evaded
                 logger.debug('Player Evaded')
-                self.log = '{1} evaded attack from {0}'.format(user.name, target.name)
-            return self.log
+                self.log = '{1} evaded {0}\'s strike.'.format(user.name, target.name)
+            return self.log, True
         else:
-         self.cooldown -= 1
+            self.cooldown -= 1
+            self.log = '{} on cooldown for {} more turns.'.format(self.name.capitalize(), self.cooldown)
+            return self.log, False
