@@ -395,9 +395,8 @@ class Player(Character):
                 self.id, self.name))
             self.loaded = True
         except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Failed to Load Player\n{}:{}'.format(
-                self.id, type(self).__name__, exc))
+            logger.error('{} Failed to Load Player'.format(
+                self.id), exc_info=True)
         finally:
             return self.loaded
 
@@ -497,9 +496,8 @@ class Enemy(Character):
                 self.id, self.name))
             self.loaded = True
         except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Failed to Load Enemy\n{}:{}'.format(
-                self.id, type(self).__name__, exc))
+            logger.error('{} Failed to Load Enemy'.format(
+                self.id), exc_info=True)
         finally:
             return self.loaded
 
@@ -524,6 +522,13 @@ class RaidBoss(Character):
         if self.id > 0:
             self.load()
 
+    def get_loot(self, rarity: int):
+        loot = []
+        for L in self.inventory:
+            if L.rarity == rarity:
+                loot.append(L)
+        return random.choice(loot)
+
     def load(self):
         try:
             data = db.get_raid_boss(self.id)
@@ -531,16 +536,19 @@ class RaidBoss(Character):
             self.level = data[2]
             self.flavor = data[3]
             
-            rawAttributes = data[4].split(',')  # Get a list of the attributes
-            self.rawStrength = int(rawAttributes[0])
-            self.rawDexterity = int(rawAttributes[1])
-            self.rawConstitution = int(rawAttributes[2])
-            self.rawIntelligence = int(rawAttributes[3])
-            self.rawWisdom = int(rawAttributes[4])
-            self.rawCharisma = int(rawAttributes[5])
+            raw_attributes = data[4].split(',')  # Get a list of the attributes
+            self.rawStrength = int(raw_attributes[0])
+            self.rawDexterity = int(raw_attributes[1])
+            self.rawConstitution = int(raw_attributes[2])
+            self.rawIntelligence = int(raw_attributes[3])
+            self.rawWisdom = int(raw_attributes[4])
+            self.rawCharisma = int(raw_attributes[5])
 
             self.skills = data[5].split(',')
             self.maxHealth = int(data[6])
+
+            for L in data[7].split(','):
+                self.inventory.append(Equipment(L))
 
             self.mainhand = None
             self.offhand = None
@@ -552,9 +560,8 @@ class RaidBoss(Character):
 
             return True
         except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Raid Boss Failed to Load\n{}:{}'.format(
-                self.id, type(self).__name__, exc))
+            logger.error('{} Failed to Load Raid Boss'.format(
+                self.id), exc_info=True)
             return False
 
 
@@ -655,8 +662,8 @@ class Equipment:
             return True
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('{} Failed to Load\n{}:{}'.format(
-                self.id, type(self).__name__, exc))
+            logger.error('{} Failed to Load'.format(
+                self.id), exc_info=True)
 
             self.loaded = False
             return False
@@ -804,8 +811,8 @@ class RNGDungeon:
                 self.loot.append(np.random.choice(lPool, p=weights))
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
-            logger.error('RNG Loot Failed to Load with weights: {}\n{}:{}'.format(
-                weights, type(self).__name__, exc))
+            logger.error('RNG Loot Failed to Load with weights: {}'.format(
+                weights), exc_info=True)
 
         self.encounter = self.buildEncounter(
             [self.adv], self.enemies[self.stage - 1])
@@ -993,8 +1000,8 @@ class Raid():
     def __init__(self, players, boss = 0):
         self.id = 0
         self.boss = None
-        self.enemies = []
         self.players = []
+        self.loot = []
         if boss == 0:
             pass
         else:
@@ -1006,9 +1013,21 @@ class Raid():
             return False
         self.players = players
         
+        player_ids = []
         count = 0
         total = 0
         for player in self.players:
             count += 1
             total += player.level
-        rawLoot = db.getEquipmentRNG(total / count, 3, 3)
+            player_ids.append(str(player.id))
+        self.loot = []
+        loot_ids = []
+        for _ in range(5):
+            loot = self.boss.get_loot(Equipment.calculate_drop_rarity())
+            self.loot.append(loot) # Need to get based on rarity
+            loot_ids.append(str(loot.id))
+        
+        self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
+
+    def build_encounter():
+        pass

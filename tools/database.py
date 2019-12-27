@@ -20,7 +20,7 @@ def initDB():  # initialize the database
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""")
-    cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER, loot TEXT)""")
 
     cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
     if not cursor2.fetchone():
@@ -194,9 +194,17 @@ def get_raid_boss(indx: int):
     )
     return cursor2.fetchone()
 
-def add_raid():
+def add_raid(players: str, boss: int, loot: str):
     cursor.execute(
-        """INSERT INTO raid DEFAULT VALUES"""
+        """INSERT INTO raid(adventurers, boss, loot, completed) VALUES(?, ?, ?, 0)""",
+        (players, boss, loot)
     )
     db.commit()
     return cursor.lastrowid
+
+def complete_raid(indx: int, result = 1):
+    cursor.execute(
+        """UPDATE raid SET completed = ? WHERE indx = ?""",
+        (result, indx)
+    )
+    db.commit()
