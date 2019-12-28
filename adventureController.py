@@ -57,7 +57,7 @@ class Character:
         self.rawWisdom = rawAttributes[4]
         self.rawCharisma = rawAttributes[5]
         # Skills
-        self.skills = ['attack'] + skills
+        self.raw_skills = ['attack'] + skills
         # Equipment
         self.mainhand = Equipment(1)
         self.offhand = Equipment(1)
@@ -180,7 +180,7 @@ class Character:
         return unspent_points
 
     def get_skill(self, skill: str):
-        if skill in self.skills:
+        if skill in self.raw_skills:
             return Skills.Skill.get_skill(skill)
         else:
             return False
@@ -290,6 +290,13 @@ class Character:
         # Charisma related stats sixth
         self.discount = 0
 
+        # Fill in Skills
+        self.skill_list = []
+        for skill in self.raw_skills:
+            s = Skills.Skill.get_skill(skill)
+            if s:
+                self.skill_list.append(s())
+
         # Set values to their maximum
         self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
         if self.dmg == 0:
@@ -302,6 +309,11 @@ class Character:
 
     def rest(self):  # Reset anything that needs to on rest
         self.health = self.maxHealth
+
+    def increment_cooldowns(self, amount = 1):
+        for skill in self.skill_list:
+            if skill.cooldown > 0:
+                skill.cooldown -= 1
 
 
 class Player(Character):
@@ -327,7 +339,7 @@ class Player(Character):
         self.rawWisdom = rawAttributes[4]
         self.rawCharisma = rawAttributes[5]
         # Skills
-        self.skills = ['attack']
+        self.raw_skills = ['attack']
         # Equipment
         self.mainhand = Equipment(1)
         self.offhand = Equipment(1)
@@ -371,9 +383,9 @@ class Player(Character):
             self.rawCharisma = int(rawAttributes[5])
 
             try:
-                self.skills = raw[8].split(',')  # Get a list of skills
+                self.raw_skills = raw[8].split(',')  # Get a list of skills
             except AttributeError:
-                self.skills = []
+                self.raw_skills = []
 
             equipment = raw[9].split(',')  # Get a list of equipped items
             self.mainhand = Equipment(equipment[0])
@@ -397,7 +409,7 @@ class Player(Character):
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
             self.loaded = True
-        except Exception as e:
+        except Exception:
             logger.error('{} Failed to Load Player'.format(
                 self.id), exc_info=True)
         finally:
@@ -408,7 +420,7 @@ class Player(Character):
                          self.rawWisdom, self.rawCharisma]  # Bundles Attributes into a string to be stored
         rawAttributes = ','.join(str(e) for e in rawAttributes)
         # Does the same for skills, though skills aren't currently used
-        skills = ','.join(self.skills)
+        skills = ','.join(self.raw_skills)
         equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id,
                                               self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
         inventory = ','.join(str(e) for e in self.inventory)
@@ -440,7 +452,7 @@ class Enemy(Character):
         self.rawWisdom = rawAttributes[4]
         self.rawCharisma = rawAttributes[5]
         # Skills
-        self.skills = ['attack'] + skills
+        self.raw_skills = ['attack'] + skills
         # Equipment
         self.mainhand = Equipment(1)
         self.offhand = Equipment(1)
@@ -481,7 +493,7 @@ class Enemy(Character):
             self.rawWisdom = int(rawAttributes[4])
             self.rawCharisma = int(rawAttributes[5])
 
-            self.skills = raw[7].split(',')  # Get a list of skills
+            self.raw_skills = raw[7].split(',')  # Get a list of skills
 
             equipment = raw[8].split(',')  # Get a list of equipped items
             self.mainhand = Equipment(equipment[0])
@@ -498,7 +510,7 @@ class Enemy(Character):
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
             self.loaded = True
-        except Exception as e:
+        except Exception:
             logger.error('{} Failed to Load Enemy'.format(
                 self.id), exc_info=True)
         finally:
@@ -508,7 +520,7 @@ class Enemy(Character):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution,
                          self.rawIntelligence, self.rawWisdom, self.rawCharisma]
         rawAttributes = ','.join(str(e) for e in rawAttributes)
-        skills = ','.join(self.skills)
+        skills = ','.join(self.raw_skills)
         equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id,
                                               self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
         inventory = ','.join(self.inventory)
@@ -547,7 +559,7 @@ class RaidBoss(Character):
             self.rawWisdom = int(raw_attributes[4])
             self.rawCharisma = int(raw_attributes[5])
 
-            self.skills = data[5].split(',')
+            self.raw_skills = data[5].split(',')
             self.maxHealth = int(data[6])
 
             for L in data[7].split(','):
@@ -562,7 +574,7 @@ class RaidBoss(Character):
             self.trinket = None
 
             return True
-        except Exception as e:
+        except Exception:
             logger.error('{} Failed to Load Raid Boss'.format(
                 self.id), exc_info=True)
             return False
@@ -663,8 +675,7 @@ class Equipment:
 
             self.loaded = True
             return True
-        except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
+        except Exception:
             logger.error('{} Failed to Load'.format(
                 self.id), exc_info=True)
 
@@ -713,6 +724,7 @@ class Encounter:
 
     def use_skill(self, user, skill_id: str, target_int: int):
         skill = user.get_skill(skill_id)
+        result = False
         if skill:
             if skill.targetable == 0:
                 target_group = self.players
@@ -740,6 +752,9 @@ class Encounter:
         check = self.turn_order[self.current_turn]
         if check in self.deadEnemies or check in self.deadPlayers:
             self.next_turn()
+        else:
+            check.increment_cooldowns()
+
 
     def nextTurn(self):
         for player in self.players:
@@ -848,8 +863,7 @@ class RNGDungeon:
         try:
             for _ in range(1, self.lootInt + 1):
                 self.loot.append(np.random.choice(lPool, p=weights))
-        except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
+        except Exception:
             logger.error('RNG Loot Failed to Load with weights: {}'.format(
                 weights), exc_info=True)
 

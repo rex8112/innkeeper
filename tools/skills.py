@@ -37,7 +37,9 @@ class Skill():
         self.log = ''
     
     def use(self, user, target, targetGroup: list):
-        return False
+        result = False
+        info = 'Invalid Skill'
+        return info, result
 
 
 class AttackSkill(Skill):
