@@ -100,7 +100,7 @@ print(f.enemies)
 print(f.deadPlayers)
 print(f.deadEnemies)
 for i in range(30):
-  f.nextTurn()
+  f.automatic_turn()
 print(f.players)
 print(f.enemies)
 print(f.deadPlayers)
@@ -115,7 +115,7 @@ b.loadActive(8112)
 while b.stage <= b.stages and b.active == True:
   while len(b.encounter.enemies) > 0 and len(b.encounter.players) > 0:
     print('--------------------------------New Turn')
-    b.encounter.nextTurn()
+    b.encounter.automatic_turn()
   print('----------------------------------New Stage: {} | {.health}'.format(b.stage + 1, b.adv))
   b.nextStage()
 

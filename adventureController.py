@@ -756,7 +756,7 @@ class Encounter:
             check.increment_cooldowns()
 
 
-    def nextTurn(self):
+    def automatic_turn(self):
         for player in self.players:
             if self.enemies[-1:]:
                 logger.debug('Living Enemy detected')

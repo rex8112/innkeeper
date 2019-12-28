@@ -80,5 +80,5 @@ class AttackSkill(Skill):
             return self.log, True
         else:
             self.cooldown -= 1
-            self.log = '{} on cooldown for {} more turns.'.format(self.name.capitalize(), self.cooldown)
+            self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
             return self.log, False

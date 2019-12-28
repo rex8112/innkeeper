@@ -681,7 +681,7 @@ class Adventure(commands.Cog):
                 limiter = 200
                 # While enemies or the player exists
                 while len(rng.encounter.enemies) > 0 and len(rng.encounter.players) > 0 and limiter > 0:
-                    rng.encounter.nextTurn()
+                    rng.encounter.automatic_turn()
                     limiter -= 1
 
                 rng.nextStage()
