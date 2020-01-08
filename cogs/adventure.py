@@ -672,6 +672,12 @@ class Adventure(commands.Cog):
                 adv.available = True
                 adv.save()
 
+    @commands.group()
+    @commands.guild_only()
+    async def raid(self):
+        if ctx.invoked_subcommand == False:
+            pass
+
     @tasks.loop(minutes=1)
     async def questCheck(self):
         quest_to_update = db.getTimeRNG()

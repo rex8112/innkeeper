@@ -179,11 +179,14 @@ class Character:
         unspent_points = (self.level - 1) - (total_points - 65)
         return unspent_points
 
-    def get_skill(self, skill: str):
-        if skill in self.raw_skills:
-            return Skills.Skill.get_skill(skill)
-        else:
-            return False
+    def get_skill(self, skill_name: str):
+        try:
+            for skill in self.skills:
+                if skill.name == skill_name:
+                    return skill
+            return None
+        except AttributeError:
+            return None
 
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
@@ -291,11 +294,11 @@ class Character:
         self.discount = 0
 
         # Fill in Skills
-        self.skill_list = []
+        self.skills = []
         for skill in self.raw_skills:
             s = Skills.Skill.get_skill(skill)
             if s:
-                self.skill_list.append(s())
+                self.skills.append(s())
 
         # Set values to their maximum
         self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
@@ -311,7 +314,7 @@ class Character:
         self.health = self.maxHealth
 
     def increment_cooldowns(self, amount = 1):
-        for skill in self.skill_list:
+        for skill in self.skills:
             if skill.cooldown > 0:
                 skill.cooldown -= 1
 
@@ -722,6 +725,36 @@ class Encounter:
         self.turn_order.sort(key=lambda character: character.roll_initiative())
         self.current_turn = 0
 
+    def get_status(self, embed: discord.Embed):
+        active_player = self.turn_order[self.current_turn]
+        available_skills = 'Available Actions'
+        for skill in active_player.skills:
+            available_skills += '`{}` **Cooldown: {}**\n'.format(
+                skill.name, skill.cooldown if skill.cooldown > 0 else 'Ready')
+        embed.add_field(name='Current Turn: {}'.format(active_player.name),
+                        value=available_skills)
+
+        enemy_string = ''
+        for enemy in self.enemies:
+            if enemy not in self.deadEnemies:
+                enemy_string += '{}. Level **{}** {}\n'.format(
+                    self.enemies.index(enemy), enemy.level, enemy.name)
+            else:
+                enemy_string += '~~{}. Level **{}** {}~~\n'.format(
+                    self.enemies.index(enemy), enemy.level, enemy.name)
+
+        player_string = ''
+        for player in self.players:
+            if player not in self.deadPlayers:
+                enemy_string += '{}. Level **{}** {}\n'.format(
+                    self.players.index(player), player.level, player.name)
+            else:
+                enemy_string += '~~{}. Level **{}** {}~~\n'.format(
+                    self.players.index(player), player.level, player.name)
+
+        embed.add_field(name='Player List', value=player_string)
+        embed.add_field(name='Enemy List', value=enemy_string)
+
     def use_skill(self, user, skill_id: str, target_int: int):
         skill = user.get_skill(skill_id)
         result = False
@@ -745,13 +778,23 @@ class Encounter:
                 
 
     def next_turn(self):
+        check = self.turn_order[self.current_turn]
+        if check.health <= 0:
+            if check in self.players:
+                self.deadPlayers.append(check)
+                self.players.remove(check)
+            elif check in self.enemies:
+                self.deadEnemies.append(check)
+                self.enemies.remove(check)
+
         if self.current_turn + 1 < len(self.turn_order):
             self.current_turn += 1
         else:
             self.current_turn = 0
         check = self.turn_order[self.current_turn]
         if check in self.deadEnemies or check in self.deadPlayers:
-            self.next_turn()
+            if len(self.players) > 0 and len(self.enemies) > 0:
+                self.next_turn()
         else:
             check.increment_cooldowns()
 
@@ -794,7 +837,7 @@ class Encounter:
         return totalXP
 
     def end(self):
-        if len(self.players) > 0:
+        if len(self.players) > 0 and len(self.enemies) :
             return True
         else:
             return False
@@ -1083,4 +1126,6 @@ class Raid():
         self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
 
     def build_encounter(self):
-        pass
+        self.encounter = Encounter(self.players, [self.boss])
+
+    def finish_encounter(self):
