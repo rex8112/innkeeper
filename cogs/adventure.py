@@ -649,7 +649,7 @@ class Adventure(commands.Cog):
                             try:
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
-                                num = adv.inventory[int(vMessage.content) - 1]
+                                num = int(vMessage.content) - 1
                             except (ValueError, IndexError) as e:
                                 pass
                             except InterruptedError:
