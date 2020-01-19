@@ -1129,3 +1129,8 @@ class Raid():
         self.encounter = Encounter(self.players, [self.boss])
 
     def finish_encounter(self):
+        totalXP = self.encounter.getExp() * 2 # Temporary
+        for p in self.players:
+            p.addXP(totalXP)
+            p.rest() # TEMPORARY UNTIL RECOVERY CODED
+            p.save()

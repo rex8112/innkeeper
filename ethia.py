@@ -4,6 +4,8 @@ import sys
 
 from discord.ext import commands
 from tools.configLoader import settings
+import tools.database as db
+db.initDB()
 
 commandPrefix = '-'
 startup_extensions = ['cogs.adventure',

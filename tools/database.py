@@ -13,6 +13,7 @@ logger = logging.getLogger('database')
 
 
 def initDB():  # initialize the database
+    logger.info('Initializing Database')
     cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
@@ -193,6 +194,12 @@ def get_raid_boss(indx: int):
         (indx,)
     )
     return cursor2.fetchone()
+
+def get_raids():
+    cursor2.execute(
+        """SELECT indx, name, level, flavor FROM raid"""
+    )
+    return cursor2.fetchall()
 
 def add_raid(players: str, boss: int, loot: str):
     cursor.execute(

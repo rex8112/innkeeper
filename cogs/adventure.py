@@ -38,7 +38,7 @@ class Adventure(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot.xpName = 'Souls'
-        self.questCheck.start()
+        self.quest_check.start()
 
     @commands.command()
     @commands.guild_only()
@@ -674,12 +674,27 @@ class Adventure(commands.Cog):
 
     @commands.group()
     @commands.guild_only()
-    async def raid(self):
+    async def raid(self, ctx):
         if ctx.invoked_subcommand == False:
             pass
 
+    @raid.command(aliases=['start'])
+    @is_available()
+    async def host(self, ctx):
+        timeoutEmbed = discord.Embed(
+            title='Timed Out', colour=Colour.errorColour)
+        timeoutEmbed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        raids = db.get_raids()
+        embed = discord.Embed(title='Available Raids', colour=Colour.infoColour,
+                              description='There are no restrictions, choose wisely or death is certain.')
+        for raid in raids:
+            embed.add_field(name='Index: **{}**'.format(raid[0]), value='__**{}**__\nLevel {}\n{}'.format(raid[1],raid[2],raid[3]))
+        await ctx.send(embed=embed)
+
     @tasks.loop(minutes=1)
-    async def questCheck(self):
+    async def quest_check(self):
         quest_to_update = db.getTimeRNG()
         for q in quest_to_update:
             rng = ac.RNGDungeon()
@@ -709,7 +724,7 @@ class Adventure(commands.Cog):
                                               description='{} died on stage {}'.format(rng.adv.name, rng.stage))
                         await mem.send(embed=embed)
 
-    @questCheck.before_loop
+    @quest_check.before_loop
     async def before_questCheck(self):
         await self.bot.wait_until_ready()
 
