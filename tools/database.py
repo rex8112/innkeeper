@@ -21,7 +21,7 @@ def initDB():  # initialize the database
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""")
-    cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER, loot TEXT)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER, loot TEXT, available INTEGER DEFAULT 0)""")
 
     cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
     if not cursor2.fetchone():
@@ -197,7 +197,7 @@ def get_raid_boss(indx: int):
 
 def get_raids():
     cursor2.execute(
-        """SELECT indx, name, level, flavor FROM raid"""
+        """SELECT indx, name, level, flavor FROM raid WHERE available = 1"""
     )
     return cursor2.fetchall()
 

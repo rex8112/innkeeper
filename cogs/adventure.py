@@ -689,9 +689,37 @@ class Adventure(commands.Cog):
         raids = db.get_raids()
         embed = discord.Embed(title='Available Raids', colour=Colour.infoColour,
                               description='There are no restrictions, choose wisely or death is certain.')
+        count = 0
         for raid in raids:
-            embed.add_field(name='Index: **{}**'.format(raid[0]), value='__**{}**__\nLevel {}\n{}'.format(raid[1],raid[2],raid[3]))
+            count += 1
+            embed.add_field(name='Index: **{}**'.format(count), value='__**{}**__\nLevel {}\n{}'.format(raid[1],raid[2],raid[3]))
         await ctx.send(embed=embed)
+        try:
+            vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+        except asyncio.TimeoutError:
+            return
+        num = int(vMessage.content) - 1
+        if num > -1:
+            selected_raid = raids[num]
+        else:
+            return
+        adventurer = ac.Player(ctx.author.id)
+        adventurer.load()
+        players = [adventurer]
+        joinable = True
+
+        while joinable:
+            players_string = ''
+            for adv in players:
+                players_string += '**{0.name}**, Level: {0.level}\n'.format(adv)
+
+            embed = discord.Embed(title='Raid: {}'.format(selected_raid[1]), colour=Colour.infoColour,
+                                description='Level **{0[2]}**\n{0[3]}'.format(selected_raid))
+            embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✔.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
+            embed.add_field(name='Current Adventurers', value=players_string)
+            await ctx.add_reaction('✔')
+        
+
 
     @tasks.loop(minutes=1)
     async def quest_check(self):
