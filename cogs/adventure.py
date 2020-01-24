@@ -693,7 +693,7 @@ class Adventure(commands.Cog):
         for raid in raids:
             count += 1
             embed.add_field(name='Index: **{}**'.format(count), value='__**{}**__\nLevel {}\n{}'.format(raid[1],raid[2],raid[3]))
-        await ctx.send(embed=embed)
+        raid_message = await ctx.send(embed=embed)
         try:
             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
         except asyncio.TimeoutError:
@@ -708,6 +708,7 @@ class Adventure(commands.Cog):
         players = [adventurer]
         joinable = True
 
+        await ctx.add_reaction('✔')
         while joinable:
             players_string = ''
             for adv in players:
@@ -717,7 +718,12 @@ class Adventure(commands.Cog):
                                 description='Level **{0[2]}**\n{0[3]}'.format(selected_raid))
             embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✔.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
             embed.add_field(name='Current Adventurers', value=players_string)
-            await ctx.add_reaction('✔')
+            await raid_message.edit(embed=embed)
+            try:
+                reaction, user = await self.bot.wait_for('reaction', timeout=15.0,
+                                                            check lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) = '✔')
+            except asyncio.TimeoutError:
+                joinable = False
         
 
 
