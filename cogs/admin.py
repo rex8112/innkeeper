@@ -44,7 +44,7 @@ class Admin(commands.Cog):
 
     @adminpanel.command()
     async def set_available(self, ctx, member: discord.Member, value: bool):
-        adv = ac.Player(member.id)
+        adv = ac.Player(member.id, False)
         adv.load(False)
         adv.available = value
         adv.save()

@@ -28,7 +28,7 @@ class Colour:
 
 def is_available():
     def predicate(ctx):
-        adv = ac.Player(ctx.author.id)
+        adv = ac.Player(ctx.author.id, False)
         adv.load(False)
         return adv.available
     return commands.check(predicate)
@@ -45,7 +45,7 @@ class Adventure(commands.Cog):
     async def begin(self, ctx):
         """Begin your adventure!
         Ultimately, the character creator."""
-        adv = ac.Player(ctx.author.id)
+        adv = ac.Player(ctx.author.id, False)
         embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
                               description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
         embed.add_field(name='Needed Information',
@@ -165,7 +165,7 @@ class Adventure(commands.Cog):
     async def profile(self, ctx):
         """Get information on your Adventurer"""
         if ctx.invoked_subcommand is None:
-            adv = ac.Player(ctx.author.id)
+            adv = ac.Player(ctx.author.id, False)
             profile_message = None
             tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
             first = True
@@ -265,7 +265,7 @@ class Adventure(commands.Cog):
     @profile.command(aliases=['attributes'])
     async def stats(self, ctx):
         """Get a bit more detail about your current stats and attributes"""
-        adv = ac.Player(ctx.author.id)
+        adv = ac.Player(ctx.author.id, False)
         if not adv.load():
             embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
                                   description='Please contact rex8112#1200 if this is not the case.')
@@ -295,7 +295,6 @@ class Adventure(commands.Cog):
     async def equipment(self, ctx):
         """Get your currently equipped gear and info"""
         adv = ac.Player(ctx.author.id)
-        adv.load()
         embed = discord.Embed(title=str(
             adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
         embed.set_author(name=ctx.author.display_name,
@@ -318,7 +317,6 @@ class Adventure(commands.Cog):
         If ran with no subcommands, will get your current inventory."""
         if ctx.invoked_subcommand is None:
             adv = ac.Player(ctx.author.id)
-            adv.load()
             count = 0
             embed = discord.Embed(title='{}\'s Inventory'.format(
                 adv.name), colour=Colour.infoColour)
@@ -340,7 +338,7 @@ class Adventure(commands.Cog):
         """Equip a piece of equipment from your inventory
         Must give the number of the inventory slot the equipment resides in."""
         try:
-            adv = ac.Player(ctx.author.id)
+            adv = ac.Player(ctx.author.id, False)
             adv.load(False)
             if adv.equip(slot):
                 adv.save()
@@ -411,7 +409,7 @@ class Adventure(commands.Cog):
     @commands.guild_only()
     @is_available()
     async def shop(self, ctx):
-        adv = ac.Player(ctx.author.id)
+        adv = ac.Player(ctx.author.id, False)
         adv.load(False)
         adv.available = False
         adv.save()
@@ -704,7 +702,6 @@ class Adventure(commands.Cog):
         else:
             return
         adventurer = ac.Player(ctx.author.id)
-        adventurer.load()
         players = [adventurer]
         joinable = True
 
@@ -721,9 +718,12 @@ class Adventure(commands.Cog):
             await raid_message.edit(embed=embed)
             try:
                 reaction, user = await self.bot.wait_for('reaction', timeout=15.0,
-                                                            check lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) = '✔')
+                                                            check = lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) == '✔')
             except asyncio.TimeoutError:
                 joinable = False
+            else:
+                tmp = ac.Player(user.id)
+                players.append(tmp)
         
 
 

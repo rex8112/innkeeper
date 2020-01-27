@@ -39,9 +39,11 @@ class Character:
     baseXP = 100
     xpRate = 0.03
 
-    def __init__(self, ID):
+    def __init__(self, ID, load = True):
         self.id = ID
         self.loaded = False
+        if load:
+            self.load()
 
     def new(self, name, cls, race, rawAttributes, skills, rng): # This should be overridden
         self.name = name
@@ -69,6 +71,9 @@ class Character:
 
         self.inventory = []
         self.loaded = True
+
+    def load(self):
+        pass
 
     def equip(self, e: int):
         try:
@@ -323,9 +328,6 @@ class Player(Character):
     baseXP = 100
     xpRate = 0.03
 
-    def __init__(self, id):
-        self.id = id
-
     def new(self, name, cls, race, rawAttributes):
         self.name = name
         self.cls = cls
@@ -437,9 +439,6 @@ class Player(Character):
 class Enemy(Character):
     xpRate = 0.03
     baseXP = 50
-
-    def __init__(self, id):
-        self.id = id
 
     def new(self, name, cls, race, rawAttributes, skills, rng):
         self.name = name
@@ -851,7 +850,6 @@ class RNGDungeon:
 
     def new(self, aID: int, difficulty: str):
         self.adv = Player(aID)
-        self.adv.load()
         self.adv.available = False
         self.adv.save()
         self.stage = 1
@@ -936,7 +934,7 @@ class RNGDungeon:
                 self.enemies.append(stage.split(','))
 
             self.id = save[0]
-            self.adv = Player(save[1])
+            self.adv = Player(save[1], False)
             self.active = bool(save[2])
             self.stage = save[3]
             self.stages = save[4]
@@ -963,7 +961,6 @@ class RNGDungeon:
         for player in players:
             if player is int:
                 tmp = Player(player)
-                tmp.load()
             else:
                 tmp = player
                 tmp.load()
