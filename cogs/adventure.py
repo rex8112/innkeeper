@@ -687,6 +687,7 @@ class Adventure(commands.Cog):
         raids = db.get_raids()
         embed = discord.Embed(title='Available Raids', colour=Colour.infoColour,
                               description='There are no restrictions, choose wisely or death is certain.')
+        embed.set_footer(text='Send the *index* number of the raid you wish to do.')
         count = 0
         for raid in raids:
             count += 1
@@ -696,6 +697,7 @@ class Adventure(commands.Cog):
             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
         except asyncio.TimeoutError:
             return
+        await vMessage.delete()
         num = int(vMessage.content) - 1
         if num > -1:
             selected_raid = raids[num]
@@ -705,7 +707,7 @@ class Adventure(commands.Cog):
         players = [adventurer]
         joinable = True
 
-        await ctx.add_reaction('✔')
+        await raid_message.add_reaction('✅')
         while joinable:
             players_string = ''
             for adv in players:
@@ -713,17 +715,25 @@ class Adventure(commands.Cog):
 
             embed = discord.Embed(title='Raid: {}'.format(selected_raid[1]), colour=Colour.infoColour,
                                 description='Level **{0[2]}**\n{0[3]}'.format(selected_raid))
-            embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✔.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
+            embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✅.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
             embed.add_field(name='Current Adventurers', value=players_string)
             await raid_message.edit(embed=embed)
             try:
-                reaction, user = await self.bot.wait_for('reaction', timeout=15.0,
-                                                            check = lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) == '✔')
+                _, user = await self.bot.wait_for('reaction_add', timeout=15.0,
+                                                            check = lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) == '✅')
             except asyncio.TimeoutError:
                 joinable = False
             else:
                 tmp = ac.Player(user.id)
-                players.append(tmp)
+                valid = True
+                for p in players:
+                    if tmp.id == p.id:
+                        valid = False
+                if valid and tmp.loaded:
+                    players.append(tmp)
+                    if len(players) >= 5:
+                        joinable = False
+        await raid_message.clear_reactions()
         
 
 
