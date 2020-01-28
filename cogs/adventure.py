@@ -719,7 +719,7 @@ class Adventure(commands.Cog):
             embed.add_field(name='Current Adventurers', value=players_string)
             await raid_message.edit(embed=embed)
             try:
-                _, user = await self.bot.wait_for('reaction_add', timeout=15.0,
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=15.0,
                                                             check = lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) == '✅')
             except asyncio.TimeoutError:
                 joinable = False
@@ -727,15 +727,40 @@ class Adventure(commands.Cog):
                 tmp = ac.Player(user.id)
                 valid = True
                 for p in players:
-                    if tmp.id == p.id:
+                    if tmp.id == p.id and tmp.available:
                         valid = False
                 if valid and tmp.loaded:
                     players.append(tmp)
                     if len(players) >= 5:
                         joinable = False
-        await raid_message.clear_reactions()
-        
+                await reaction.remove(user)
+        embed.clear_fields()
+        embed.add_field(name='Raid is now closed', value='To begin the raid, the host must react with ✅ to begin or ❌ to cancel.')
+        embed.add_field(name='Current Adventurers', value=players_string)
+        await raid_message.edit(embed=embed)
+        await raid_message.add_reaction('❌')
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=30.0,
+                                                        check = lambda reaction, user: reaction.message.id == raid_message.id and user.id == ctx.author.id)
+        except asyncio.TimeoutError:
+            await raid_message.edit(embed=timeoutEmbed)
+            return
+        else:
+            if str(reaction) == '✅':
+                try:
+                    for p in players:
+                        p.load()
+                        p.available = False
+                        p.save()
+                    raid = ac.Raid(players, selected_raid[0])
+                    await self.raid_combat(raid, raid_message)
+                finally:
+                    for p in players:
+                        p.available = True
+                        p.save()
 
+    async def raid_combat(self, raid, raid_message: discord.Message):
+        pass
 
     @tasks.loop(minutes=1)
     async def quest_check(self):
