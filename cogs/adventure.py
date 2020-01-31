@@ -753,14 +753,13 @@ class Adventure(commands.Cog):
                         p.available = False
                         p.save()
                     raid = ac.Raid(players, selected_raid[0])
-                    await self.raid_combat(raid, raid_message)
+                    raid.build_encounter()
+                    await raid_message.clear_reactions()
+                    await raid.encounter.run_combat(self.bot, raid_message)
                 finally:
                     for p in players:
                         p.available = True
                         p.save()
-
-    async def raid_combat(self, raid, raid_message: discord.Message):
-        pass
 
     @tasks.loop(minutes=1)
     async def quest_check(self):

@@ -4,6 +4,7 @@ import random
 import math
 import numpy as np
 import datetime
+import asyncio
 
 from discord.ext import commands
 import tools.skills as Skills
@@ -327,6 +328,7 @@ class Character:
 class Player(Character):
     baseXP = 100
     xpRate = 0.03
+    pc = True
 
     def new(self, name, cls, race, rawAttributes):
         self.name = name
@@ -536,6 +538,7 @@ class Enemy(Character):
 class RaidBoss(Character):
     def __init__(self, boss_id):
         self.id = boss_id
+        self.loaded = False
         if self.id > 0:
             self.load()
 
@@ -544,7 +547,8 @@ class RaidBoss(Character):
         for L in self.inventory:
             if L.rarity == rarity:
                 loot.append(L)
-        return random.choice(loot)
+        if len(loot) > 0:
+            return random.choice(loot)
 
     def load(self):
         try:
@@ -563,7 +567,9 @@ class RaidBoss(Character):
 
             self.raw_skills = data[5].split(',')
             self.maxHealth = int(data[6])
+            self.health = self.maxHealth
 
+            self.inventory = []
             for L in data[7].split(','):
                 self.inventory.append(Equipment(L))
 
@@ -575,6 +581,8 @@ class RaidBoss(Character):
             self.boots = None
             self.trinket = None
 
+            self.calculate()
+            self.loaded = True
             return True
         except Exception:
             logger.error('{} Failed to Load Raid Boss'.format(
@@ -726,7 +734,7 @@ class Encounter:
 
     def get_status(self, embed: discord.Embed):
         active_player = self.turn_order[self.current_turn]
-        available_skills = 'Available Actions'
+        available_skills = 'Available Actions\n'
         for skill in active_player.skills:
             available_skills += '`{}` **Cooldown: {}**\n'.format(
                 skill.name, skill.cooldown if skill.cooldown > 0 else 'Ready')
@@ -737,18 +745,18 @@ class Encounter:
         for enemy in self.enemies:
             if enemy not in self.deadEnemies:
                 enemy_string += '{}. Level **{}** {}\n'.format(
-                    self.enemies.index(enemy), enemy.level, enemy.name)
+                    self.turn_order.index(enemy), enemy.level, enemy.name)
             else:
                 enemy_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.enemies.index(enemy), enemy.level, enemy.name)
+                    self.turn_order.index(enemy), enemy.level, enemy.name)
 
         player_string = ''
         for player in self.players:
             if player not in self.deadPlayers:
-                enemy_string += '{}. Level **{}** {}\n'.format(
+                player_string += '{}. Level **{}** {}\n'.format(
                     self.players.index(player), player.level, player.name)
             else:
-                enemy_string += '~~{}. Level **{}** {}~~\n'.format(
+                player_string += '~~{}. Level **{}** {}~~\n'.format(
                     self.players.index(player), player.level, player.name)
 
         embed.add_field(name='Player List', value=player_string)
@@ -820,6 +828,25 @@ class Encounter:
                 if self.players[-1].health <= 0:
                     self.deadPlayers.append(self.players[-1])
                     self.players.pop()
+
+    async def run_combat(self, bot, encounter_message: discord.Message):
+        escape = False
+        combat_log = ''
+        while escape == False:
+            combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
+            self.get_status(combat_embed)
+            await encounter_message.edit(embed=combat_embed)
+            try:
+                vMessage = await bot.wait_for('message', timeout=60.0, check=lambda message: message.channel.id == encounter_message.channel.id and message.author.id == self.turn_order[self.current_turn].id)
+            except asyncio.TimeoutError:
+                self.next_turn()
+            else:
+                content = vMessage.content.split(' ')
+                info, result = self.use_skill(self.turn_order[self.current_turn], content[0], content[1])
+                combat_log += info
+                if result:
+                    self.next_turn()
+            escape = True
 
     def getLoot(self):
         rawLoot = []
@@ -1117,8 +1144,9 @@ class Raid():
         loot_ids = []
         for _ in range(5):
             loot = self.boss.get_loot(Equipment.calculate_drop_rarity())
-            self.loot.append(loot) # Need to get based on rarity
-            loot_ids.append(str(loot.id))
+            if loot:
+                self.loot.append(loot) # Need to get based on rarity
+                loot_ids.append(str(loot.id))
         
         self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
 
