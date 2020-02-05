@@ -42,9 +42,19 @@ class Character:
 
     def __init__(self, ID, load = True):
         self.id = ID
+        self.name = 'Unloaded'
         self.loaded = False
         if load:
             self.load()
+
+    def __str__(self):
+        return self.name
+
+    def __index__(self):
+        return self.id
+
+    def __int__(self):
+        return self.id
 
     def new(self, name, cls, race, rawAttributes, skills, rng): # This should be overridden
         self.name = name
@@ -329,6 +339,17 @@ class Player(Character):
     baseXP = 100
     xpRate = 0.03
     pc = True
+
+    def __eq__(self, value):
+        if isinstance(value, Player):
+            return self.id == value.id
+        elif isinstance(value, int):
+            return self.id == value
+        else:
+            return NotImplemented
+
+    def __ne__(self, value):
+        return not self.__eq__(value)
 
     def new(self, name, cls, race, rawAttributes):
         self.name = name
