@@ -766,10 +766,10 @@ class Encounter:
         for enemy in self.enemies:
             if enemy not in self.deadEnemies:
                 enemy_string += '{}. Level **{}** {}\n'.format(
-                    self.turn_order.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy), enemy.level, enemy.name)
             else:
                 enemy_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.turn_order.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy), enemy.level, enemy.name)
 
         player_string = ''
         for player in self.players:
@@ -779,6 +779,8 @@ class Encounter:
             else:
                 player_string += '~~{}. Level **{}** {}~~\n'.format(
                     self.players.index(player), player.level, player.name)
+
+        turn_order_string = ''
 
         embed.add_field(name='Player List', value=player_string)
         embed.add_field(name='Enemy List', value=enemy_string)
@@ -854,19 +856,25 @@ class Encounter:
         escape = False
         combat_log = ''
         while escape == False:
+            active_turn = self.turn_order[self.current_turn]
             combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
             self.get_status(combat_embed)
             await encounter_message.edit(embed=combat_embed)
-            try:
-                vMessage = await bot.wait_for('message', timeout=60.0, check=lambda message: message.channel.id == encounter_message.channel.id and message.author.id == self.turn_order[self.current_turn].id)
-            except asyncio.TimeoutError:
-                self.next_turn()
-            else:
-                content = vMessage.content.split(' ')
-                info, result = self.use_skill(self.turn_order[self.current_turn], content[0], content[1])
-                combat_log += info
-                if result:
+            if active_turn.pc:
+                try:
+                    vMessage = await bot.wait_for('message', timeout=60.0, check=lambda message: message.channel.id == encounter_message.channel.id and message.author.id == active_turn.id)
+                except asyncio.TimeoutError:
                     self.next_turn()
+                else:
+                    content = vMessage.content.split(' ')
+                    info, result = self.use_skill(active_turn, content[0], content[1])
+                    combat_log += info
+                    if result:
+                        self.next_turn()
+            else:
+                for skill in active_turn.skills:
+                    if skill.cooldown <= 0:
+                        if skill.
             escape = True
 
     def getLoot(self):
