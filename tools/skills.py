@@ -79,6 +79,5 @@ class AttackSkill(Skill):
                 self.log = '{1} evaded {0}\'s strike.'.format(user.name, target.name)
             return self.log, True
         else:
-            self.cooldown -= 1
             self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
             return self.log, False

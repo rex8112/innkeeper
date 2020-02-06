@@ -42,9 +42,19 @@ class Character:
 
     def __init__(self, ID, load = True):
         self.id = ID
+        self.name = 'Unloaded'
         self.loaded = False
         if load:
             self.load()
+
+    def __str__(self):
+        return self.name
+
+    def __index__(self):
+        return self.id
+
+    def __int__(self):
+        return self.id
 
     def new(self, name, cls, race, rawAttributes, skills, rng): # This should be overridden
         self.name = name
@@ -329,6 +339,17 @@ class Player(Character):
     baseXP = 100
     xpRate = 0.03
     pc = True
+
+    def __eq__(self, value):
+        if isinstance(value, Player):
+            return self.id == value.id
+        elif isinstance(value, int):
+            return self.id == value
+        else:
+            return NotImplemented
+
+    def __ne__(self, value):
+        return not self.__eq__(value)
 
     def new(self, name, cls, race, rawAttributes):
         self.name = name
@@ -745,10 +766,10 @@ class Encounter:
         for enemy in self.enemies:
             if enemy not in self.deadEnemies:
                 enemy_string += '{}. Level **{}** {}\n'.format(
-                    self.turn_order.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy), enemy.level, enemy.name)
             else:
                 enemy_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.turn_order.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy), enemy.level, enemy.name)
 
         player_string = ''
         for player in self.players:
@@ -758,6 +779,8 @@ class Encounter:
             else:
                 player_string += '~~{}. Level **{}** {}~~\n'.format(
                     self.players.index(player), player.level, player.name)
+
+        turn_order_string = ''
 
         embed.add_field(name='Player List', value=player_string)
         embed.add_field(name='Enemy List', value=enemy_string)
@@ -833,19 +856,25 @@ class Encounter:
         escape = False
         combat_log = ''
         while escape == False:
+            active_turn = self.turn_order[self.current_turn]
             combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
             self.get_status(combat_embed)
             await encounter_message.edit(embed=combat_embed)
-            try:
-                vMessage = await bot.wait_for('message', timeout=60.0, check=lambda message: message.channel.id == encounter_message.channel.id and message.author.id == self.turn_order[self.current_turn].id)
-            except asyncio.TimeoutError:
-                self.next_turn()
-            else:
-                content = vMessage.content.split(' ')
-                info, result = self.use_skill(self.turn_order[self.current_turn], content[0], content[1])
-                combat_log += info
-                if result:
+            if active_turn.pc:
+                try:
+                    vMessage = await bot.wait_for('message', timeout=60.0, check=lambda message: message.channel.id == encounter_message.channel.id and message.author.id == active_turn.id)
+                except asyncio.TimeoutError:
                     self.next_turn()
+                else:
+                    content = vMessage.content.split(' ')
+                    info, result = self.use_skill(active_turn, content[0], content[1])
+                    combat_log += info
+                    if result:
+                        self.next_turn()
+            else:
+                for skill in active_turn.skills:
+                    if skill.cooldown <= 0:
+                        if skill.
             escape = True
 
     def getLoot(self):
