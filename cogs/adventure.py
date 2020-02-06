@@ -740,10 +740,11 @@ class Adventure(commands.Cog):
         await raid_message.edit(embed=embed)
         await raid_message.add_reaction('❌')
         try:
-            reaction, user = await self.bot.wait_for('reaction_add', timeout=30.0,
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0,
                                                         check = lambda reaction, user: reaction.message.id == raid_message.id and user.id == ctx.author.id)
         except asyncio.TimeoutError:
             await raid_message.edit(embed=timeoutEmbed)
+            await raid_message.clear_reactions()
             return
         else:
             if str(reaction) == '✅':

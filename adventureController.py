@@ -39,6 +39,7 @@ class PerLevel:
 class Character:
     baseXP = 100
     xpRate = 0.03
+    pc = False
 
     def __init__(self, ID, load = True):
         self.id = ID
@@ -766,42 +767,56 @@ class Encounter:
         for enemy in self.enemies:
             if enemy not in self.deadEnemies:
                 enemy_string += '{}. Level **{}** {}\n'.format(
-                    self.enemies.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy) + 1, enemy.level, enemy.name)
             else:
                 enemy_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.enemies.index(enemy), enemy.level, enemy.name)
+                    self.enemies.index(enemy) + 1, enemy.level, enemy.name)
 
         player_string = ''
         for player in self.players:
             if player not in self.deadPlayers:
                 player_string += '{}. Level **{}** {}\n'.format(
-                    self.players.index(player), player.level, player.name)
+                    self.players.index(player) + 1, player.level, player.name)
             else:
                 player_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.players.index(player), player.level, player.name)
+                    self.players.index(player) + 1, player.level, player.name)
 
         turn_order_string = ''
+        for character in self.turn_order:
+            if character not in self.deadPlayers and character not in self.deadEnemies:
+                turn_order_string += 'Level **{}** {}\n'.format(
+                    character.level, character.name)
+            else:
+                turn_order_string += '~~Level **{}** {}~~\n'.format(
+                    character.level, character.name)
 
         embed.add_field(name='Player List', value=player_string)
         embed.add_field(name='Enemy List', value=enemy_string)
+        embed.add_field(name='Turn Order', value=turn_order_string)
 
     def use_skill(self, user, skill_id: str, target_int: int):
         skill = user.get_skill(skill_id)
+
+        if user in self.players:
+            friendly_team = self.players
+            enemy_team = self.enemies
+        else:
+            friendly_team = self.enemies
+            enemy_team = self.players
+
         result = False
         if skill:
             if skill.targetable == 0:
                 target_group = self.players
                 target = user
             elif skill.targetable == 1:
-                target_group = self.players
+                target_group = friendly_team
                 target = target_group[target_int - 1]
             else:
-                target_group = self.enemies
+                target_group = enemy_team
                 target = target_group[target_int - 1]
 
             info, result = skill.use(user, target, target_group)
-            if result:
-                self.next_turn()
         else:
             info = '`{}` not found in your skills.'.format(skill_id)
         return info, result
@@ -858,6 +873,7 @@ class Encounter:
         while escape == False:
             active_turn = self.turn_order[self.current_turn]
             combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
+            combat_embed.set_footer(text='You have 60 seconds to do your turn, otherwise your turn will be skipped.')
             self.get_status(combat_embed)
             await encounter_message.edit(embed=combat_embed)
             if active_turn.pc:
@@ -867,15 +883,38 @@ class Encounter:
                     self.next_turn()
                 else:
                     content = vMessage.content.split(' ')
-                    info, result = self.use_skill(active_turn, content[0], content[1])
-                    combat_log += info
+                    try:
+                        info, result = self.use_skill(active_turn, content[0], int(content[1]))
+                    except IndexError:
+                        result = False
+                        info = 'Invalid Target'
+                    combat_log += info + '\n'
                     if result:
                         self.next_turn()
+                finally:
+                    await vMessage.delete()
             else:
+                if active_turn in self.players:
+                    friendly_team = self.players
+                    enemy_team = self.enemies
+                else:
+                    friendly_team = self.enemies
+                    enemy_team = self.players
                 for skill in active_turn.skills:
                     if skill.cooldown <= 0:
-                        if skill.
-            escape = True
+                        if skill.targetable == 0:
+                            info, result = self.use_skill(active_turn, skill.name, 0) #Target int doesn't matter for self cast
+                        elif skill.targetable == 1:
+                            info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(friendly_team)))
+                        else:
+                            info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(enemy_team)))
+                        break
+                combat_log += info + '\n'
+                self.next_turn()
+            if len(self.players) <= 0 or len(self.enemies) <= 0:
+                escape = True
+
+        await encounter_message.edit(content='Combat Done I guess', embed=None)
 
     def getLoot(self):
         rawLoot = []
