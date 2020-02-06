@@ -18,7 +18,7 @@ logger.addHandler(handler2)
 
 
 class Skill():
-    name = None # In Turns
+    name = None # Identification
     targetable = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
     cleave = None # 0 = No, 1 = Surrounding, 2 = All
     max_cooldown = None
