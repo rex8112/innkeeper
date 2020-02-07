@@ -756,7 +756,15 @@ class Adventure(commands.Cog):
                     raid = ac.Raid(players, selected_raid[0])
                     raid.build_encounter()
                     await raid_message.clear_reactions()
-                    await raid.encounter.run_combat(self.bot, raid_message)
+                    winner = await raid.encounter.run_combat(self.bot, raid_message)
+                    if raid.encounter.players is winner:
+                        for loot in raid.loot:
+                            loot_rolls = {}
+                            embed = discord.Embed(title='Loot', colour=Colour.infoColour, description='\n'.join(list(map(lambda x: x.name, raid.loot))))
+                            embed.add_field(name='Loot Information', value=loot.getInfo(), inline=False)
+                            embed.add_field(name='Loot Rolls', value='None')
+                            # Add wait_for reactions to do rolls
+
                 finally:
                     for p in players:
                         p.available = True

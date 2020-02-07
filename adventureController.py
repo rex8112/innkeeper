@@ -869,8 +869,15 @@ class Encounter:
 
     async def run_combat(self, bot, encounter_message: discord.Message):
         escape = False
+        winner = None
         combat_log = ''
         while escape == False:
+            if combat_log != '':
+                tmp = combat_log.split('\n')
+                if len(tmp) > 5:
+                    tmp.pop(0)
+                    combat_log = '\n'.join(tmp)
+
             active_turn = self.turn_order[self.current_turn]
             combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
             combat_embed.set_footer(text='You have 60 seconds to do your turn, otherwise your turn will be skipped.')
@@ -911,10 +918,14 @@ class Encounter:
                         break
                 combat_log += info + '\n'
                 self.next_turn()
-            if len(self.players) <= 0 or len(self.enemies) <= 0:
+            if len(self.players) <= 0:
                 escape = True
+                winner = self.players
+            elif len(self.enemies) <= 0:
+                escape = True
+                winner = self.enemies
 
-        await encounter_message.edit(content='Combat Done I guess', embed=None)
+        return winner
 
     def getLoot(self):
         rawLoot = []
