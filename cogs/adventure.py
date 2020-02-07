@@ -1,6 +1,7 @@
 import discord
 import logging
 import asyncio
+import random
 import adventureController as ac
 import tools.database as db
 
@@ -761,9 +762,28 @@ class Adventure(commands.Cog):
                         for loot in raid.loot:
                             loot_rolls = {}
                             embed = discord.Embed(title='Loot', colour=Colour.infoColour, description='\n'.join(list(map(lambda x: x.name, raid.loot))))
-                            embed.add_field(name='Loot Information', value=loot.getInfo(), inline=False)
-                            embed.add_field(name='Loot Rolls', value='None')
-                            # Add wait_for reactions to do rolls
+                            loot_escape = False
+                            while loot_escape == False:
+                                loot_rolls_string = ''
+                                for key, value in loot_rolls.items():
+                                    roller = next(x for x in raid.players if x.id == key)
+                                    loot_rolls_string += '{}: {}\n'.format(roller.name, value)
+                                if loot_rolls_string == '':
+                                    loot_rolls_string = 'None'
+
+                                embed.clear_fields()
+                                embed.add_field(name='Loot Information', value=loot.getInfo(), inline=False)
+                                embed.add_field(name='Loot Rolls', value=loot_rolls_string)
+                                try:
+                                    reaction, user = await self.bot.wait_for('reaction_add', timeout=15.0,
+                                                                                check=lambda reaction, user: reaction.message.id == raid_message.id)
+                                except asyncio.TimeoutError:
+                                    loot_escape = True
+                                else:
+                                    if str(reaction) == '✅' and user.id in [int(x) for x in raid.players] and user.id not in loot_rolls:
+                                        loot_rolls[user.id] = random.randint(1, 100)
+                                finally:
+                                    await reaction.remove(user)
 
                 finally:
                     for p in players:
