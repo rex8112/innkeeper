@@ -759,6 +759,7 @@ class Adventure(commands.Cog):
                     await raid_message.clear_reactions()
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
                     if raid.encounter.players is winner:
+                        await raid_message.add_reaction('✅')
                         for loot in raid.loot:
                             loot_rolls = {}
                             embed = discord.Embed(title='Loot', colour=Colour.infoColour, description='\n'.join(list(map(lambda x: x.name, raid.loot))))
@@ -772,8 +773,9 @@ class Adventure(commands.Cog):
                                     loot_rolls_string = 'None'
 
                                 embed.clear_fields()
-                                embed.add_field(name='Loot Information', value=loot.getInfo(), inline=False)
+                                embed.add_field(name='Loot Information', value=loot.getInfo())
                                 embed.add_field(name='Loot Rolls', value=loot_rolls_string)
+                                await raid_message.edit(embed=embed)
                                 try:
                                     reaction, user = await self.bot.wait_for('reaction_add', timeout=15.0,
                                                                                 check=lambda reaction, user: reaction.message.id == raid_message.id)

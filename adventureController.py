@@ -756,10 +756,13 @@ class Encounter:
 
     def get_status(self, embed: discord.Embed):
         active_player = self.turn_order[self.current_turn]
-        available_skills = 'Available Actions\n'
-        for skill in active_player.skills:
-            available_skills += '`{}` **Cooldown: {}**\n'.format(
-                skill.name, skill.cooldown if skill.cooldown > 0 else 'Ready')
+        if active_player.pc:
+            available_skills = 'Available Actions\n'
+            for skill in active_player.skills:
+                available_skills += '`{}` **Cooldown: {}**\n'.format(
+                    skill.name, skill.cooldown if skill.cooldown > 0 else 'Ready')
+        else:
+            available_skills = 'Information Unknown'
         embed.add_field(name='Current Turn: {}'.format(active_player.name),
                         value=available_skills)
 
@@ -901,6 +904,7 @@ class Encounter:
                 finally:
                     await vMessage.delete()
             else:
+                await asyncio.sleep(2)
                 if active_turn in self.players:
                     friendly_team = self.players
                     enemy_team = self.enemies
@@ -919,11 +923,13 @@ class Encounter:
                 combat_log += info + '\n'
                 self.next_turn()
             if len(self.players) <= 0:
-                escape = True
-                winner = self.players
-            elif len(self.enemies) <= 0:
+                print('Enemy wins')
                 escape = True
                 winner = self.enemies
+            elif len(self.enemies) <= 0:
+                print('Player wins')
+                escape = True
+                winner = self.players
 
         return winner
 
