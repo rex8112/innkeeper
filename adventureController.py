@@ -9,6 +9,7 @@ import asyncio
 from discord.ext import commands
 import tools.skills as Skills
 import tools.database as db
+from tools.colour import Colour
 
 logger = logging.getLogger('adventureController')
 logger.setLevel(logging.INFO)
@@ -882,7 +883,7 @@ class Encounter:
                     combat_log = '\n'.join(tmp)
 
             active_turn = self.turn_order[self.current_turn]
-            combat_embed = discord.Embed(title='Combat', colour=discord.Colour(0xFF0000), description=combat_log)
+            combat_embed = discord.Embed(title='Combat', colour=Colour.combatColour, description=combat_log)
             combat_embed.set_footer(text='You have 60 seconds to do your turn, otherwise your turn will be skipped.')
             self.get_status(combat_embed)
             await encounter_message.edit(embed=combat_embed)
@@ -934,7 +935,7 @@ class Encounter:
                 escape = True
                 winner = self.players
 
-        embed = discord.Embed(title='Combat Over', colour=discord.Colour(0xFF0000))
+        embed = discord.Embed(title='Combat Over', colour=Colour.combatColour)
         survivors_string = ''
         for player in self.players:
             survivors_string += '{}\n'.format(player.name)

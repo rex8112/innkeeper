@@ -2,8 +2,10 @@ import discord
 import logging
 import asyncio
 import random
+
 import adventureController as ac
 import tools.database as db
+from tools.colour import Colour
 
 from discord.ext import tasks, commands
 
@@ -18,14 +20,6 @@ handler2.setFormatter(logging.Formatter(
     '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 logger.addHandler(handler2)
-
-
-class Colour:
-    creationColour = discord.Colour(0x00DBEB)
-    errorColour = discord.Colour(0xFF0000)
-    successColour = discord.Colour(0x0DFF00)
-    infoColour = discord.Colour(0xFFA41C)
-
 
 def is_available():
     def predicate(ctx):
