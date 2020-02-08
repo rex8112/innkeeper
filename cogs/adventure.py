@@ -786,6 +786,10 @@ class Adventure(commands.Cog):
                                         loot_rolls[user.id] = random.randint(1, 100)
                                 finally:
                                     await reaction.remove(user)
+                            sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
+                            loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
+                            loot_winner.addInv(loot.id)
+                            raid.finish_encounter()
 
                 finally:
                     for p in players:

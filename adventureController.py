@@ -877,7 +877,7 @@ class Encounter:
         while escape == False:
             if combat_log != '':
                 tmp = combat_log.split('\n')
-                if len(tmp) > 5:
+                if len(tmp) > 6:
                     tmp.pop(0)
                     combat_log = '\n'.join(tmp)
 
@@ -902,7 +902,10 @@ class Encounter:
                     if result:
                         self.next_turn()
                 finally:
-                    await vMessage.delete()
+                    try:
+                        await vMessage.delete()
+                    except discord.NotFound:
+                        logger.debug('No message to delete')
             else:
                 await asyncio.sleep(2)
                 if active_turn in self.players:
@@ -931,6 +934,13 @@ class Encounter:
                 escape = True
                 winner = self.players
 
+        embed = discord.Embed(title='Combat Over', colour=discord.Colour(0xFF0000))
+        survivors_string = ''
+        for player in self.players:
+            survivors_string += '{}\n'.format(player.name)
+        embed.add_field(name='Survivors', value=survivors_string)
+        await encounter_message.edit(embed=embed)
+        await asyncio.sleep(5)
         return winner
 
     def getLoot(self):
@@ -1238,9 +1248,10 @@ class Raid():
     def build_encounter(self):
         self.encounter = Encounter(self.players, [self.boss])
 
-    def finish_encounter(self):
+    def finish_encounter(self, win: bool):
         totalXP = self.encounter.getExp() * 2 # Temporary
         for p in self.players:
-            p.addXP(totalXP)
+            if win:
+                p.addXP(totalXP)
             p.rest() # TEMPORARY UNTIL RECOVERY CODED
             p.save()

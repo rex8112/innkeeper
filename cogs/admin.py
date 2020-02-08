@@ -50,6 +50,13 @@ class Admin(commands.Cog):
         adv.save()
         await ctx.message.add_reaction('✅')
 
+    @adminpanel.command()
+    async def rest(self, ctx, member: discord.Member):
+        adv = ac.Player(member.id)
+        adv.rest()
+        adv.save()
+        await ctx.message.add_reaction('✅')
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))
