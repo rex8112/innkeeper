@@ -20,7 +20,7 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, rng INTEGER)""")
-    cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, rarity INTEGER, modifier TEXT, slot TEXT, price INTEGER, rng INTEGER)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL DEFAULT 1, flavor TEXT NOT NULL DEFAULT ' ', rarity INTEGER NOT NULL DEFAULT 0, modifier TEXT NOT NULL DEFAULT 'ac:1', slot TEXT NOT NULL, price INTEGER NOT NULL, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY, name TEXT, level INTEGER, flavor TEXT, attributes TEXT, skills TEXT, health INTEGER, loot TEXT, available INTEGER DEFAULT 0)""")
 
     cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
