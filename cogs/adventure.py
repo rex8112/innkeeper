@@ -818,10 +818,45 @@ class Adventure(commands.Cog):
             await talk_message.clear_reactions()
             return
         if str(reaction) == '1️⃣':
+            name = 'Quests'
             information = """Quests is the main idle component that I offer. Quests are structured in stages, \
                 each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.
                 
-                Each stage takes {} seconds to complete."""
+                Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.""".format(ac.RNGDungeon.stageTime)
+        elif str(reaction) == '2️⃣':
+            name = 'Raids'
+            information = """Raids, at the moment, are the only active content that I can offer. \
+                Upon hosting a raid, other adventurers have up to fifteen seconds to join your raid \
+                    and assist you in defeating the boss. At the end, the loot will be cycled through \
+                    and adventurers can opt to roll for the loot and the highest roll will get the item."""
+        elif str(reaction) == '3️⃣':
+            name = 'Combat'
+            information = """Combat is turn-based with an order that relies on behind-the-scenes initiative rolls. \
+                Adventurers will be confronted with a list of their skills and cooldowns that they may use. \
+                All forms of skill usage should be formatted as `skill #` where `skill` is the listed \
+                name of the skill and `#` is the index of the target -All this information is listed in the combat screen.\
+                It is important to note how your skills are targetted, if your skill should be cast on an enemy then the \
+                index must match that of the enemy. If it targets an ally, then the index must match your ally. In the event \
+                of a self-cast ability, no target is necessary."""
+        elif str(reaction) == '4️⃣':
+            name = 'Roadmap'
+            information = """
+            Listed by priority.
+            **1. Complete Equipment Overhaul**
+            2. Storage and Player Trading
+            3. Class and Races
+            4. Status Effects
+            5. Dungeons
+            6. Property Ownership
+            7. Slavery
+            More to come."""
+        else:
+            name = 'Not an option'
+            information = "I'm not in that big of a mood to talk."
+        embed = discord.Embed(title=name, colour=Colour.infoColour, description=information)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await talk_message.edit(embed=embed)
+        await talk_message.clear_reactions()
 
 
     @tasks.loop(minutes=1)
