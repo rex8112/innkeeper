@@ -791,6 +791,39 @@ class Adventure(commands.Cog):
                         p.available = True
                         p.save()
 
+    @commands.command()
+    @commands.guild_only()
+    async def talk(self, ctx):
+        adv = ac.Player(ctx.author.id)
+        timeoutEmbed = discord.Embed(
+            title='Timed Out', colour=Colour.errorColour)
+        timeoutEmbed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed = discord.Embed(title='The Innkeeper', colour=Colour.infoColour,
+                              description='Hello {},\nHow may I help you today?'.format(adv.name))
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed.add_field(name='Information Options', value='1️⃣ Quests\n2️⃣ Raids\n3️⃣ Combat\n4️⃣ Roadmap')
+        talk_message = await ctx.send(embed=embed)
+        await talk_message.add_reaction('1️⃣')
+        await asyncio.sleep(0.26)
+        await talk_message.add_reaction('2️⃣')
+        await asyncio.sleep(0.26)
+        await talk_message.add_reaction('3️⃣')
+        await asyncio.sleep(0.26)
+        await talk_message.add_reaction('4️⃣')
+        try:
+            reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == talk_message.id and user.id == ctx.author.id)
+        except asyncio.TimeoutError:
+            await talk_message.edit(embed=timeoutEmbed)
+            await talk_message.clear_reactions()
+            return
+        if str(reaction) == '1️⃣':
+            information = """Quests is the main idle component that I offer. Quests are structured in stages, \
+                each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.
+                
+                Each stage takes {} seconds to complete."""
+
+
     @tasks.loop(minutes=1)
     async def quest_check(self):
         quest_to_update = db.getTimeRNG()
