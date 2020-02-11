@@ -27,7 +27,7 @@ db.initDB()
 
 
 class PerLevel:
-    unarm_damage = 3.5  # Flat increase
+    unarm_damage = 1.5  # Flat increase
     inventory_cap = 5  # Amount of strength to gain one inventory slot
     evasion = 0.004  # Evasion Chance
     softcap_evasion = 0.0023  # Evasion Chance after soft cap
@@ -184,7 +184,7 @@ class Character:
                 return False
 
     def getXPToLevel(self):
-        reqXP = self.baseXP * math.exp(self.xpRate * self.level - 1)
+        reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
         return int(reqXP)
 
     def get_unspent_points(self):
