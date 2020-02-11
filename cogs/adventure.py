@@ -783,9 +783,11 @@ class Adventure(commands.Cog):
                             sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
                             loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
                             loot_winner.addInv(loot.id)
-                            raid.finish_encounter()
-                            embed = discord.Embed(title='Raid Over', colour=Colour.errorColour)
-                            await raid_message.edit(embed=embed)
+                        raid.finish_encounter(True)
+                    else:
+                        raid.finish_encounter(False)
+                    embed = discord.Embed(title='Raid Over', colour=Colour.errorColour)
+                    await raid_message.edit(embed=embed)
                 finally:
                     for p in players:
                         p.available = True
