@@ -602,7 +602,8 @@ class RaidBoss(Character):
             self.armor = None
             self.gloves = None
             self.boots = None
-            self.trinket = None
+            self.trinket = Equipment(0)
+            self.trinket.new('RaidBossModifierTrinket', 'Not much', 4, data[8], 'trinket', 0, save=False)
 
             self.calculate()
             self.loaded = True
@@ -724,7 +725,7 @@ class Equipment:
                 ','.join(rawMod), self.slot, self.price]
         return db.saveEquipment(save)
 
-    def new(self, name, flavor, rarity: int, mods, slot, price):
+    def new(self, name, flavor, rarity: int, mods, slot, price, save=True):
         self.name = name
         self.flavor = flavor
         self.rarity = rarity
@@ -734,7 +735,8 @@ class Equipment:
         for mod in mods.split(','):
             rawMod.append(tuple(mod.split(':')))
         self.mods = dict(rawMod)
-        self.id = self.save()
+        if (save):
+            self.id = self.save()
         logger.info('{}:{} Created Successfully'.format(self.id, self.name))
 
     def delete(self):
@@ -939,7 +941,7 @@ class Encounter:
         survivors_string = ''
         for player in self.players:
             survivors_string += '{}\n'.format(player.name)
-        embed.add_field(name='Survivors', value=survivors_string)
+        embed.add_field(name='Survivors', value=survivors_string if survivors_string != '' else 'No one')
         await encounter_message.edit(embed=embed)
         await asyncio.sleep(5)
         return winner

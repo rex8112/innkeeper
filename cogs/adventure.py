@@ -788,6 +788,8 @@ class Adventure(commands.Cog):
                         raid.finish_encounter(False)
                     embed = discord.Embed(title='Raid Over', colour=Colour.errorColour)
                     await raid_message.edit(embed=embed)
+                except:
+                    logger.error('Error in Raid Host', exc_info=True)
                 finally:
                     for p in players:
                         p.available = True
