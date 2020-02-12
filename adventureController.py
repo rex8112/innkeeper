@@ -751,6 +751,7 @@ class Encounter:
         self.deadPlayers = []
         self.deadEnemies = []
         self.turn_order = []
+        self.winner = 0
         for L in [self.players, self.enemies]:
             for c in L:
                 self.turn_order.append(c)
@@ -833,21 +834,35 @@ class Encounter:
         if check.health <= 0:
             if check in self.players:
                 self.deadPlayers.append(check)
-                self.players.remove(check)
             elif check in self.enemies:
                 self.deadEnemies.append(check)
-                self.enemies.remove(check)
+
+        if len(self.players) <= len(self.deadPlayers):
+            print('Enemy wins')
+            self.winner = 2
+            return True
+        elif len(self.enemies) <= len(self.deadEnemies):
+            print('Player wins')
+            self.winner = 1
+            return True
 
         if self.current_turn + 1 < len(self.turn_order):
             self.current_turn += 1
         else:
             self.current_turn = 0
         check = self.turn_order[self.current_turn]
+
+        if check.health <= 0:
+            if check in self.players:
+                    self.deadPlayers.append(check)
+            elif check in self.enemies:
+                self.deadEnemies.append(check)
+
         if check in self.deadEnemies or check in self.deadPlayers:
-            if len(self.players) > 0 and len(self.enemies) > 0:
-                self.next_turn()
+            return self.next_turn()
         else:
             check.increment_cooldowns()
+        return False
 
 
     def automatic_turn(self):
@@ -875,7 +890,6 @@ class Encounter:
 
     async def run_combat(self, bot, encounter_message: discord.Message):
         escape = False
-        winner = None
         combat_log = ''
         while escape == False:
             if combat_log != '':
@@ -901,9 +915,12 @@ class Encounter:
                     except IndexError:
                         result = False
                         info = 'Invalid Target'
+                    except ValueError:
+                        result = False
+                        info = 'Target must be an integer'
                     combat_log += info + '\n'
                     if result:
-                        self.next_turn()
+                        escape = self.next_turn()
                 finally:
                     try:
                         await vMessage.delete()
@@ -927,24 +944,18 @@ class Encounter:
                             info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(enemy_team)))
                         break
                 combat_log += info + '\n'
-                self.next_turn()
-            if len(self.players) <= 0:
-                print('Enemy wins')
-                escape = True
-                winner = self.enemies
-            elif len(self.enemies) <= 0:
-                print('Player wins')
-                escape = True
-                winner = self.players
+                escape = self.next_turn()
 
         embed = discord.Embed(title='Combat Over', colour=Colour.combatColour)
         survivors_string = ''
         for player in self.players:
-            survivors_string += '{}\n'.format(player.name)
+            if player not in self.deadPlayers:
+                survivors_string += '{}\n'.format(player.name)
         embed.add_field(name='Survivors', value=survivors_string if survivors_string != '' else 'No one')
+        embed.add_field(name='Combat Log', value=combat_log)
         await encounter_message.edit(embed=embed)
         await asyncio.sleep(5)
-        return winner
+        return self.winner
 
     def getLoot(self):
         rawLoot = []

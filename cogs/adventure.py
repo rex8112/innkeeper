@@ -247,7 +247,7 @@ class Adventure(commands.Cog):
             for i in adv.inventory:
                 tmp = ac.Equipment(i)
                 invStr += '**{}** {}, Level **{}**\n'.format(
-                    tmp.rarity, tmp.name, tmp.level)
+                    tmp.getRarity(), tmp.name, tmp.level)
             if invStr == '':
                 invStr = 'Nothing'
 
@@ -536,7 +536,7 @@ class Adventure(commands.Cog):
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
                                 index = int(vMessage.content) - 1
-                                num = shop.buyback[index]
+                                num = shop.inventory[index]
                             except (ValueError, IndexError) as e:
                                 pass
                             except InterruptedError:
@@ -752,7 +752,7 @@ class Adventure(commands.Cog):
                     raid.build_encounter()
                     await raid_message.clear_reactions()
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
-                    if raid.encounter.players is winner:
+                    if winner == 1: # 1 signifies player wins
                         await raid_message.add_reaction('✅')
                         for loot in raid.loot:
                             loot_rolls = {}
