@@ -50,6 +50,12 @@ class Admin(commands.Cog):
         adv.save()
         await ctx.message.add_reaction('✅')
 
+    @commands.command()
+    @commands.has_permissions(administration=True)
+    @commands.guild_only()
+    async def setup(self, ctx):
+        pass
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

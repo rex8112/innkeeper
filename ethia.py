@@ -9,7 +9,8 @@ db.initDB()
 
 commandPrefix = '-'
 startup_extensions = ['cogs.adventure',
-                        'cogs.admin']
+                        'cogs.admin',
+                        'cogs.events']
 logging.basicConfig(level=logging.INFO)
 
 game = discord.Activity(

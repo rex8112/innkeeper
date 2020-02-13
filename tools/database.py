@@ -18,6 +18,7 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER UNIQUE NOT NULL, ownerID INTEGER NOT NULL, category INTEGER, announcement INTEGER""")
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, class TEXT NOT NULL, level INTEGER NOT NULL, xp INTEGER NOT NULL DEFAULT 0, race TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, equipment TEXT NOT NULL, inventory TEXT, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL DEFAULT 1, flavor TEXT NOT NULL DEFAULT ' ', rarity INTEGER NOT NULL DEFAULT 0, modifier TEXT NOT NULL DEFAULT 'ac:1', slot TEXT NOT NULL, price INTEGER NOT NULL, rng INTEGER NOT NULL DEFAULT 1)""")
@@ -213,5 +214,39 @@ def complete_raid(indx: int, result = 1):
     cursor.execute(
         """UPDATE raid SET completed = ? WHERE indx = ?""",
         (result, indx)
+    )
+    db.commit()
+
+def add_server(ID: int, name: str, ownerID: int, categoryID: int, announcementID = 0):
+    if announcementID == 0:
+        cursor.execute(
+            """INSERT INTO servers(name, id, ownerID, category) VALUES(?, ?, ?, ?)""",
+            (name, ID, ownerID, categoryID)
+        )
+    else:
+        cursor.execute(
+            """INSERT INTO servers(name, id, ownerID, category, announcement) VALUES(?, ?, ?, ?, ?)""",
+            (name, ID, ownerID, categoryID, announcementID)
+        )
+    db.commit()
+    return cursor.lastrowid
+
+def update_server(ID: int, name: str, ownerID: int, categoryID: int, announcementID = 0):
+    if announcementID == 0:
+        cursor.execute(
+            """UPDATE servers SET name = ?, ownerID = ?, category = ? WHERE id = ?""",
+            (name, ownerID, categoryID, ID)
+        )
+    else:
+        cursor.execute(
+            """UPDATE servers SET name = ?, ownerID = ?, category = ?, announcement = ? WHERE id = ?""",
+            (name, ownerID, categoryID, announcementID, ID)
+        )
+    db.commit()
+
+def del_server(ID: int):
+    cursor.execute(
+        """DELETE FROM servers WHERE id = ?""",
+        (ID,)
     )
     db.commit()
