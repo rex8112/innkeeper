@@ -22,7 +22,7 @@ logger.addHandler(handler)
 logger.addHandler(handler2)
 
 def is_available():
-    def predicate(ctx):
+    async def predicate(ctx):
         adv = ac.Player(ctx.author.id, False)
         adv.load(False)
         return adv.available

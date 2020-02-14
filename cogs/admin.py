@@ -71,11 +71,12 @@ class Admin(commands.Cog):
         # await asyncio.sleep(0.26)
         # await mainMessage.add_reaction('2️⃣')
         try:
-            reaction, _ = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: reaction.message.id == mainMessage.id and author == user)
+            reaction, _ = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: reaction.message.id == mainMessage.id and author.id == user.id)
         except asyncio.TimeoutError:
             await mainMessage.edit(embed=tout)
         else:
-            await mainMessage.clear_reactions()
+            if isinstance(mainMessage.channel, discord.TextChannel):
+                await mainMessage.clear_reactions()
             if str(reaction) == '1️⃣':
                 embed.title = 'Setup Progress 1/1'
                 embed.description = 'I will now create a new category and channels, you may edit the channels as you see fit but do not delete and recreate them.'
@@ -112,12 +113,14 @@ class Admin(commands.Cog):
             await ctx.message.add_reaction('✅')
 
             announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=Colour.infoColour,
-                description='I have arrived to answer a plea for power, power that I can offer. You may call me, **The Innkeeper**.\nMy Inn will always be open to you and your friends.\n\n***(Bot is heavily still in early alpha and has a hard limitation at this moment until a few things are reworked. Think of this as more of a preview to what is to come.)***')
+                description='I have arrived to answer a plea for power, power that I can offer. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.\n\n***(Bot is heavily still in early alpha and has a hard limitation at this moment until a few things are reworked. Think of this as more of a preview for what is to come.)***')
             announceEmbed.add_field(name='How to get started',
-                                    value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a citizen to an adventurer.'.format(self.bot.CP, commandChannel.mentions))
+                                    value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a citizen to an adventurer.'.format(self.bot.CP, commandChannel.mention))
             announceEmbed.add_field(name='Current Alpha Limitations',
                                     value='Max level: 5\nVery Limited Equipment\nOne Raid\n\nThese limitations will be lifted once equipment is reworked.')
-            await announcementChannel.send(embed=embed)
+            print('About to send')
+            await announcementChannel.send(embed=announceEmbed)
+            print('Sending')
 
 
 def setup(bot):
