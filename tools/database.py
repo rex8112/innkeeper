@@ -2,9 +2,10 @@ import datetime
 import sqlite3
 import discord
 import logging
+import semantic_version
 import numpy as np
 
-
+database_version = semantic_version.Version('0.1.0')
 db = sqlite3.connect('ethiaData.db')
 db2 = sqlite3.connect('persistentData.db')
 cursor = db.cursor()
