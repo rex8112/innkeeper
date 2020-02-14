@@ -51,9 +51,9 @@ class Admin(commands.Cog):
         await ctx.message.add_reaction('✅')
 
     @commands.command()
-    @commands.has_permissions(administration=True)
+    @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def setup(self, ctx):
+    async def setup_server(self, ctx):
         tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
 
         author = ctx.author
