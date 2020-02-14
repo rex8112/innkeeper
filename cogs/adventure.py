@@ -34,6 +34,7 @@ class Adventure(commands.Cog):
         self.bot = bot
         self.bot.xpName = 'Souls'
         self.quest_check.start()
+        self.activity_change.start()
 
     @commands.command()
     @commands.guild_only()
@@ -668,8 +669,10 @@ class Adventure(commands.Cog):
     @commands.group()
     @commands.guild_only()
     async def raid(self, ctx):
+        """Host a raid for you and multiple adventurers to partake in."""
         if ctx.invoked_subcommand == False:
-            pass
+            embed = discord.Embed(colour=Colour.infoColour, description='Please use `{}raid host`'.format(self.bot.CP))
+            await ctx.send(embed=embed)
 
     @raid.command(aliases=['start'])
     @is_available()
@@ -798,6 +801,7 @@ class Adventure(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def talk(self, ctx):
+        """Source of various information"""
         adv = ac.Player(ctx.author.id)
         timeoutEmbed = discord.Embed(
             title='Timed Out', colour=Colour.errorColour)
@@ -896,6 +900,24 @@ class Adventure(commands.Cog):
 
     @quest_check.before_loop
     async def before_questCheck(self):
+        await self.bot.wait_until_ready()
+
+    current_activity = None
+    @tasks.loop(minutes=5)
+    async def activity_change(self):
+        activities = [
+            discord.Activity(name='an Adventure', type=discord.ActivityType.watching),
+            discord.Activity(name='{}help'.format(self.bot.CP), type=discord.ActivityType.listening),
+            discord.Activity(name='with Drinks', type=discord.ActivityType.playing),
+            discord.Activity(name='the Bard', type=discord.ActivityType.listening)
+        ]
+        old_activity = self.current_activity
+        while old_activity == self.current_activity:
+            self.current_activity = random.choice(activities)
+        await self.bot.change_presence(activity=self.current_activity)
+
+    @activity_change.before_loop
+    async def before_activity_change(self):
         await self.bot.wait_until_ready()
 
 

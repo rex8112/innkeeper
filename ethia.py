@@ -16,7 +16,8 @@ logging.basicConfig(level=logging.INFO)
 game = discord.Activity(
     name='An Adventure', type=discord.ActivityType.watching)
 bot = commands.Bot(description='A Wonderful Adventure',
-                   command_prefix=commandPrefix, owner_id=int(settings.owner), activity=game)
+                   command_prefix=commandPrefix, owner_id=int(settings.owner))
+bot.CP = commandPrefix
 
 logger = logging.getLogger('core')
 logger.setLevel(logging.DEBUG)
@@ -33,7 +34,6 @@ logger.addHandler(handler2)
 
 @bot.event
 async def on_ready():
-    bot.CP = commandPrefix
     print('Logged in as')
     print('Name: {}'.format(bot.user.name))
     print('ID:   {}'.format(bot.user.id))
