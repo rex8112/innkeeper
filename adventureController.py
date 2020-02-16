@@ -203,7 +203,7 @@ class Character:
     def get_skill(self, skill_name: str):
         try:
             for skill in self.skills:
-                if skill.name == skill_name:
+                if skill.name.lower() == skill_name.lower():
                     return skill
             return None
         except AttributeError:
@@ -911,7 +911,7 @@ class Encounter:
                 else:
                     content = vMessage.content.split(' ')
                     try:
-                        info, result = self.use_skill(active_turn, content[0], int(content[1]))
+                        info, result = self.use_skill(active_turn, content[0].lower(), int(content[1]))
                     except IndexError:
                         result = False
                         info = 'Invalid Target'
