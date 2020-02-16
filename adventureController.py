@@ -38,8 +38,8 @@ class PerLevel:
 
 
 class Character:
-    baseXP = 100
-    xpRate = 0.03
+    baseXP = 25
+    xpRate = 0.035
     pc = False
 
     def __init__(self, ID, load = True):
@@ -184,7 +184,10 @@ class Character:
                 return False
 
     def getXPToLevel(self):
-        reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
+        if self.level < 5:
+            reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
+        else:
+            reqXP = 999999999
         return int(reqXP)
 
     def get_unspent_points(self):
@@ -200,7 +203,7 @@ class Character:
     def get_skill(self, skill_name: str):
         try:
             for skill in self.skills:
-                if skill.name == skill_name:
+                if skill.name.lower() == skill_name.lower():
                     return skill
             return None
         except AttributeError:
@@ -339,7 +342,7 @@ class Character:
 
 class Player(Character):
     baseXP = 100
-    xpRate = 0.03
+    xpRate = 0.1
     pc = True
 
     def __eq__(self, value):
@@ -462,9 +465,6 @@ class Player(Character):
 
 
 class Enemy(Character):
-    xpRate = 0.03
-    baseXP = 50
-
     def new(self, name, cls, race, rawAttributes, skills, rng):
         self.name = name
         self.cls = cls
@@ -911,7 +911,7 @@ class Encounter:
                 else:
                     content = vMessage.content.split(' ')
                     try:
-                        info, result = self.use_skill(active_turn, content[0], int(content[1]))
+                        info, result = self.use_skill(active_turn, content[0].lower(), int(content[1]))
                     except IndexError:
                         result = False
                         info = 'Invalid Target'

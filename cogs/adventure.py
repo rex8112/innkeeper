@@ -45,7 +45,7 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
                               description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
         embed.add_field(name='Needed Information',
-                        value='Name:\nStrength:\nDexterity:\nConstitution:\nIntelligence:\nWisdom:\nCharisma:[WIP:Currently Unused But Required]')
+                        value='Name:\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:~~[WIP:Currently Unused But Required]')
         embed.add_field(name='Next on the list:',
                         value='**Name**\nYour new adventurer is going to need a name. Type it below.')
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -70,7 +70,7 @@ class Adventure(commands.Cog):
                 embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
                                       description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
                 embed.add_field(name='Needed Information',
-                                value='Name: {}\nStrength:\nDexterity:\nConstitution:\nIntelligence:\nWisdom:\nCharisma:[WIP:Currently Unused But Required]'.format(name))
+                                value='Name: {}\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:\n~~[WIP:Currently Unused But Required]'.format(name))
                 embed.add_field(name='Next on the list:',
                                 value='**Attributes**\nBy default, you have 10 in every attribute but we are going to change that. You have **5** points to spend. \
                           You will gain a point per level up, do not worry.\n**Formatting**\nFor this information, I am going to need you to put the points \
@@ -107,7 +107,6 @@ class Adventure(commands.Cog):
                             total += att
 
                         attributes[:] = [x + 10 for x in attributes]
-                        print(attributes)
 
                         if total > 5:
                             await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=Colour.errorColour), delete_after=3.0)
@@ -123,7 +122,7 @@ class Adventure(commands.Cog):
             embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
                                   description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
             embed.add_field(name='Needed Information',
-                            value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\nIntelligence: {1[3]}\nWisdom: {1[4]}\nCharisma: {1[5]}[WIP:Currently Unused But Required]'.format(name, attributes))
+                            value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\n~~Intelligence: {1[3]}\nWisdom: {1[4]}\nCharisma: {1[5]}~~\n[WIP:Currently Unused But Required]'.format(name, attributes))
             embed.add_field(name='Next on the list:',
                             value='**ALL DONE!**\nTake a look at the information, is it all to your liking?')
             embed.set_author(name=ctx.author.display_name,
@@ -167,11 +166,12 @@ class Adventure(commands.Cog):
             first = True
             escape = False
 
-            if not adv.load():
+            if not adv.loaded:
                 embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
-                                      description='Please contact rex8112#1200 if this is not the case.')
+                                    description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
+
             while adv.get_unspent_points() > 0 and escape == False:
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
                                       colour=Colour.infoColour,
@@ -261,8 +261,8 @@ class Adventure(commands.Cog):
     @profile.command(aliases=['attributes'])
     async def stats(self, ctx):
         """Get a bit more detail about your current stats and attributes"""
-        adv = ac.Player(ctx.author.id, False)
-        if not adv.load():
+        adv = ac.Player(ctx.author.id)
+        if not adv.loaded:
             embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
                                   description='Please contact rex8112#1200 if this is not the case.')
             await ctx.send(embed=embed)
@@ -291,6 +291,11 @@ class Adventure(commands.Cog):
     async def equipment(self, ctx):
         """Get your currently equipped gear and info"""
         adv = ac.Player(ctx.author.id)
+        if not adv.loaded:
+            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                                  description='Please contact rex8112#1200 if this is not the case.')
+            await ctx.send(embed=embed)
+            return
         embed = discord.Embed(title=str(
             adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
         embed.set_author(name=ctx.author.display_name,
@@ -313,6 +318,11 @@ class Adventure(commands.Cog):
         If ran with no subcommands, will get your current inventory."""
         if ctx.invoked_subcommand is None:
             adv = ac.Player(ctx.author.id)
+            if not adv.loaded:
+                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                                    description='Please contact rex8112#1200 if this is not the case.')
+                await ctx.send(embed=embed)
+                return
             count = 0
             embed = discord.Embed(title='{}\'s Inventory'.format(
                 adv.name), colour=Colour.infoColour)
@@ -336,6 +346,11 @@ class Adventure(commands.Cog):
         try:
             adv = ac.Player(ctx.author.id, False)
             adv.load(False)
+            if not adv.loaded:
+                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                                    description='Please contact rex8112#1200 if this is not the case.')
+                await ctx.send(embed=embed)
+                return
             if adv.equip(slot):
                 adv.save()
                 await ctx.message.add_reaction('✅')

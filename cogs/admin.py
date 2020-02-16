@@ -113,14 +113,14 @@ class Admin(commands.Cog):
             await ctx.message.add_reaction('✅')
 
             announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=Colour.infoColour,
-                description='I have arrived to answer a plea for power, power that I can offer. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.\n\n***(Bot is heavily still in early alpha and has a hard limitation at this moment until a few things are reworked. Think of this as more of a preview for what is to come.)***')
+                description='I have arrived to answer a plea for adventure, and a plea for drinks. Both I can offer and both you can have, with a little work that is. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.\n\n***(Bot is heavily still in early alpha and has a hard limitation at this moment until a few things are reworked. Think of this as more of a preview for what is to come.)***')
             announceEmbed.add_field(name='How to get started',
-                                    value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a citizen to an adventurer.'.format(self.bot.CP, commandChannel.mention))
-            announceEmbed.add_field(name='Current Alpha Limitations',
-                                    value='Max level: 5\nVery Limited Equipment\nOne Raid\n\nThese limitations will be lifted once equipment is reworked.')
-            print('About to send')
+                                    value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP, commandChannel.mention))
+            announceEmbed.add_field(name='Current Early Alpha Limitations',
+                                    value='Max level: 5\nVery Limited Equipment\nOne Raid\nAbsolutely NO balancing has been done.\n\nThese limitations will be lifted once equipment is reworked.')
+            announceEmbed.add_field(name='Suggestions suggestions suggestions',
+                                    value='One of the main purposes for this bot being released early is so that anyone interested can help find bugs, balancing issues, and suggest any change or feature along the way. I am making this bot, from scratch, and anything could be done. No suggestion is too much or too little, if you feel like it should be implemented, suggest away.')
             await announcementChannel.send(embed=announceEmbed)
-            print('Sending')
 
 
 def setup(bot):

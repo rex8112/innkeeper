@@ -47,11 +47,8 @@ async def on_ready():
 
 @bot.command()
 @commands.guild_only()
-async def ping(ctx, test=True):
-    if test:
-        await ctx.send('Pong!')
-    else:
-        await ctx.send('Nope!')
+async def ping(ctx):
+    await ctx.send('Pong!')
 
 
 @bot.command(hidden=True)
