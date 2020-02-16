@@ -5,11 +5,15 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+rope = "*"
+autopep8 = "*"
 
 [packages]
 configobj = "*"
 pytz = "*"
 discord-py = "*"
+numpy = "*"
+semantic-version = "*"
 
 [requires]
 python_version = "3.7"
