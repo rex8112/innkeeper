@@ -25,7 +25,10 @@ def is_available():
     async def predicate(ctx):
         adv = ac.Player(ctx.author.id, False)
         adv.load(False)
-        return adv.available
+        if adv.loaded:
+            return adv.available
+        else:
+            return False
     return commands.check(predicate)
 
 
