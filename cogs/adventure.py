@@ -163,7 +163,7 @@ class Adventure(commands.Cog):
     async def profile(self, ctx):
         """Get information on your Adventurer"""
         if ctx.invoked_subcommand is None:
-            adv = ac.Player(ctx.author.id, False)
+            adv = ac.Player(ctx.author.id)
             profile_message = None
             tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
             first = True
