@@ -119,7 +119,7 @@ class Admin(commands.Cog):
             announceEmbed.add_field(name='Current Early Alpha Limitations',
                                     value='Max level: 5\nVery Limited Equipment\nOne Raid\nAbsolutely NO balancing has been done.\n\nThese limitations will be lifted once equipment is reworked.')
             announceEmbed.add_field(name='Suggestions suggestions suggestions',
-                                    value='One of the main purposes for this bot being released early is so that anyone interested can help find bugs, balancing issues, and to suggest any change or feature along the way. I am making this bot, from scratch, and anything could be done. No suggestion is too much or too little, if you feel like it should be implemented, suggest away.')
+                                    value='One of the main purposes for this bot being released early is so that anyone interested can help find bugs, balancing issues, and suggest any change or feature along the way. I am making this bot, from scratch, and anything could be done. No suggestion is too much or too little, if you feel like it should be implemented, suggest away.')
             await announcementChannel.send(embed=announceEmbed)
 
 
