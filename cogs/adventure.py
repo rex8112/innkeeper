@@ -159,7 +159,6 @@ class Adventure(commands.Cog):
                 await controlMessage.edit(embed=embed)
 
     @commands.group(aliases=['character'])
-    @commands.guild_only()
     async def profile(self, ctx):
         """Get information on your Adventurer"""
         if ctx.invoked_subcommand is None:
@@ -290,7 +289,6 @@ class Adventure(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.guild_only()
     async def equipment(self, ctx):
         """Get your currently equipped gear and info"""
         adv = ac.Player(ctx.author.id)
@@ -315,7 +313,6 @@ class Adventure(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group()
-    @commands.guild_only()
     async def inventory(self, ctx):
         """Command group to manage your inventory
         If ran with no subcommands, will get your current inventory."""
