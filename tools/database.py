@@ -4,10 +4,13 @@ import discord
 import logging
 import semantic_version
 import numpy as np
+import shutil
 
-database_version = semantic_version.Version('0.1.0')
-db = sqlite3.connect('ethiaData.db')
-db2 = sqlite3.connect('persistentData.db')
+from tools.configLoader import settings
+
+database_version = semantic_version.Version('0.1.1')
+db = sqlite3.connect('innkeeperData.db')
+db2 = sqlite3.connect('staticData.db')
 cursor = db.cursor()
 cursor2 = db2.cursor()
 logger = logging.getLogger('database')
@@ -16,7 +19,7 @@ logger = logging.getLogger('database')
 def initDB():  # initialize the database
     logger.info('Initializing Database')
     cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
-    cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
@@ -34,6 +37,11 @@ def initDB():  # initialize the database
     db.commit()
     db2.commit()
 
+def update_database():
+    shutil.copyfile('innkeeperData.db', 'inkeeperDataBACKUP.db')
+    # if settings.current_version < semantic_version.Version('0.1.1'):
+    #     cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo Text""")
+    #     db.commit()
 
 def addAdventurer(id, name, cls, race, attributes):
     try:
