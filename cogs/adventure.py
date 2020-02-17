@@ -141,6 +141,7 @@ class Adventure(commands.Cog):
                 reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and controlMessage.id == reaction.message.id)
             except asyncio.TimeoutError:
                 await controlMessage.edit(embed=tout)
+                await asyncio.sleep(0.26)
                 await controlMessage.clear_reactions()
                 logger.warning('Adventure Creator Timed Out')
             else:
@@ -155,6 +156,7 @@ class Adventure(commands.Cog):
                 else:
                     embed = discord.Embed(title='Adventurer Scrapped!', colour=Colour.errorColour,
                                           description='Rerun the command to try again')
+                await asyncio.sleep(0.26)
                 await controlMessage.clear_reactions()
                 await controlMessage.edit(embed=embed)
 
@@ -189,6 +191,7 @@ class Adventure(commands.Cog):
                 else:
                     profile_message = await ctx.send(embed=embed)
                 if first:
+                    await asyncio.sleep(0.26)
                     await profile_message.clear_reactions()
                     await asyncio.sleep(0.26)
                     await profile_message.add_reaction('1️⃣')
@@ -224,6 +227,7 @@ class Adventure(commands.Cog):
                     await reaction.remove(user)
                 except asyncio.TimeoutError:
                     await profile_message.edit(embed=tout)
+                    await asyncio.sleep(0.26)
                     await profile_message.clear_reactions()
                     return
                 finally:
@@ -231,6 +235,7 @@ class Adventure(commands.Cog):
                     adv.save()
 
             if profile_message:
+                await asyncio.sleep(0.26)
                 await profile_message.clear_reactions()
             equipment = []
             for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
@@ -454,6 +459,7 @@ class Adventure(commands.Cog):
                             value='I will buy some equipment from you, if you no longer want it.')
             embed.set_footer(text='Shop Refresh at: {}'.format(shop.refresh.strftime('%H:%M')))
             await shopMessage.edit(embed=embed)
+            await asyncio.sleep(0.26)
             await shopMessage.clear_reactions()
             await asyncio.sleep(0.26)
             await shopMessage.add_reaction('1️⃣')
@@ -471,6 +477,7 @@ class Adventure(commands.Cog):
             except asyncio.TimeoutError:
                 mainExit = True
                 await shopMessage.edit(embed=timeoutEmbed)
+                await asyncio.sleep(0.26)
                 await shopMessage.clear_reactions()
 
             else:
@@ -484,6 +491,7 @@ class Adventure(commands.Cog):
                     embed.add_field(name='Current {}'.format(
                         self.bot.xpName), value=str(adv.xp))
                     await shopMessage.edit(embed=embed)
+                    await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
                     await asyncio.sleep(0.26)
 
@@ -500,6 +508,7 @@ class Adventure(commands.Cog):
                     except asyncio.TimeoutError:
                         mainExit = True
                         await shopMessage.edit(embed=timeoutEmbed)
+                        await asyncio.sleep(0.26)
                         await shopMessage.clear_reactions()
                     else:
                         if str(reaction) == '✅':  # If purchase is accepted
@@ -518,6 +527,7 @@ class Adventure(commands.Cog):
 
                             mainExit = True
                             await shopMessage.edit(embed=embed)
+                            await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
 
                         elif str(reaction) == '🔙':  # Go back
@@ -526,6 +536,7 @@ class Adventure(commands.Cog):
                         else:  # Cancel
                             mainExit = True
                             await shopMessage.edit(embed=goodbyeEmbed)
+                            await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
@@ -541,11 +552,13 @@ class Adventure(commands.Cog):
                     buyExit = False
                     while buyExit == False:
                         await shopMessage.edit(embed=buy_embed)
+                        await asyncio.sleep(0.26)
                         await shopMessage.clear_reactions()
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
                             await shopMessage.edit(embed=timeoutEmbed)
+                            await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
                             try:
@@ -572,6 +585,7 @@ class Adventure(commands.Cog):
                                     mainExit = True
                                     buyExit = True
                                     await shopMessage.edit(embed=timeoutEmbed)
+                                    await asyncio.sleep(0.26)
                                     await shopMessage.clear_reactions()
                                 else:
                                     if str(reaction) == '✅':
@@ -594,11 +608,13 @@ class Adventure(commands.Cog):
                     buyExit = False
                     while buyExit == False:
                         await shopMessage.edit(embed=buy_embed)
+                        await asyncio.sleep(0.26)
                         await shopMessage.clear_reactions()
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
                             await shopMessage.edit(embed=timeoutEmbed)
+                            await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
                             try:
@@ -625,6 +641,7 @@ class Adventure(commands.Cog):
                                     mainExit = True
                                     buyExit = True
                                     await shopMessage.edit(embed=timeoutEmbed)
+                                    await asyncio.sleep(0.26)
                                     await shopMessage.clear_reactions()
                                 else:
                                     if str(reaction) == '✅':
@@ -645,6 +662,7 @@ class Adventure(commands.Cog):
                             embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
                             ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
                     await shopMessage.edit(embed=embed)
+                    await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
 
                     sellExit = False
@@ -653,6 +671,7 @@ class Adventure(commands.Cog):
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
                             await shopMessage.edit(embed=timeoutEmbed)
+                            await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
                             try:
@@ -675,6 +694,7 @@ class Adventure(commands.Cog):
                 elif str(reaction) == '❌':
                     mainExit = True
                     await shopMessage.edit(embed=goodbyeEmbed)
+                    await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
 
             finally:  # No matter what, adventurer should be set available again and saved.
@@ -757,6 +777,7 @@ class Adventure(commands.Cog):
                                                         check = lambda reaction, user: reaction.message.id == raid_message.id and user.id == ctx.author.id)
         except asyncio.TimeoutError:
             await raid_message.edit(embed=timeoutEmbed)
+            await asyncio.sleep(0.26)
             await raid_message.clear_reactions()
             return
         else:
@@ -768,6 +789,7 @@ class Adventure(commands.Cog):
                         p.save()
                     raid = ac.Raid(players, selected_raid[0])
                     raid.build_encounter()
+                    await asyncio.sleep(0.26)
                     await raid_message.clear_reactions()
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
                     if winner == 1: # 1 signifies player wins
@@ -838,6 +860,7 @@ class Adventure(commands.Cog):
             reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == talk_message.id and user.id == ctx.author.id)
         except asyncio.TimeoutError:
             await talk_message.edit(embed=timeoutEmbed)
+            await asyncio.sleep(0.26)
             await talk_message.clear_reactions()
             return
         if str(reaction) == '1️⃣':
@@ -879,6 +902,7 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title=name, colour=Colour.infoColour, description=information)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await talk_message.edit(embed=embed)
+        await asyncio.sleep(0.26)
         await talk_message.clear_reactions()
 
 
