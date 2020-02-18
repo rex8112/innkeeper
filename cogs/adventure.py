@@ -811,7 +811,7 @@ class Adventure(commands.Cog):
                                 embed.add_field(name='Loot Rolls', value=loot_rolls_string)
                                 await raid_message.edit(embed=embed)
                                 try:
-                                    reaction, user = await self.bot.wait_for('reaction_add', timeout=15.0,
+                                    reaction, user = await self.bot.wait_for('reaction_add', timeout=10.0,
                                                                                 check=lambda reaction, user: reaction.message.id == raid_message.id)
                                 except asyncio.TimeoutError:
                                     loot_escape = True
@@ -821,8 +821,11 @@ class Adventure(commands.Cog):
                                 finally:
                                     await reaction.remove(user)
                             sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
-                            loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
-                            loot_winner.addInv(loot.id)
+                            try:
+                                loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
+                                loot_winner.addInv(loot.id)
+                            except IndexError:
+                                pass
                         raid.finish_encounter(True)
                     else:
                         raid.finish_encounter(False)
