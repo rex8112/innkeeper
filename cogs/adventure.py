@@ -390,7 +390,8 @@ class Adventure(commands.Cog):
                 embed.add_field(name='Current Enemies', value=enemies)
             else:
                 embed = discord.Embed(
-                    title='No Active Quest', colour=Colour.errorColour)
+                    title='No Active Quest', colour=Colour.errorColour,
+                    description='To start a new quest, run `{}quest start difficulty`. Replace difficulty with either: `easy`, `medium`, or `hard`.'.format(self.bot.CP))
                 embed.set_author(name=ctx.author.display_name,
                                  icon_url=ctx.author.avatar_url)
 

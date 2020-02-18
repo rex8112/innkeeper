@@ -24,8 +24,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.NoPrivateMessage):
-            print(error)
-            await ctx.send('[NoPrivateMessage] Sorry. This command is not allow in private messages.')
+            embed = discord.Embed(title='No Private Message', colour=Colour.errorColour, description='Sorry. This command is not allow in private messages. Run {}help to see what is supported in DMs'.format(self.bot.CP))
         elif isinstance(error, commands.CommandNotFound):
             return
         elif isinstance(error, commands.CheckFailure):
