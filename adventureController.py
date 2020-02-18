@@ -983,6 +983,7 @@ class RNGDungeon:
 
     def __init__(self, dID=0):
         self.id = dID
+        self.combat_log = []
 
     def new(self, aID: int, difficulty: str):
         self.adv = Player(aID)
@@ -1056,7 +1057,7 @@ class RNGDungeon:
             tmp.append(','.join(str(e) for e in stage))
         enemies = ';'.join(tmp)
         save = [self.id, self.adv.id, int(self.active), self.stage, self.stages,
-                enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S'), self.xp]
+                enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S'), self.xp, '|'.join(self.combat_log)]
         self.id = db.saveRNG(save)
 
     def loadActive(self, aID):
@@ -1077,6 +1078,7 @@ class RNGDungeon:
             self.time = datetime.datetime.strptime(
                 save[7], '%Y-%m-%d %H:%M:%S')
             self.xp = int(save[8])
+            self.combat_log = save[9].split('|')
             self.encounter = self.buildEncounter(
                 [self.adv], self.enemies[self.stage - 1])
             return True
@@ -1109,6 +1111,14 @@ class RNGDungeon:
         return Encounter(bPlayers, bEnemies)
 
     def nextStage(self):
+        info = '**{0}**: {0.health}/{0.maxHealth}'.format(self.adv)
+        info += '\n__*Enemies*__'
+        for e in self.encounter.enemies:
+            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.maxHealth}'.format(e)
+        for e in self.encounter.deadEnemies:
+            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.maxHealth}'.format(e)
+        info += '\n'
+        self.combat_log.append(info)
         if self.adv.health > 0:
             self.stage += 1
             self.xp += int(self.encounter.getExp())

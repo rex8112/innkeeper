@@ -940,14 +940,18 @@ class Adventure(commands.Cog):
                         lootStr = ''
                         for l in rng.loot:
                             tmp = ac.Equipment(l)
-                            lootStr += 'Level {0.level} {0.rarity} {0.name}\n'.format(
-                                tmp)
+                            lootStr += 'Level {0.level} {1} {0.name}\n'.format(tmp, tmp.getRarity())
                         embed.add_field(name='Loot', value=lootStr)
-                        await mem.send(embed=embed)
                     else:
                         embed = discord.Embed(title='Quest Failed', colour=Colour.errorColour,
                                               description='{} died on stage {}'.format(rng.adv.name, rng.stage))
-                        await mem.send(embed=embed)
+                    count = 1
+                    while '' in rng.combat_log: rng.combat_log.remove('')
+                    for info in rng.combat_log:
+                        embed.add_field(name='Stage {}'.format(count), value=info)
+                        count += 1
+                    embed.set_footer(text='DEBUG: Current Characters: {}'.format(len(embed)))
+                    await mem.send(embed=embed)
 
     @quest_check.before_loop
     async def before_questCheck(self):
