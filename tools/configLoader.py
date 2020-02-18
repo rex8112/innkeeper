@@ -1,6 +1,5 @@
 import logging
 import semantic_version
-import tools.database as db
 import sys
 
 from configobj import ConfigObj
@@ -17,11 +16,9 @@ except IOError as e:
   logger.critical('config.ini not found, generating one now. Please fill it in.')
   config['token'] = ''
   config['ownerID'] = '180067685986467840'
-  config['dbVersion'] = str(db.database_version)
   config.write()
   sys.exit()
 
 class settings:
   token = config['token']
   owner = config['ownerID']
-  current_version = config['dbVersion']
