@@ -654,20 +654,21 @@ class Adventure(commands.Cog):
 
                 elif str(reaction) == '4️⃣':  # Sell Equipment
                     embed = discord.Embed(title='Selling Equipment', colour=Colour.infoColour,
-                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. Use `0` to go back.')
-                    number = 0
-                    for i in adv.inventory:
-                        number += 1
-                        e = ac.Equipment(i)
-                        if not e.mods.get('unsellable', False):
-                            embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
-                            ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
-                    await shopMessage.edit(embed=embed)
+                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. You must use `0` to go cancel.')
                     await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
 
                     sellExit = False
                     while sellExit == False:
+                        embed.clear_fields()
+                        number = 0
+                        for i in adv.inventory:
+                            number += 1
+                            e = ac.Equipment(i)
+                            if not e.mods.get('unsellable', False):
+                                embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
+                                ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
+                        await shopMessage.edit(embed=embed)
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
@@ -688,7 +689,6 @@ class Adventure(commands.Cog):
                                 if not e.mods.get('unsellable', False):
                                     shop.sell(num)
                                     shop.save()
-                                    sellExit = True
                             finally:
                                 await vMessage.delete()
 
