@@ -850,7 +850,7 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title='The Innkeeper', colour=Colour.infoColour,
                               description='Hello {},\nHow may I help you today?'.format(adv.name))
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        embed.add_field(name='Information Options', value='1️⃣ Quests\n2️⃣ Raids\n3️⃣ Combat\n4️⃣ Roadmap')
+        embed.add_field(name='Information Options', value='1️⃣ Quests\n2️⃣ Raids\n3️⃣ Combat\n4️⃣ AC/WC\n5️⃣ Roadmap')
         talk_message = await ctx.send(embed=embed)
         await talk_message.add_reaction('1️⃣')
         await asyncio.sleep(0.26)
@@ -859,6 +859,8 @@ class Adventure(commands.Cog):
         await talk_message.add_reaction('3️⃣')
         await asyncio.sleep(0.26)
         await talk_message.add_reaction('4️⃣')
+        await asyncio.sleep(0.26)
+        await talk_message.add_reaction('5️⃣')
         try:
             reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == talk_message.id and user.id == ctx.author.id)
         except asyncio.TimeoutError:
@@ -888,6 +890,12 @@ class Adventure(commands.Cog):
                 index must match that of the enemy. If it targets an ally, then the index must match your ally. In the event \
                 of a self-cast ability, no target is necessary."""
         elif str(reaction) == '4️⃣':
+            name = 'Armor and Weapon Class'
+            information = """Armor Class and Weapon Class is used to determine hit chances based on the percent difference. \
+                In an average scenerio, Weapon Class should be lower and that difference is used for hit chance; however, \
+                if Weapon Class is higher than the armor class, the percent difference is then used for crit chance as a hit \
+                is already guaranteed."""
+        elif str(reaction) == '5️⃣':
             name = 'Roadmap'
             information = """
             Listed by priority.
