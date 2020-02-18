@@ -8,7 +8,6 @@ import shutil
 
 from tools.configLoader import settings
 
-database_version = semantic_version.Version('0.1.1')
 db = sqlite3.connect('innkeeperData.db')
 db2 = sqlite3.connect('staticData.db')
 cursor = db.cursor()
@@ -33,15 +32,14 @@ def initDB():  # initialize the database
         cursor2.execute("""INSERT INTO equipment(name, level, flavor, rarity, modifier, slot, price, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
                         ('Empty', 0, 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0, 0))
 
+    try:
+        cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo TEXT""")
+    except sqlite3.OperationalError:
+        logger.error('Unable to create combatInfo column. Ignoring.')
+
     cursor.execute("""DELETE FROM rngdungeons WHERE adv IS NULL""")
     db.commit()
     db2.commit()
-
-def update_database():
-    shutil.copyfile('innkeeperData.db', 'inkeeperDataBACKUP.db')
-    # if settings.current_version < semantic_version.Version('0.1.1'):
-    #     cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo Text""")
-    #     db.commit()
 
 def addAdventurer(id, name, cls, race, attributes):
     try:
@@ -153,8 +151,8 @@ def addRNG():
 def saveRNG(save):
     if save[0] == 0:
         save[0] = addRNG()
-    cursor.execute("""UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ?, time = ?, xp = ? WHERE indx = ?""",
-                   (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[0]))
+    cursor.execute("""UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ?, time = ?, xp = ?, combatInfo = ? WHERE indx = ?""",
+                   (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
     db.commit()
     return save[0]
 
