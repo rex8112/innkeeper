@@ -253,3 +253,9 @@ def del_server(ID: int):
         (ID,)
     )
     db.commit()
+
+def get_all_servers():
+    cursor.execute(
+        """SELECT * FROM servers"""
+    )
+    return cursor.fetchall()
