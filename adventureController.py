@@ -614,6 +614,56 @@ class RaidBoss(Character):
             return False
 
 
+class Modifier:
+    def __eq__(self, other):
+        if isinstance(other, Modifier):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Modifier):
+            return self.value < other.value
+        elif isinstance(other, int):
+            return self.value < other
+
+    def __le__(self, other):
+        if isinstance(other, Modifier):
+            return self.value <= other.value
+        elif isinstance(other, int):
+            return self.value <= other
+
+    def __gt__(self, other):
+        if isinstance(other, Modifier):
+            return self.value > other.value
+        elif isinstance(other, int):
+            return self.value > other
+
+    def __ge__(self, other):
+        if isinstance(other, Modifier):
+            return self.value >= other.value
+        elif isinstance(other, int):
+            return self.value >= other
+
+    def __init__(self, ID: str, value: int):
+        self.id = ID
+        self.value = value
+        self.load()
+    
+    def load(self):
+        data = db.get_modifier(self.id)
+        if data[2]:
+            self.display_name = data[2]
+        else:
+            self.display_name = self.id
+        if data[3]:
+            self.title = data[3]
+        else:
+            self.title = None
+
 
 class Equipment:
     def __init__(self, id):

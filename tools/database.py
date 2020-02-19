@@ -26,6 +26,7 @@ def initDB():  # initialize the database
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, class TEXT NOT NULL, level INTEGER NOT NULL, xp INTEGER NOT NULL DEFAULT 0, race TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, equipment TEXT NOT NULL, inventory TEXT, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS equipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL DEFAULT 1, flavor TEXT NOT NULL DEFAULT ' ', rarity INTEGER NOT NULL DEFAULT 0, modifier TEXT NOT NULL DEFAULT 'ac:1', slot TEXT NOT NULL, price INTEGER NOT NULL, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT)""")
 
     cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
     if not cursor2.fetchone():
@@ -259,3 +260,10 @@ def get_all_servers():
         """SELECT * FROM servers"""
     )
     return cursor.fetchall()
+
+def get_modifier(ID: str):
+    cursor2.execute(
+        """SELECT * FROM modifiers WHERE id = ?""",
+        (ID,)
+    )
+    return cursor2.fetchone()
