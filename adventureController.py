@@ -655,13 +655,17 @@ class Modifier:
     
     def load(self):
         data = db.get_modifier(self.id)
-        if data[2]:
-            self.display_name = data[2]
+        if data:
+            if data[2]:
+                self.display_name = data[2]
+            else:
+                self.display_name = self.id
+            if data[3]:
+                self.title = data[3]
+            else:
+                self.title = None
         else:
             self.display_name = self.id
-        if data[3]:
-            self.title = data[3]
-        else:
             self.title = None
 
 
