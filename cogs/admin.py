@@ -67,10 +67,11 @@ class Admin(commands.Cog):
                 except IndexError:
                     pass
         for channel in channels:
-            try:
-                await channel.send(embed=embed)
-            except discord.Forbidden:
-                pass
+            if channel:
+                try:
+                    await channel.send(embed=embed)
+                except discord.Forbidden:
+                    pass
         await ctx.message.add_reaction('✅')
 
     @commands.command()
