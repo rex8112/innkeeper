@@ -4,10 +4,12 @@ import discord
 import logging
 import semantic_version
 import numpy as np
+import shutil
 
-database_version = semantic_version.Version('0.1.0')
-db = sqlite3.connect('ethiaData.db')
-db2 = sqlite3.connect('persistentData.db')
+from tools.configLoader import settings
+
+db = sqlite3.connect('innkeeperData.db')
+db2 = sqlite3.connect('staticData.db')
 cursor = db.cursor()
 cursor2 = db2.cursor()
 logger = logging.getLogger('database')
@@ -16,7 +18,7 @@ logger = logging.getLogger('database')
 def initDB():  # initialize the database
     logger.info('Initializing Database')
     cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
-    cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
@@ -30,10 +32,14 @@ def initDB():  # initialize the database
         cursor2.execute("""INSERT INTO equipment(name, level, flavor, rarity, modifier, slot, price, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
                         ('Empty', 0, 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0, 0))
 
+    try:
+        cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo TEXT""")
+    except sqlite3.OperationalError:
+        logger.error('Unable to create combatInfo column. Ignoring.')
+
     cursor.execute("""DELETE FROM rngdungeons WHERE adv IS NULL""")
     db.commit()
     db2.commit()
-
 
 def addAdventurer(id, name, cls, race, attributes):
     try:
@@ -145,8 +151,8 @@ def addRNG():
 def saveRNG(save):
     if save[0] == 0:
         save[0] = addRNG()
-    cursor.execute("""UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ?, time = ?, xp = ? WHERE indx = ?""",
-                   (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[0]))
+    cursor.execute("""UPDATE rngdungeons SET adv = ?, active = ?, stage = ?, stages = ?, enemies = ?, loot = ?, time = ?, xp = ?, combatInfo = ? WHERE indx = ?""",
+                   (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
     db.commit()
     return save[0]
 
@@ -247,3 +253,9 @@ def del_server(ID: int):
         (ID,)
     )
     db.commit()
+
+def get_all_servers():
+    cursor.execute(
+        """SELECT * FROM servers"""
+    )
+    return cursor.fetchall()

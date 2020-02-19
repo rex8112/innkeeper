@@ -50,6 +50,29 @@ class Admin(commands.Cog):
         adv.save()
         await ctx.message.add_reaction('✅')
 
+    @adminpanel.command()
+    async def announce(self, ctx, *, content):
+        """A bot-wide announcement, used for updates and the like.
+        
+        Format: Embed Title|Embed Description|Field Title|Field Value
+        Fields are repeatable but need both a title and a value."""
+        raw_guilds = db.get_all_servers()
+        channels = [self.bot.get_channel(x[5]) for x in raw_guilds]
+        message = content.split('|')
+        embed = discord.Embed(title=message[0], colour=Colour.infoColour, description=message[1])
+        for i, x in enumerate(message[2:]):
+            if i % 2 != 1:
+                try:
+                    embed.add_field(name=x, value=message[2+i+1])
+                except IndexError:
+                    pass
+        for channel in channels:
+            try:
+                await channel.send(embed=embed)
+            except discord.Forbidden:
+                pass
+        await ctx.message.add_reaction('✅')
+
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.guild_only()

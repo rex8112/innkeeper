@@ -73,10 +73,10 @@ class AttackSkill(Skill):
                 else:  # You miss
                     logger.debug(
                         'Missed with chanceToHit: {:.1%}'.format(chanceToHit))
-                    self.log = '{} missed trying to hit {}.'.format(user.name, target.name)
+                    self.log = '**{}** missed trying to hit **{}**.'.format(user.name, target.name)
             else:  # You evaded
                 logger.debug('Player Evaded')
-                self.log = '{1} evaded {0}\'s strike.'.format(user.name, target.name)
+                self.log = '**{1}** evaded **{0}**\'s strike.'.format(user.name, target.name)
             return self.log, True
         else:
             self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
