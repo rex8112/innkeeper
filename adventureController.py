@@ -812,6 +812,13 @@ class Equipment:
             requirements[key] = final_requirement
         return requirements
 
+    def calculate_price(self):
+        base_price = 100
+        price_per_mod = 400
+        price_per_level = 100
+        rarity_coefficient = 1 + (self.rarity * 0.5)
+        self.price = (base_price + (price_per_level * self.level) + (price_per_mod * len(self.mods))) * rarity_coefficient
+
     def generate_new_rng(self, lvl: int, rarity: int):
         self.base_equipment = BaseEquipment()
         self.base_equipment.new(lvl)
