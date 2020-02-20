@@ -699,7 +699,8 @@ class BaseEquipment:
         self.starting_rarity = int(data[6])
         self.starting_mod_string = str(data[7])
         self.random_mod_string = str(data[8])
-        self.rng = bool(data[9])
+        self.requirement_string = str(data[9])
+        self.rng = bool(data[10])
 
     def new(self, lvl: int, RNG = True):
         if RNG:
@@ -792,13 +793,24 @@ class Equipment:
             min_string, max_string = tuple(value_string.split('/'))
             min_value, min_per_level = tuple(min_string.split('+'))
             max_value, max_per_level = tuple(max_string.split('+'))
-            final_min_volume = int(min_value) + (int(min_per_level) * self.level)
-            final_max_volume = int(max_value) + (int(max_per_level) * self.level)
+            final_min_volume = int(min_value) + math.floor(float(min_per_level) * self.level)
+            final_max_volume = int(max_value) + math.floor(float(max_per_level) * self.level)
             final_mod = Modifier(key, random.randint(final_min_volume, final_max_volume))
             if mods.get(key, False): # Determine if this modifier is already in the dictionary
                 final_mod.value += mods.get(key).value
             mods[key] = final_mod
         return mods
+
+    def process_requirement_string(self, requirement_string: str):
+        requirements = {}
+        requirement_string_list = requirement_string.split('|')
+        for requirement in requirement_string_list:
+            key, value_string = tuple(requirement.split(':'))
+            value, per_level = tuple(value_string.split('+'))
+            final_value = int(value) + math.floor(float(per_level) * self.level)
+            final_requirement = Modifier(key, final_value)
+            requirements[key] = final_requirement
+        return requirements
 
     def generate_new_rng(self, lvl: int, rarity: int):
         self.base_equipment = BaseEquipment()
@@ -813,6 +825,7 @@ class Equipment:
             self.rarity = rarity
         self.slot = self.base_equipment.slot
         self.mods = self.process_mod_string(self.base_equipment.starting_mod_string)
+
         if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
             potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
             new_mods = random.sample(potential_mods, self.rarity) # Grab an amount based on rarity
@@ -825,7 +838,13 @@ class Equipment:
             highest_mod = next(sorted(new_mods, reverse=True)) # Set title
             if highest_mod.title:
                 self.name += ' {}'.format(highest_mod.title)
-        # Need Price Calculation
+
+        if self.base_equipment.requirement_string:
+            self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
+        else:
+            self.requirements = {}
+        self.calculate_price()
+        return True
 
     def load(self):
         try:
