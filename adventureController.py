@@ -620,6 +620,8 @@ class Modifier:
             return self.value == other.value
         elif isinstance(other, int):
             return self.value == other
+        else:
+            return NotImplemented
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -629,24 +631,32 @@ class Modifier:
             return self.value < other.value
         elif isinstance(other, int):
             return self.value < other
+        else:
+            return NotImplemented
 
     def __le__(self, other):
         if isinstance(other, Modifier):
             return self.value <= other.value
         elif isinstance(other, int):
             return self.value <= other
+        else:
+            return NotImplemented
 
     def __gt__(self, other):
         if isinstance(other, Modifier):
             return self.value > other.value
         elif isinstance(other, int):
             return self.value > other
+        else:
+            return NotImplemented
 
     def __ge__(self, other):
         if isinstance(other, Modifier):
             return self.value >= other.value
         elif isinstance(other, int):
             return self.value >= other
+        else:
+            return NotImplemented
 
     def __init__(self, ID: str, value: int):
         self.id = ID
@@ -668,6 +678,37 @@ class Modifier:
             self.display_name = self.id
             self.title = None
 
+
+class BaseEquipment:
+    def __init__(self, ID = 0):
+        self.id = ID
+        if self.id != 0:
+            self.load(self.id)
+
+    def load(self, ID):
+        if isinstance(ID, int):
+            data = db.get_base_equipment(ID)
+        else:
+            data = ID
+        self.id = str(data[0])
+        self.name = str(data[1])
+        self.flavor = str(data[2])
+        self.slot = str(data[3])
+        self.min_level = int(data[4])
+        self.max_level = int(data[5])
+        self.starting_rarity = int(data[6])
+        self.starting_mod_string = str(data[7])
+        self.random_mod_string = str(data[8])
+        self.rng = bool(data[9])
+
+    def new(self, lvl: int, RNG = True):
+        if RNG:
+            data = db.get_base_equipment_lvl_rng(lvl)
+        else:
+            data = db.get_base_equipment_lvl(lvl)
+        chosen_data = random.choice(data)
+        self.load(chosen_data)
+        
 
 class Equipment:
     def __init__(self, id):
@@ -742,6 +783,49 @@ class Equipment:
             for key, mod in self.mods.items():
                 info += str(key).upper() + ': **' + str(mod) + '**\n'
         return info
+
+    def process_mod_string(self, mod_string: str): # May be moved to Equipment
+        mods = {}
+        mod_string_list = mod_string.split('|')
+        for mod in mod_string_list:
+            key, value_string = tuple(mod.split(':'))
+            min_string, max_string = tuple(value_string.split('/'))
+            min_value, min_per_level = tuple(min_string.split('+'))
+            max_value, max_per_level = tuple(max_string.split('+'))
+            final_min_volume = int(min_value) + (int(min_per_level) * self.level)
+            final_max_volume = int(max_value) + (int(max_per_level) * self.level)
+            final_mod = Modifier(key, random.randint(final_min_volume, final_max_volume))
+            if mods.get(key, False): # Determine if this modifier is already in the dictionary
+                final_mod.value += mods.get(key).value
+            mods[key] = final_mod
+        return mods
+
+    def generate_new_rng(self, lvl: int, rarity: int):
+        self.base_equipment = BaseEquipment()
+        self.base_equipment.new(lvl)
+
+        self.name = self.base_equipment.name
+        self.level = lvl
+        self.flavor = self.base_equipment.flavor
+        if rarity < self.base_equipment.starting_rarity:
+            self.rarity = self.base_equipment.starting_rarity
+        else:
+            self.rarity = rarity
+        self.slot = self.base_equipment.slot
+        self.mods = self.process_mod_string(self.base_equipment.starting_mod_string)
+        if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
+            potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
+            new_mods = random.sample(potential_mods, self.rarity) # Grab an amount based on rarity
+            for mod in new_mods: # Add new mods
+                if self.mods.get(mod.id, False):
+                    self.mods[mod.id].value += mod.value
+                else:
+                    self.mods[mod.id] = mod
+
+            highest_mod = next(sorted(new_mods, reverse=True)) # Set title
+            if highest_mod.title:
+                self.name += ' {}'.format(highest_mod.title)
+        # Need Price Calculation
 
     def load(self):
         try:

@@ -24,7 +24,7 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, class TEXT NOT NULL, level INTEGER NOT NULL, xp INTEGER NOT NULL DEFAULT 0, race TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, equipment TEXT NOT NULL, inventory TEXT, rng INTEGER NOT NULL DEFAULT 1)""")
-    cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingMods INTEGER NOT NULL DEFAULT 1, modString TEXT NOT NULL, rng INTEGER NOT NULL)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, rng INTEGER NOT NULL)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT)""")
 
@@ -75,16 +75,23 @@ def statusAdventurer(id, available: bool):
     db.commit()
 
 
+def get_base_equipment(ID: int):
+    cursor2.execute(
+        """SELECT * FROM baseEquipment WHERE indx = ?""",
+        (ID,)
+    )
+    return cursor.fetchone()
+
 def get_base_equipment_lvl(lvl: int):
     cursor2.execute(
-        """SELECT * FROM equipment WHERE minLevel <= ? AND maxLevel >= ?""", (lvl, lvl)
+        """SELECT * FROM baseEquipment WHERE minLevel <= ? AND maxLevel >= ?""", (lvl, lvl)
     )
     return cursor2.fetchall()
 
 
 def get_base_equipment_lvl_rng(lvl: int):
     cursor2.execute(
-        """SELECT * FROM equipment WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ?""", (lvl, lvl)
+        """SELECT * FROM baseEquipment WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ?""", (lvl, lvl)
     )
     return cursor2.fetchall()
 
