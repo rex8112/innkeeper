@@ -700,7 +700,8 @@ class BaseEquipment:
         self.starting_mod_string = str(data[7])
         self.random_mod_string = str(data[8])
         self.requirement_string = str(data[9])
-        self.rng = bool(data[10])
+        self.skills_string = str(data[10])
+        self.rng = bool(data[11])
 
     def new(self, lvl: int, RNG = True):
         if RNG:
@@ -812,6 +813,15 @@ class Equipment:
             requirements[key] = final_requirement
         return requirements
 
+    def process_skills_string(self, skills_string: str):
+        skills = []
+        skills_string_list = skills_string.split('|')
+        for skill in skills_string_list:
+            final_skill = Skills.Skill.get_skill(skill)
+            if final_skill:
+                skills.append(final_skill)
+        return skills
+
     def calculate_price(self):
         base_price = 100
         price_per_mod = 400
@@ -850,7 +860,14 @@ class Equipment:
             self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
         else:
             self.requirements = {}
+
+        if self.base_equipment.skills_string:
+            self.skills = self.process_skills_string(self.base_equipment.skills_string)
+        else:
+            self.skills = []
         self.calculate_price()
+        self.saved = False
+        self.loaded = True
         return True
 
     def load(self):
