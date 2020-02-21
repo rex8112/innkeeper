@@ -658,6 +658,12 @@ class Modifier:
         else:
             return NotImplemented
 
+    def __int__(self):
+        return self.value
+
+    def __str__(self):
+        return self.display_name
+
     def __init__(self, ID: str, value: int):
         self.id = ID
         self.value = value
@@ -699,8 +705,14 @@ class BaseEquipment:
         self.starting_rarity = int(data[6])
         self.starting_mod_string = str(data[7])
         self.random_mod_string = str(data[8])
-        self.requirement_string = str(data[9])
-        self.skills_string = str(data[10])
+        if data[9]:
+            self.requirement_string = str(data[9])
+        else:
+            self.requirement_string = None
+        if data[10]:
+            self.skills_string = str(data[10])
+        else:
+            self.skills_string = None
         self.rng = bool(data[11])
 
     def new(self, lvl: int, RNG = True):
@@ -782,8 +794,8 @@ class Equipment:
         else:
             info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
                 self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
-            for key, mod in self.mods.items():
-                info += str(key).upper() + ': **' + str(mod) + '**\n'
+            for mod in self.mods.values():
+                info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
         return info
 
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
@@ -827,12 +839,13 @@ class Equipment:
         price_per_mod = 400
         price_per_level = 100
         rarity_coefficient = 1 + (self.rarity * 0.5)
-        self.price = (base_price + (price_per_level * self.level) + (price_per_mod * len(self.mods))) * rarity_coefficient
+        self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * len(self.mods))) * rarity_coefficient)
 
     def generate_new_rng(self, lvl: int, rarity: int):
         self.base_equipment = BaseEquipment()
         self.base_equipment.new(lvl)
 
+        self.id = None
         self.name = self.base_equipment.name
         self.level = lvl
         self.flavor = self.base_equipment.flavor
@@ -845,14 +858,14 @@ class Equipment:
 
         if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
             potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
-            new_mods = random.sample(potential_mods, self.rarity) # Grab an amount based on rarity
+            new_mods = random.sample(list(potential_mods.values()), self.rarity) # Grab an amount based on rarity
             for mod in new_mods: # Add new mods
                 if self.mods.get(mod.id, False):
                     self.mods[mod.id].value += mod.value
                 else:
                     self.mods[mod.id] = mod
 
-            highest_mod = next(sorted(new_mods, reverse=True)) # Set title
+            highest_mod = max(new_mods) # Set title
             if highest_mod.title:
                 self.name += ' {}'.format(highest_mod.title)
 
@@ -866,7 +879,6 @@ class Equipment:
         else:
             self.skills = []
         self.calculate_price()
-        self.saved = False
         self.loaded = True
         return True
 

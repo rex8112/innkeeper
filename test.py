@@ -1,4 +1,5 @@
 import adventureController as ac
+import tools.database as db
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -9,6 +10,8 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='w')
 handler2.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
+
+db.initDB()
 
 def output(x):
   print('----------')
@@ -28,3 +31,6 @@ def equipout(z: ac.Equipment):
   print('----------')
 
 logger.info('Beginning Test')
+equipment = ac.Equipment(0)
+equipment.generate_new_rng(50, 2)
+print(equipment.getInfo())
