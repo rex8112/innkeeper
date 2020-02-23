@@ -794,7 +794,9 @@ class Equipment:
         else:
             info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
                 self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
-            for mod in self.mods.values():
+            for mod in self.starting_mods.values():
+                info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+            for mod in self.random_mods.values():
                 info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
         return info
 
@@ -835,11 +837,11 @@ class Equipment:
         return skills
 
     def calculate_price(self):
-        base_price = 100
-        price_per_mod = 400
-        price_per_level = 100
+        base_price = 10
+        price_per_mod = 100
+        price_per_level = 10 * math.ceil(self.level / 10)
         rarity_coefficient = 1 + (self.rarity * 0.5)
-        self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * len(self.mods))) * rarity_coefficient)
+        self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * (len(self.starting_mods) + len(self.random_mods)))) * rarity_coefficient)
 
     def generate_new_rng(self, lvl: int, rarity: int):
         self.base_equipment = BaseEquipment()
@@ -854,20 +856,32 @@ class Equipment:
         else:
             self.rarity = rarity
         self.slot = self.base_equipment.slot
-        self.mods = self.process_mod_string(self.base_equipment.starting_mod_string)
-
+        self.starting_mods = self.process_mod_string(self.base_equipment.starting_mod_string)
+        self.random_mods = {}
         if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
             potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
             new_mods = random.sample(list(potential_mods.values()), self.rarity) # Grab an amount based on rarity
             for mod in new_mods: # Add new mods
-                if self.mods.get(mod.id, False):
-                    self.mods[mod.id].value += mod.value
+                if self.random_mods.get(mod.id, False):
+                    self.random_mods[mod.id].value += mod.value
                 else:
-                    self.mods[mod.id] = mod
+                    self.random_mods[mod.id] = mod
 
             highest_mod = max(new_mods) # Set title
             if highest_mod.title:
                 self.name += ' {}'.format(highest_mod.title)
+
+        # for key, value in self.starting_mods.items(): # Put starting_mods and random_mods together
+        #     if self.mods.get(key, False):
+        #         self.mods[key] += value
+        #     else:
+        #         self.mods[key] = value
+
+        # for key, value in self.random_mods.items():
+        #     if self.mods.get(key, False):
+        #         self.mods[key] += value
+        #     else:
+        #         self.mods[key] = value
 
         if self.base_equipment.requirement_string:
             self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
@@ -884,22 +898,47 @@ class Equipment:
 
     def load(self):
         try:
-            raw = db.getEquipment(self.id)
-            self.loaded = True
-            self.name = raw[1]
-            self.level = raw[2]
-            self.flavor = raw[3]
-            self.rarity = raw[4]
-            self.slot = raw[6]
-            self.price = raw[7]
-            rawMod = raw[5].split(',')
-            mods = []
-            for mod in rawMod:
-                mods.append(tuple(mod.split(':')))
-            self.mods = dict(mods)
+            data = db.get_equipment(self.id)
+            self.base_equipment = BaseEquipment(data[1])
+            self.level = int(data[2])
+            self.rarity = int(data[3])
+            self.starting_mods = {}
+            starting_mods = str(data[4]).split('|')
+            self.random_mods = {}
+            random_mods = str(data[5]).split('|')
+
+            self.name = self.base_equipment.name
+            self.flavor = self.base_equipment.flavor
+            self.slot = self.base_equipment.slot
+            if self.base_equipment.requirement_string:
+                self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
+            else:
+                self.requirements = {}
+            if self.base_equipment.skills_string:
+                self.skills = self.process_skills_string(self.base_equipment.skills_string)
+            else:
+                self.skills = []
+
+            for mod_data in starting_mods:
+                tmp = mod_data.split(':')
+                mod = Modifier(tmp[0], tmp[1])
+                self.starting_mods[mod.id] = mod
+
+            for mod_data in random_mods:
+                tmp = mod_data.split(':')
+                mod = Modifier(tmp[0], int(tmp[1]))
+                if self.random_mods.get(mod.id, False):
+                    self.random_mods[mod.id].value += mod.value
+                else:
+                    self.random_mods[mod.id] = mod
+            highest_mod = max(self.random_mods.values()) # Set title
+            if highest_mod.title:
+                self.name += ' {}'.format(highest_mod.title)
+
+            self.calculate_price()
+
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
-
             self.loaded = True
             return True
         except Exception:
@@ -910,30 +949,21 @@ class Equipment:
             return False
 
     def save(self):
-        rawMod = []
-        for mod in self.mods:
-            rawMod.append('{}:{}'.format(mod, self.mods[mod]))
+        starting_mods = []
+        random_mods = []
+        for mod in self.starting_mods.values():
+            starting_mods.append('{}:{}'.format(mod.id, mod.value))
+        for mod in self.random_mods.values():
+            random_mods.append('{}:{}'.format(mod.id, mod.value))
 
-        save = [self.id, self.name, self.flavor, self.rarity,
-                ','.join(rawMod), self.slot, self.price]
-        return db.saveEquipment(save)
-
-    def new(self, name, flavor, rarity: int, mods, slot, price, save=True):
-        self.name = name
-        self.flavor = flavor
-        self.rarity = rarity
-        self.slot = slot
-        self.price = price
-        rawMod = []
-        for mod in mods.split(','):
-            rawMod.append(tuple(mod.split(':')))
-        self.mods = dict(rawMod)
-        if (save):
-            self.id = self.save()
-        logger.info('{}:{} Created Successfully'.format(self.id, self.name))
+        save = [self.id, self.base_equipment.id, self.level, self.rarity,
+                '|'.join(starting_mods), '|'.join(random_mods)]
+        self.id = db.save_equipment(save)
+        logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
+        return self.id
 
     def delete(self):
-        db.deleteEquipment(self.id)
+        db.delete_equipment(self.id)
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
 

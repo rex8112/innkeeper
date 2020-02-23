@@ -22,6 +22,7 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, class TEXT NOT NULL, level INTEGER NOT NULL, xp INTEGER NOT NULL DEFAULT 0, race TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, equipment TEXT NOT NULL, inventory TEXT, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
@@ -80,7 +81,7 @@ def get_base_equipment(ID: int):
         """SELECT * FROM baseEquipment WHERE indx = ?""",
         (ID,)
     )
-    return cursor.fetchone()
+    return cursor2.fetchone()
 
 def get_base_equipment_lvl(lvl: int):
     cursor2.execute(
@@ -96,22 +97,32 @@ def get_base_equipment_lvl_rng(lvl: int):
     return cursor2.fetchall()
 
 
-def saveEquipment(save):
-    if save[0] > 0:
-        cursor2.execute("""UPDATE equipment SET name = ?, flavor = ?, rarity = ?, modifier = ?, slot = ?, price = ? WHERE indx = ?""",
-                        (save[1], save[2], save[3], save[4], save[5], save[6], save[0]))
-        id = save[0]
+def get_equipment(id):
+    cursor.execute(
+        """SELECT * FROM equipment WHERE indx = ?""",
+        (id,)
+    )
+    return cursor.fetchone()
+
+
+def save_equipment(save):
+    if save[0] == None:
+        cursor.execute(
+            """INSERT INTO equipment(baseID, level, rarity, startingMods, randomMods) VALUES(?, ?, ?, ?, ?)""",
+            (save[1], save[2], save[3], save[4], save[5])
+        )
     else:
-        cursor2.execute("""INSERT INTO equipment(name, flavor, rarity, modifier, slot, price) VALUES(?, ?, ?, ?, ?, ?)""",
-                        (save[1], save[2], save[3], save[4], save[5], save[6]))
-        id = cursor2.lastrowid
-    db2.commit()
-    return id
+        cursor.execute(
+            """UPDATE equipment SET baseID = ?, level = ?, rarity = ?, startingMods = ?, randomMods = ? WHERE indx = ?""",
+            (save[1], save[2], save[3], save[4], save[5], save[0])
+        )
+    db.commit()
+    return cursor.lastrowid
 
 
-def deleteEquipment(id):
-    cursor2.execute("""DELETE FROM equipment WHERE indx = ?""", (id,))
-    db2.commit()
+def delete_equipment(id):
+    cursor.execute("""DELETE FROM equipment WHERE indx = ?""", (id,))
+    db.commit()
 
 
 def addEnemy(name, cls, race, attributes, skills, rng):
