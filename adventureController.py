@@ -45,6 +45,7 @@ class Character:
     def __init__(self, ID, load = True):
         self.id = ID
         self.name = 'Unloaded'
+        self.mods = {}
         self.loaded = False
         if load:
             self.load()
@@ -241,62 +242,72 @@ class Character:
         self.wisdom = self.rawWisdom
         self.charisma = self.rawCharisma
         self.maxHealth = 0
-        self.wc = 3
-        self.ac = 4
-        self.dmg = 0
-        self.strdmg = 0
-        self.dexdmg = 0
+        self.mods['wc'] = Modifier('wc', 3)
+        self.mods['ac'] = Modifier('ac', 4)
+        self.mods['dmg'] = Modifier('dmg', 0)
+        self.mods['strdmg'] = Modifier('strdmg', 0)
+        self.mods['dexdmg'] = Modifier('dexdmg', 0)
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
             if equip == None:
                 equip = Equipment(1)
-            self.wc += int(equip.mods.get('wc', 0))
-            self.ac += int(equip.mods.get('ac', 0))
-            self.maxHealth += int(equip.mods.get('health', 0))
 
-            self.strength += int(equip.mods.get('strength', 0))
-            self.dexterity += int(equip.mods.get('dexterity', 0))
-            self.constitution += int(equip.mods.get('constitution', 0))
-            self.intelligence += int(equip.mods.get('intelligence', 0))
-            self.wisdom += int(equip.mods.get('wisdom', 0))
-            self.charisma += int(equip.mods.get('charisma', 0))
+            for key, mod in equip.starting_mods.items():
+                if self.mods.get(key, False):
+                    self.mods.get(key).value += mod.value
+                else:
+                    self.mods[key] = mod
+            for key, mod in equip.random_mods.items():
+                if self.mods.get(key, False):
+                    self.mods.get(key).value += mod.value
+                else:
+                    self.mods[key] = mod
+        self.maxHealth += int(self.mods.get('health', 0))
 
-            self.dmg += int(equip.mods.get('dmg', 0))
-            self.strdmg += int(equip.mods.get('strdmg', 0))
-            self.dexdmg += int(equip.mods.get('dexdmg', 0))
+        self.strength += int(self.mods.get('strength', 0))
+        self.dexterity += int(self.mods.get('dexterity', 0))
+        self.constitution += int(self.mods.get('constitution', 0))
+        self.intelligence += int(self.mods.get('intelligence', 0))
+        self.wisdom += int(self.mods.get('wisdom', 0))
+        self.charisma += int(self.mods.get('charisma', 0))
 
         # Strength Related Stats First
-        self.unarmDamage = float(self.strength) * PerLevel.unarm_damage
+        self.mods['unarmDamage'] = float(self.strength) * PerLevel.unarm_damage
         logger.debug(
-            '{0.name} Unarmed Damage calculated to: {0.unarmDamage}'.format(self))
+            '{0.name} Unarmed Damage calculated to: {1}'.format(self, self.mods['unarmDamage']))
 
-        self.inventoryCapacity = self.strength // PerLevel.inventory_cap + \
-            (10 - (10 // PerLevel.inventory_cap))
+        self.inventoryCapacity = (self.strength // PerLevel.inventory_cap + 
+            (10 - (10 // PerLevel.inventory_cap)))
         logger.debug(
             '{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
 
         # Dexterity related stats second
         if self.dexterity <= 40:  # Dexterity below 40
-            self.evasion = float(self.dexterity) * PerLevel.evasion
-            self.critChance = float(self.dexterity) * PerLevel.evasion
+            evasion = Modifier('evasion', float(self.dexterity) * PerLevel.evasion)
+            crit = Modifier('critChance', float(self.dexterity) * PerLevel.evasion)
 
         elif self.dexterity > 40 and self.dexterity <= 100:  # Dexterity between 40 and 100
-            self.evasion = PerLevel.softcap_evasion * \
-                (float(self.dexterity) - 40.0) + 40.0 * PerLevel.evasion
-            self.critChance = PerLevel.softcap_crit_chance * \
-                (float(self.dexterity) - 40.0) + 40.0 * PerLevel.crit_chance
+            evasion = Modifier('evasion', (PerLevel.softcap_evasion * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.evasion))
+            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.crit_chance))
 
         else:  # Dexterity above 100
-            self.evasion = PerLevel.softcap_evasion * \
-                (100.0 - 40.0) + 40.0 * PerLevel.evasion
-            self.critChance = PerLevel.softcap_crit_chance * \
-                (100.0 - 40.0) + 40.0 * PerLevel.crit_chance
+            evasion = Modifier('evasion', (PerLevel.softcap_evasion * (100.0 - 40.0) + 40.0 * PerLevel.evasion))
+            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (100.0 - 40.0) + 40.0 * PerLevel.crit_chance))
+        
+        if self.mods.get(evasion.id, False):
+            self.mods[evasion.id].value += evasion.value
+        else:
+            self.mods[evasion.id] = evasion
+        if self.mods.get(crit.id, False):
+            self.mods[crit.id].value += crit.value
+        else:
+            self.mods[crit.id] = crit
 
         logger.debug(
-            '{0.name} Evasion calculated to: {0.evasion}'.format(self))
+            '{0.name} Evasion calculated to: {1}'.format(self, self.mods['evasion']))
         logger.debug(
-            '{0.name} Crit Chance calculated to: {0.critChance}'.format(self))
+            '{0.name} Crit Chance calculated to: {1}'.format(self, self.mods['critChance']))
 
         # Constitution related stats third
         self.maxHealth += PerLevel.health * self.constitution + 100
@@ -304,15 +315,19 @@ class Character:
             '{0.name} Max health calculated to: {0.maxHealth}'.format(self))
 
         # Intelligence related stats fourth
-        self.spellAmp = PerLevel.spell_amp * float(self.intelligence)
+        spellAmp = Modifier('spellAmp', (PerLevel.spell_amp * float(self.intelligence)))
+        if self.mods.get(spellAmp.id, False):
+            self.mods[spellAmp.id].value += spellAmp.value
+        else:
+            self.mods[spellAmp.id] = spellAmp
         logger.debug(
-            '{0.name} Spell Amp calculated to: {0.spellAmp}'.format(self))
+            '{0.name} Spell Amp calculated to: {1}'.format(self, self.mods['spellAmp']))
 
         # Wisdom related stats fifth
-        self.secretChance = 0
+        # self.secretChance = 0
 
         # Charisma related stats sixth
-        self.discount = 0
+        # self.discount = 0
 
         # Fill in Skills
         self.skills = []
@@ -322,9 +337,9 @@ class Character:
                 self.skills.append(s())
 
         # Set values to their maximum
-        self.dmg += self.strdmg * self.strength + self.dexdmg * self.dexterity
-        if self.dmg == 0:
-            self.dmg = self.unarmDamage
+        self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'] * self.dexterity
+        if self.mods['dmg'] == 0:
+            self.mods['dmg'].value = self.mods['unarmDamage'].value
 
         if self.maxHealth < self.health:
             self.health = self.maxHealth
@@ -1259,14 +1274,12 @@ class RNGDungeon:
         else:
             self.lootInt = 0
 
-        lPool = db.getEquipmentRNG(self.adv.level)
-        weights = np.asarray(Equipment.calculateWeight(lPool))
         try:
             for _ in range(1, self.lootInt + 1):
-                self.loot.append(np.random.choice(lPool, p=weights))
+                loot = Equipment(0).generate_new_rng(self.adv.level, Equipment.calculate_drop_rarity())
+                self.loot.append(loot)
         except Exception:
-            logger.error('RNG Loot Failed to Load with weights: {}'.format(
-                weights), exc_info=True)
+            logger.error('RNG Loot Failed to Load', exc_info=True)
 
         self.encounter = self.buildEncounter(
             [self.adv], self.enemies[self.stage - 1])
@@ -1391,9 +1404,9 @@ class Shop():
             self.save()
 
     def new(self):
-        equipment = db.getEquipmentRNG(self.adv.level)
         for _ in range(10):
-            self.inventory.append(random.choice(equipment))
+            equipment = Equipment(0).generate_new_rng(self.adv.lvl, Equipment.calculate_drop_rarity())
+            self.inventory.append(equipment)
         self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
     def save(self):
