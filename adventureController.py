@@ -915,9 +915,12 @@ class Equipment:
         self.loaded = True
         return True
 
-    def load(self):
+    def load(self, data_list = None):
         try:
-            data = db.get_equipment(self.id)
+            if data_list:
+                data = data_list
+            else:
+                data = db.get_equipment(self.id)
             self.base_equipment = BaseEquipment(data[1])
             self.level = int(data[2])
             self.rarity = int(data[3])
@@ -967,7 +970,7 @@ class Equipment:
             self.loaded = False
             return False
 
-    def save(self):
+    def save(self, database = True):
         starting_mods = []
         random_mods = []
         for mod in self.starting_mods.values():
@@ -977,9 +980,11 @@ class Equipment:
 
         save = [self.id, self.base_equipment.id, self.level, self.rarity,
                 '|'.join(starting_mods), '|'.join(random_mods)]
-        self.id = db.save_equipment(save)
+        if database:
+            self.id = db.save_equipment(save)
+            save[0] = self.id
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return self.id
+        return save
 
     def delete(self):
         db.delete_equipment(self.id)
