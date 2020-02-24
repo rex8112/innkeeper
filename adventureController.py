@@ -617,8 +617,12 @@ class RaidBoss(Character):
             self.armor = None
             self.gloves = None
             self.boots = None
-            self.trinket = Equipment(0)
-            self.trinket.new('RaidBossModifierTrinket', 'Not much', 4, data[8], 'trinket', 0, save=False)
+            self.trinket = None
+
+            for mod_string in data[8].split('|'):
+                mod_tmp = mod_string.split(':')
+                mod = Modifier(mod_tmp[0], mod_tmp[1])
+                self.mods[mod.id] = mod
 
             self.calculate()
             self.loaded = True
