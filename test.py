@@ -31,6 +31,8 @@ def equipout(z: ac.Equipment):
   print('----------')
 
 logger.info('Beginning Test')
-equipment = ac.Equipment(0)
-equipment.generate_new_rng(50, 2)
-print(equipment.getInfo())
+elite_mod = ac.EliteModifier(1)
+print(elite_mod.name)
+print(elite_mod.title)
+print(elite_mod.attributes)
+print(elite_mod.modifiers)

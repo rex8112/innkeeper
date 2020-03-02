@@ -686,9 +686,12 @@ class Modifier:
     def __str__(self):
         return self.display_name
 
-    def __init__(self, ID: str, value: int):
+    def __init__(self, ID: str, value):
         self.id = ID
-        self.value = value
+        if isinstance(value, (int, float)):
+            self.value = value
+        else:
+            raise ValueError('Incorrect Value Type Passed')
         self.load()
     
     def load(self):
@@ -705,6 +708,25 @@ class Modifier:
         else:
             self.display_name = self.id
             self.title = None
+
+
+class EliteModifier:
+    def __init__(self, ID = 0):
+        self.id = ID
+        if self.id != 0:
+            self.load(self.id)
+
+    def load(self, ID):
+        data = db.get_elite_modifier(self.id)
+        self.id = int(data[0])
+        self.name = str(data[1])
+        self.title = str(data[2])
+        self.attributes = [float(x) for x in data[3].split('|')]
+        self.modifiers = {}
+        modifier_string = data[4].split('|')
+        for mod in modifier_string:
+            key, value = tuple(mod.split(':'))
+            self.modifiers[key] = Modifier(key, value)
 
 
 class BaseEquipment:
