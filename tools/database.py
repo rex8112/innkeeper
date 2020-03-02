@@ -24,7 +24,7 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
 
-    cursor2.execute("""CREATE TABLE IF NOT EXISTS enemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, class TEXT NOT NULL, level INTEGER NOT NULL, xp INTEGER NOT NULL DEFAULT 0, race TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, equipment TEXT NOT NULL, inventory TEXT, rng INTEGER NOT NULL DEFAULT 1)""")
+    cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEnemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, elite TEXT, attributes TEXT NOT NULL, modifiers TEXT NOT NULL, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT)""")
@@ -125,37 +125,39 @@ def delete_equipment(id):
     db.commit()
 
 
-def addEnemy(name, cls, race, attributes, skills, rng):
-    cursor2.execute("""INSERT INTO enemies(name, class, level, xp, race, attributes, skills, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (name, cls, 1, 0, race, attributes, skills, rng))
-    db2.commit()
-    idToSend = cursor2.lastrowid
-    return idToSend
+# def addEnemy(name, cls, race, attributes, skills, rng):
+#     cursor2.execute("""INSERT INTO enemies(name, class, level, xp, race, attributes, skills, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
+#                     (name, cls, 1, 0, race, attributes, skills, rng))
+#     db2.commit()
+#     idToSend = cursor2.lastrowid
+#     return idToSend
 
 
-def deleteEnemy(id):
-    cursor2.execute("""DELETE FROM enemies WHERE indx = ?""", (id,))
-    db2.commit()
+# def deleteEnemy(indx):
+#     cursor2.execute("""DELETE FROM enemies WHERE indx = ?""", (indx,))
+#     db2.commit()
 
 
-def getEnemy(id):
-    cursor2.execute("""SELECT * FROM enemies WHERE indx = ?""", (id,))
+def get_base_enemy_indx(indx: int):
+    cursor2.execute("""SELECT * FROM enemies WHERE indx = ?""", (indx,))
     return cursor2.fetchone()
 
 
-def getEnemyRNG(lvl: int, offset=0, rnge=3):
-    maximum = lvl + offset
-    minimum = maximum - rnge
-    cursor2.execute(
-        """SELECT * FROM enemies WHERE rng = 1 AND level BETWEEN ? AND ?""", (minimum, maximum))
+def get_base_enemy(lvl: int, rng = True):
+    if rng:
+        cursor2.execute(
+            """SELECT * FROM baseEnemies WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ?""", (lvl, lvl))
+    else:
+        cursor2.execute(
+            """SELECT * FROM baseEnemies WHERE minLevel <= ? AND maxLevel >= ?""", (lvl, lvl))
     return cursor2.fetchall()
 
 
-def saveEnemy(save):
-    cursor2.execute("""UPDATE enemies SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ? WHERE indx = ?""",
-                    (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
-    db2.commit()
-    return save[0]
+# def saveEnemy(save):
+#     cursor2.execute("""UPDATE enemies SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ? WHERE indx = ?""",
+#                     (save[1], save[2], save[3], save[4], save[5], save[6], save[7], save[8], save[9], save[0]))
+#     db2.commit()
+#     return save[0]
 
 
 def addRNG():

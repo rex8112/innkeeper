@@ -509,6 +509,9 @@ class Enemy(Character):
             str(e) for e in rawAttributes), ','.join(str(e) for e in skills), int(rng))
         logger.info('{}:{} Created Successfully'.format(self.id, self.name))
 
+    def generate_new(self):
+        pass
+
     def delete(self):
         db.deleteEnemy(self.id)
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
