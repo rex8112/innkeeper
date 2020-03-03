@@ -509,8 +509,46 @@ class Enemy(Character):
             str(e) for e in rawAttributes), ','.join(str(e) for e in skills), int(rng))
         logger.info('{}:{} Created Successfully'.format(self.id, self.name))
 
-    def generate_new(self):
-        pass
+    def process_attributes_string(self, attributes_string: str):
+        attributes_list = attributes_string.split('|')
+        final_list = []
+        for a in attributes_list:
+            base_value, per_level = tuple(a.split('+'))
+            final_value = math.floor(float(base_value) + float(per_level))
+            final_list.append(final_value)
+        try:
+            self.rawStrength = final_list[0]
+            self.rawDexterity = final_list[1]
+            self.rawConstitution = final_list[2]
+            self.rawIntelligence = final_list[3]
+            self.rawWisdom = final_list[4]
+            self.rawConstitution = final_list[5]
+        except IndexError:
+            pass
+
+    def process_mod_string(self, mod_string: str):
+        mods = {}
+        mod_string_list = mod_string.split('|')
+        for mod in mod_string_list:
+            key, value = tuple(mod.split(':'))
+            base_value, per_level = tuple(value.split('+'))
+            mods[key] = Modifier(key, math.floor(float(base_value) + float(per_level)))
+        return mods
+
+
+    def generate_new(self, lvl: int, rng = True, index = 0):
+        if index == 0:
+            data = db.get_base_enemy(lvl, rng=rng)
+        else:
+            data = db.get_base_enemy_indx(index)
+        
+        self.id = int(data[0])
+        self.name = str(data[1])
+        minLevel = int(data[2])
+        maxLevel = int(data[3])
+        self.potential_elites = data[4].split('|')
+        attributes_string = data[5]
+        modifiers_string = data[6]
 
     def delete(self):
         db.deleteEnemy(self.id)
