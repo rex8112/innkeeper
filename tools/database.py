@@ -29,12 +29,7 @@ def initDB():  # initialize the database
     cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS eliteModifiers(indx INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, title TEXT, attributes TEXT, modifiers TEXT, skills TEXT)""")
-
-    cursor2.execute("""SELECT * FROM equipment WHERE indx = 1""")
-    if not cursor2.fetchone():
-        cursor2.execute("""INSERT INTO equipment(name, level, flavor, rarity, modifier, slot, price, rng) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
-                        ('Empty', 0, 'Nothing is equipped', 0, 'unsellable:1,empty:1', 'all', 0, 0))
-
+    
     try:
         cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo TEXT""")
     except sqlite3.OperationalError:

@@ -75,13 +75,13 @@ class Character:
         # Skills
         self.raw_skills = ['attack'] + skills
         # Equipment
-        self.mainhand = Equipment(1)
-        self.offhand = Equipment(1)
-        self.helmet = Equipment(1)
-        self.armor = Equipment(1)
-        self.gloves = Equipment(1)
-        self.boots = Equipment(1)
-        self.trinket = Equipment(1)
+        self.mainhand = Equipment('empty')
+        self.offhand = Equipment('empty')
+        self.helmet = Equipment('empty')
+        self.armor = Equipment('empty')
+        self.gloves = Equipment('empty')
+        self.boots = Equipment('empty')
+        self.trinket = Equipment('empty')
 
         self.inventory = []
         self.loaded = True
@@ -115,7 +115,7 @@ class Character:
                 uneq = self.trinket
                 self.trinket = eq
 
-            if not uneq.mods.get('empty', False):
+            if not uneq.requirements.get('empty', False):
                 self.inventory.append(uneq.id)
             self.calculate()
             return True
@@ -123,7 +123,7 @@ class Character:
             return False
 
     def unequip(self, slot: str):
-        eq = Equipment(1)
+        eq = Equipment('empty')
         if slot == 'mainhand':
             uneq = self.mainhand
             self.mainhand = eq
@@ -251,7 +251,7 @@ class Character:
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
             if equip == None:
-                equip = Equipment(1)
+                equip = Equipment('empty')
 
             for key, mod in equip.starting_mods.items():
                 if self.mods.get(key, False):
@@ -389,13 +389,13 @@ class Player(Character):
         # Skills
         self.raw_skills = ['attack']
         # Equipment
-        self.mainhand = Equipment(1)
-        self.offhand = Equipment(1)
-        self.helmet = Equipment(1)
-        self.armor = Equipment(1)
-        self.gloves = Equipment(1)
-        self.boots = Equipment(1)
-        self.trinket = Equipment(1)
+        self.mainhand = Equipment('empty')
+        self.offhand = Equipment('empty')
+        self.helmet = Equipment('empty')
+        self.armor = Equipment('empty')
+        self.gloves = Equipment('empty')
+        self.boots = Equipment('empty')
+        self.trinket = Equipment('empty')
 
         self.inventory = []
         if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
@@ -496,13 +496,13 @@ class Enemy(Character):
         # Skills
         self.raw_skills = ['attack'] + skills
         # Equipment
-        self.mainhand = Equipment(1)
-        self.offhand = Equipment(1)
-        self.helmet = Equipment(1)
-        self.armor = Equipment(1)
-        self.gloves = Equipment(1)
-        self.boots = Equipment(1)
-        self.trinket = Equipment(1)
+        self.mainhand = Equipment('empty')
+        self.offhand = Equipment('empty')
+        self.helmet = Equipment('empty')
+        self.armor = Equipment('empty')
+        self.gloves = Equipment('empty')
+        self.boots = Equipment('empty')
+        self.trinket = Equipment('empty')
 
         self.inventory = []
         self.id = db.addEnemy(name, cls, race, ','.join(
@@ -774,7 +774,9 @@ class EliteModifier:
 class BaseEquipment:
     def __init__(self, ID = 0):
         self.id = ID
-        if self.id != 0:
+        if self.id == 'empty':
+            self.load(['empty', 'Empty', 'Nothing is equipped', 'all', 1, 1000, 0, '', '', 'empty:1+0|unsellable:1+0', None, 0])
+        elif self.id != 0:
             self.load(self.id)
 
     def load(self, ID):
@@ -811,11 +813,12 @@ class BaseEquipment:
         
 
 class Equipment:
-    def __init__(self, id):
-        self.id = id
-        if id == 0:
-            pass
-        else:  # Search for equipment in the database
+    def __init__(self, ID):
+        self.id = ID
+        if self.id == 'empty':
+            data_list = [None, 'empty', 1, 0, '', '']
+            self.load(data_list=data_list)
+        elif self.id != 0:
             self.load()
 
     @staticmethod
@@ -831,34 +834,6 @@ class Equipment:
             result = 1
 
         return result
-            
-
-    @staticmethod
-    def calculateWeight(loot: list):
-        weight = []
-        tmp = []
-        total = 0
-        for l in loot:
-            e = Equipment(l)
-            r = e.rarity
-
-            if r == 0:
-                r = 5
-            elif r == 1:
-                r = 4
-            elif r == 2:
-                r = 3
-            elif r == 3:
-                r = 2
-            elif r == 4:
-                r = 1
-
-            tmp.append(r)
-        for l in tmp:
-            total += l
-        for l in tmp:
-            weight.append(l / total)
-        return weight
 
     def getRarity(self):
         if self.name == 'Empty':
@@ -1009,20 +984,23 @@ class Equipment:
                 self.skills = []
 
             for mod_data in starting_mods:
-                tmp = mod_data.split(':')
-                mod = Modifier(tmp[0], tmp[1])
-                self.starting_mods[mod.id] = mod
+                if mod_data:
+                    tmp = mod_data.split(':')
+                    mod = Modifier(tmp[0], tmp[1])
+                    self.starting_mods[mod.id] = mod
 
             for mod_data in random_mods:
-                tmp = mod_data.split(':')
-                mod = Modifier(tmp[0], int(tmp[1]))
-                if self.random_mods.get(mod.id, False):
-                    self.random_mods[mod.id].value += mod.value
-                else:
-                    self.random_mods[mod.id] = mod
-            highest_mod = max(self.random_mods.values()) # Set title
-            if highest_mod.title:
-                self.name += ' {}'.format(highest_mod.title)
+                if mod_data:
+                    tmp = mod_data.split(':')
+                    mod = Modifier(tmp[0], int(tmp[1]))
+                    if self.random_mods.get(mod.id, False):
+                        self.random_mods[mod.id].value += mod.value
+                    else:
+                        self.random_mods[mod.id] = mod
+            if len(self.random_mods) > 0:
+                highest_mod = max(self.random_mods.values()) # Set title
+                if highest_mod.title:
+                    self.name += ' {}'.format(highest_mod.title)
 
             self.calculate_price()
 
