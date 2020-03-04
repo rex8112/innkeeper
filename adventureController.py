@@ -549,10 +549,29 @@ class Enemy(Character):
         self.potential_elites = data[4].split('|')
         attributes_string = data[5]
         modifiers_string = data[6]
-        self.raw_skills = data[7]
+        self.raw_skills = data[7].split('|')
         self.level = lvl
         self.process_attributes_string(attributes_string)
         self.mods = self.process_mod_string(modifiers_string)
+
+    def generate_new_elite(self, lvl: int, rng = True, index = 0):
+        self.generate_new(lvl, rng=rng, index=index)
+        elite = random.choice(self.potential_elites)
+        try:
+            elite = int(elite)
+        except ValueError:
+            pass
+        self.elite = EliteModifier(elite)
+        self.raw_skills += self.elite.skills
+        if self.elite.title:
+            if self.elite.title[0] == ' ':
+                self.name = '{}{}'.format(self.name, self.elite.title)
+            else:
+                self.name = '{}{}'.format(self.elite.title, self.name)
+        length = len(self.elite.attributes)
+        for indx, attribute in enumerate([self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]):
+            if indx + 1 <= length:
+                attribute += self.elite.attributes[indx]
 
     def delete(self):
         db.deleteEnemy(self.id)
@@ -769,6 +788,8 @@ class EliteModifier:
         for mod in modifier_string:
             key, value = tuple(mod.split(':'))
             self.modifiers[key] = Modifier(key, value)
+        if data[5]:
+            self.skills = data[5].split('|')
 
 
 class BaseEquipment:
