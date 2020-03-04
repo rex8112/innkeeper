@@ -50,10 +50,10 @@ class AttackSkill(Skill):
 
     def use(self, user, target, targetGroup: list):
         if self.cooldown <= 0:
-            dmg = user.dmg
-            critChance = user.critChance
-            chanceToHit = 1 + (user.wc - target.ac) / \
-                ((user.wc + target.ac) * 0.5)
+            dmg = user.mods.get('dmg', 0)
+            critChance = user.mods.get('critChance')
+            chanceToHit = 1 + (user.mods.get('wc', 0) - target.mods.get('ac', 0)) / \
+                ((user.mods.get('wc', 0) + target.mods.get('ac', 0)) * 0.5)
 
             if chanceToHit > 1:  # If you have a chance to hit higher than 100% convert overflow into crit chance
                 critChance += chanceToHit - 1.0

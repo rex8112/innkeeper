@@ -549,6 +549,10 @@ class Enemy(Character):
         self.potential_elites = data[4].split('|')
         attributes_string = data[5]
         modifiers_string = data[6]
+        self.raw_skills = data[7]
+        self.level = lvl
+        self.process_attributes_string(attributes_string)
+        self.mods = self.process_mod_string(modifiers_string)
 
     def delete(self):
         db.deleteEnemy(self.id)
