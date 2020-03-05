@@ -773,11 +773,32 @@ class Modifier:
         else:
             return NotImplemented
 
+    def __add__(self, other):
+        if isinstance(other, Modifier):
+            new_value = self.value + other.value
+            return Modifier(self.id, new_value)
+        elif isinstance(other, (int, float)):
+            new_value = self.value + other
+            return Modifier(self.id, new_value)
+        else:
+            return NotImplemented
+
+    def __iadd__(self, other):
+        if isinstance(other, Modifier):
+            self.value = self.value + other.value
+            return self
+        elif isinstance(other, (int, float)):
+            self.value = self.value + other
+            return self
+        else:
+            NotImplemented
+            
     def __int__(self):
         return self.value
 
     def __str__(self):
         return self.display_name
+
 
     def __init__(self, ID: str, value):
         self.id = ID

@@ -38,3 +38,9 @@ save = e.save()
 print(save)
 b = ac.Enemy(raw_data=save)
 print(b.save())
+
+m = ac.Modifier('test', 1)
+n = ac.Modifier('test', 1)
+g = m + n
+m += n
+print(m.value)
