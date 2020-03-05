@@ -46,6 +46,7 @@ class Character:
         self.id = ID
         self.name = 'Unloaded'
         self.mods = {}
+        self.raw_mods = {}
         self.loaded = False
         if load:
             self.load()
@@ -247,6 +248,12 @@ class Character:
         self.mods['dmg'] = Modifier('dmg', 0)
         self.mods['strdmg'] = Modifier('strdmg', 0)
         self.mods['dexdmg'] = Modifier('dexdmg', 0)
+
+        for mod in self.raw_mods.values():
+            if self.mods.get(mod.id, False):
+                self.mods[mod.id].value += mod.value
+            else:
+                self.mods[mod.id] = mod
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
@@ -480,6 +487,15 @@ class Player(Character):
 
 
 class Enemy(Character):
+    def __init__(self, raw_data = ''):
+        self.name = 'Unloaded'
+        self.mods = {}
+        self.raw_mods = {}
+        self.loaded = False
+
+        if raw_data:
+            self.load(raw_data)
+
     def new(self, name, cls, race, rawAttributes, skills, rng):
         self.name = name
         self.cls = cls
@@ -516,6 +532,12 @@ class Enemy(Character):
             base_value, per_level = tuple(a.split('+'))
             final_value = math.floor(float(base_value) + (float(per_level) * self.level))
             final_list.append(final_value)
+        self.rawStrength = 0
+        self.rawDexterity = 0
+        self.rawConstitution = 0
+        self.rawIntelligence = 0
+        self.rawWisdom = 0
+        self.rawCharisma = 0
         try:
             self.rawStrength = final_list[0]
             self.rawDexterity = final_list[1]
@@ -552,15 +574,7 @@ class Enemy(Character):
         self.raw_skills = data[7].split('|')
         self.level = lvl
         self.process_attributes_string(attributes_string)
-        self.mods = self.process_mod_string(modifiers_string)
-
-        self.mainhand = None
-        self.offhand = None
-        self.helmet = None
-        self.armor = None
-        self.gloves = None
-        self.boots = None
-        self.trinket = None
+        self.raw_mods = self.process_mod_string(modifiers_string)
 
     def generate_new_elite(self, lvl: int, rng = True, index = 0):
         self.generate_new(lvl, rng=rng, index=index)
@@ -582,9 +596,9 @@ class Enemy(Character):
                 attribute *= self.elite.attributes[indx]
 
         for mod in self.elite.modifiers.values():
-            if self.mods.get(mod.id, False):
-                tmp = self.mods.get(mod.id).value * mod.value
-                self.mods.get(mod.id).value = int(tmp)
+            if self.raw_mods.get(mod.id, False):
+                tmp = self.raw_mods.get(mod.id).value * mod.value
+                self.raw_mods.get(mod.id).value = int(tmp)
 
         for skill in self.elite.skills:
             self.raw_skills.append(skill)
@@ -595,19 +609,24 @@ class Enemy(Character):
 
     def calculate(self):
         self.health = 0
+        self.mainhand = Equipment('empty')
+        self.offhand = Equipment('empty')
+        self.helmet = Equipment('empty')
+        self.armor = Equipment('empty')
+        self.gloves = Equipment('empty')
+        self.boots = Equipment('empty')
+        self.trinket = Equipment('empty')
         Character.calculate(self)
         self.rest()
 
-    def load(self, calculate=True):
+    def load(self, raw_data, calculate=True):
         try:
-            raw = db.getEnemy(self.id)
-            self.name = raw[1]
-            self.cls = raw[2]
-            self.level = raw[3]
-            self.xp = raw[4]
-            self.race = raw[5]
+            data = raw_data.split('|')
+            self.id = int(data[0])
+            self.name = data[1]
+            self.level = data[2]
 
-            rawAttributes = raw[6].split(',')  # Get a list of the attributes
+            rawAttributes = data[3].split(';')  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
             self.rawDexterity = int(rawAttributes[1])
             self.rawConstitution = int(rawAttributes[2])
@@ -615,20 +634,17 @@ class Enemy(Character):
             self.rawWisdom = int(rawAttributes[4])
             self.rawCharisma = int(rawAttributes[5])
 
-            self.raw_skills = raw[7].split(',')  # Get a list of skills
+            self.raw_skills = data[5].split(';')  # Get a list of skills
 
-            equipment = raw[8].split(',')  # Get a list of equipped items
-            self.mainhand = Equipment(equipment[0])
-            self.offhand = Equipment(equipment[1])
-            self.helmet = Equipment(equipment[2])
-            self.armor = Equipment(equipment[3])
-            self.gloves = Equipment(equipment[4])
-            self.boots = Equipment(equipment[5])
-            self.trinket = Equipment(equipment[6])
+            raw_mods = data[4].split(';')
+            self.raw_mods.clear()
+            for mod_string in raw_mods:
+                key, value = tuple(mod_string.split(':'))
+                self.raw_mods[key] = Modifier(key, int(value))
 
-            self.inventory = raw[9].split(',')
             if calculate:
                 self.calculate()
+            
             logger.debug('{}:{} Loaded Successfully'.format(
                 self.id, self.name))
             self.loaded = True
@@ -641,16 +657,16 @@ class Enemy(Character):
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution,
                          self.rawIntelligence, self.rawWisdom, self.rawCharisma]
-        rawAttributes = ','.join(str(e) for e in rawAttributes)
-        skills = ','.join(self.raw_skills)
-        equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id,
-                                              self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
-        inventory = ','.join(self.inventory)
+        rawAttributes = ';'.join(str(e) for e in rawAttributes)
+        skills = ';'.join(self.raw_skills)
+        tmp_mods = []
+        for mod in self.raw_mods.values():
+            tmp_mods.append('{}:{}'.format(mod.id, mod.value))
+        mods = ';'.join(tmp_mods)
 
-        save = [self.id, self.name, self.cls, self.level, self.xp,
-                self.race, rawAttributes, skills, equipment, inventory]
+        save = '|'.join([str(self.id), self.name, str(self.level), rawAttributes, mods, skills])
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return db.saveEnemy(save)
+        return save
 
 
 class RaidBoss(Character):

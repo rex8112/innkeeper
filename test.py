@@ -31,7 +31,10 @@ def equipout(z: ac.Equipment):
   print('----------')
 
 logger.info('Beginning Test')
-e = ac.Enemy(0, False)
+e = ac.Enemy()
 e.generate_new_elite(3)
 e.calculate()
-print(e)
+save = e.save()
+print(save)
+b = ac.Enemy(raw_data=save)
+print(b.save())
