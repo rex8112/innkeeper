@@ -1353,23 +1353,24 @@ class RNGDungeon:
         self.enemies = []
         for i in range(1, self.stages + 1):
             if i > 6:
-                bossToAdd = random.choice(
-                    db.getEnemyRNG(self.adv.level, 2, 0))[0]
+                bossToAdd = Enemy()
+                bossToAdd.generate_new_elite(self.adv.level + 1)
             elif i > 2:
-                bossToAdd = random.choice(
-                    db.getEnemyRNG(self.adv.level, 1, 0))[0]
+                bossToAdd = Enemy()
+                bossToAdd.generate_new_elite(self.adv.level)
             else:
                 bossToAdd = None
 
             if bossToAdd:
-                stageEnemies = [bossToAdd]
+                stageEnemies = [bossToAdd.save()]
             else:
                 stageEnemies = []
 
-            pool = db.getEnemyRNG(self.adv.level)
             randMax = random.randint(1, 3)
             for _ in range(1, randMax + 1):
-                stageEnemies.append(random.choice(pool)[0])
+                enemy = Enemy()
+                enemy.generate_new(self.adv.level)
+                stageEnemies.append(enemy.save())
 
             self.enemies.append(stageEnemies)
 
@@ -1396,11 +1397,11 @@ class RNGDungeon:
         self.save()
 
     def save(self):
-        loot = ','.join(str(e) for e in self.loot)
+        loot = '|'.join(str(e) for e in self.loot)
         tmp = []
         for stage in self.enemies:
-            tmp.append(','.join(str(e) for e in stage))
-        enemies = ';'.join(tmp)
+            tmp.append('/'.join(str(e) for e in stage))
+        enemies = ','.join(tmp)
         save = [self.id, self.adv.id, int(self.active), self.stage, self.stages,
                 enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S'), self.xp, '|'.join(self.combat_log)]
         self.id = db.saveRNG(save)
