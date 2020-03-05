@@ -273,7 +273,7 @@ class Character:
         self.charisma += int(self.mods.get('charisma', 0))
 
         # Strength Related Stats First
-        self.mods['unarmDamage'] = float(self.strength) * PerLevel.unarm_damage
+        self.mods['unarmDamage'] = Modifier('unarmDamage', float(self.strength) * PerLevel.unarm_damage)
         logger.debug(
             '{0.name} Unarmed Damage calculated to: {1}'.format(self, self.mods['unarmDamage']))
 
@@ -337,7 +337,7 @@ class Character:
                 self.skills.append(s())
 
         # Set values to their maximum
-        self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'] * self.dexterity
+        self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
         if self.mods['dmg'] == 0:
             self.mods['dmg'].value = self.mods['unarmDamage'].value
 
@@ -514,7 +514,7 @@ class Enemy(Character):
         final_list = []
         for a in attributes_list:
             base_value, per_level = tuple(a.split('+'))
-            final_value = math.floor(float(base_value) + float(per_level))
+            final_value = math.floor(float(base_value) + (float(per_level) * self.level))
             final_list.append(final_value)
         try:
             self.rawStrength = final_list[0]
@@ -522,7 +522,7 @@ class Enemy(Character):
             self.rawConstitution = final_list[2]
             self.rawIntelligence = final_list[3]
             self.rawWisdom = final_list[4]
-            self.rawConstitution = final_list[5]
+            self.rawCharisma = final_list[5]
         except IndexError:
             pass
 
@@ -532,13 +532,13 @@ class Enemy(Character):
         for mod in mod_string_list:
             key, value = tuple(mod.split(':'))
             base_value, per_level = tuple(value.split('+'))
-            mods[key] = Modifier(key, math.floor(float(base_value) + float(per_level)))
+            mods[key] = Modifier(key, math.floor(float(base_value) + (float(per_level) * self.level)))
         return mods
-
 
     def generate_new(self, lvl: int, rng = True, index = 0):
         if index == 0:
-            data = db.get_base_enemy(lvl, rng=rng)
+            data_pool = db.get_base_enemy(lvl, rng=rng)
+            data = random.choice(data_pool)
         else:
             data = db.get_base_enemy_indx(index)
         
@@ -553,6 +553,14 @@ class Enemy(Character):
         self.level = lvl
         self.process_attributes_string(attributes_string)
         self.mods = self.process_mod_string(modifiers_string)
+
+        self.mainhand = None
+        self.offhand = None
+        self.helmet = None
+        self.armor = None
+        self.gloves = None
+        self.boots = None
+        self.trinket = None
 
     def generate_new_elite(self, lvl: int, rng = True, index = 0):
         self.generate_new(lvl, rng=rng, index=index)
@@ -571,7 +579,15 @@ class Enemy(Character):
         length = len(self.elite.attributes)
         for indx, attribute in enumerate([self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]):
             if indx + 1 <= length:
-                attribute += self.elite.attributes[indx]
+                attribute *= self.elite.attributes[indx]
+
+        for mod in self.elite.modifiers.values():
+            if self.mods.get(mod.id, False):
+                tmp = self.mods.get(mod.id).value * mod.value
+                self.mods.get(mod.id).value = int(tmp)
+
+        for skill in self.elite.skills:
+            self.raw_skills.append(skill)
 
     def delete(self):
         db.deleteEnemy(self.id)
@@ -787,9 +803,11 @@ class EliteModifier:
         modifier_string = data[4].split('|')
         for mod in modifier_string:
             key, value = tuple(mod.split(':'))
-            self.modifiers[key] = Modifier(key, value)
+            self.modifiers[key] = Modifier(key, float(value))
         if data[5]:
             self.skills = data[5].split('|')
+        else:
+            self.skills = []
 
 
 class BaseEquipment:
