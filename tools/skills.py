@@ -50,17 +50,17 @@ class AttackSkill(Skill):
 
     def use(self, user, target, targetGroup: list):
         if self.cooldown <= 0:
-            dmg = user.mods.get('dmg', 0)
-            critChance = user.mods.get('critChance')
-            chanceToHit = 1 + (user.mods.get('wc', 0) - target.mods.get('ac', 0)) / \
-                ((user.mods.get('wc', 0) + target.mods.get('ac', 0)) * 0.5)
+            dmg = float(user.mods.get('dmg', 0))
+            critChance = float(user.mods.get('critChance'))
+            chanceToHit = float(1 + (user.mods.get('wc', 0) - target.mods.get('ac', 0)) /
+                ((user.mods.get('wc', 0) + target.mods.get('ac', 0)) * 0.5))
 
             if chanceToHit > 1:  # If you have a chance to hit higher than 100% convert overflow into crit chance
                 critChance += chanceToHit - 1.0
                 logger.debug(
                     'Player Crit Chance set to: {}'.format(critChance))
 
-            if random.uniform(0.0, 1.0) > user.evasion:  # Evasion Check
+            if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     if random.uniform(0.0, 1.0) <= critChance:

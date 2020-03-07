@@ -44,3 +44,7 @@ n = ac.Modifier('test', 1)
 g = m + n
 m += n
 print(m.value)
+
+r = ac.RNGDungeon()
+r.loadActive(180067685986467840)
+print(r)

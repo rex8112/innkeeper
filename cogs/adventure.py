@@ -164,7 +164,7 @@ class Adventure(commands.Cog):
     async def profile(self, ctx):
         """Get information on your Adventurer"""
         if ctx.invoked_subcommand is None:
-            adv = ac.Player(ctx.author.id, False)
+            adv = ac.Player(ctx.author.id)
             profile_message = None
             tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
             first = True
@@ -247,7 +247,10 @@ class Adventure(commands.Cog):
             embed.add_field(
                 name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
             embed.add_field(
-                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{0.wc}**\nArmor Class: **{0.ac}**\nDamage: **{0.dmg:.0f}**\nSpell Amp: **{0.spellAmp:.0%}**'.format(adv))
+                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**'\
+                    .format(adv, adv.mods.get('wc'),
+                            adv.mods.get('ac'),
+                            adv.mods.get('dmg')))
             embed.add_field(
                 name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
@@ -900,13 +903,14 @@ class Adventure(commands.Cog):
             name = 'Roadmap'
             information = """
             Listed by priority.
-            **1. Complete Equipment Overhaul**
-            2. Storage and Player Trading
-            3. Class and Races
-            4. Status Effects
-            5. Dungeons
-            6. Property Ownership
-            7. Slavery
+            ~~1. Complete Equipment Overhaul~~
+            ~~2. Complete Enemy Overhaul~~
+            3. Storage and Player Trading
+            4. Class and Races
+            5. Status Effects
+            6. Dungeons
+            7. Property Ownership
+            8. Slavery
             More to come."""
         else:
             name = 'Not an option'

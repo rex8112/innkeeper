@@ -624,7 +624,7 @@ class Enemy(Character):
             data = raw_data.split('|')
             self.id = int(data[0])
             self.name = data[1]
-            self.level = data[2]
+            self.level = int(data[2])
 
             rawAttributes = data[3].split(';')  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
@@ -733,7 +733,7 @@ class Modifier:
     def __eq__(self, other):
         if isinstance(other, Modifier):
             return self.value == other.value
-        elif isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return self.value == other
         else:
             return NotImplemented
@@ -744,7 +744,7 @@ class Modifier:
     def __lt__(self, other):
         if isinstance(other, Modifier):
             return self.value < other.value
-        elif isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return self.value < other
         else:
             return NotImplemented
@@ -752,7 +752,7 @@ class Modifier:
     def __le__(self, other):
         if isinstance(other, Modifier):
             return self.value <= other.value
-        elif isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return self.value <= other
         else:
             return NotImplemented
@@ -760,7 +760,7 @@ class Modifier:
     def __gt__(self, other):
         if isinstance(other, Modifier):
             return self.value > other.value
-        elif isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return self.value > other
         else:
             return NotImplemented
@@ -768,7 +768,7 @@ class Modifier:
     def __ge__(self, other):
         if isinstance(other, Modifier):
             return self.value >= other.value
-        elif isinstance(other, int):
+        elif isinstance(other, (int, float)):
             return self.value >= other
         else:
             return NotImplemented
@@ -783,6 +783,48 @@ class Modifier:
         else:
             return NotImplemented
 
+    def __sub__(self, other):
+        if isinstance(other, Modifier):
+            new_value = self.value - other.value
+            return Modifier(self.id, new_value)
+        elif isinstance(other, (int, float)):
+            new_value = self.value - other
+            return Modifier(self.id, new_value)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, Modifier):
+            new_value = self.value * other.value
+            return Modifier(self.id, new_value)
+        elif isinstance(other, (int, float)):
+            new_value = self.value * other
+            return Modifier(self.id, new_value)
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other):
+        if isinstance(other, Modifier):
+            new_value = self.value / other.value
+            return Modifier(self.id, new_value)
+        elif isinstance(other, (int, float)):
+            new_value = self.value / other
+            return Modifier(self.id, new_value)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        return self.__truediv__(other)
+
     def __iadd__(self, other):
         if isinstance(other, Modifier):
             self.value = self.value + other.value
@@ -792,12 +834,45 @@ class Modifier:
             return self
         else:
             NotImplemented
+
+    def __isub__(self, other):
+        if isinstance(other, Modifier):
+            self.value = self.value - other.value
+            return self
+        elif isinstance(other, (int, float)):
+            self.value = self.value - other
+            return self
+        else:
+            NotImplemented
+
+    def __imul__(self, other):
+        if isinstance(other, Modifier):
+            self.value = self.value * other.value
+            return self
+        elif isinstance(other, (int, float)):
+            self.value = self.value * other
+            return self
+        else:
+            NotImplemented
+
+    def __itruediv__(self, other):
+        if isinstance(other, Modifier):
+            self.value = self.value / other.value
+            return self
+        elif isinstance(other, (int, float)):
+            self.value = self.value / other
+            return self
+        else:
+            NotImplemented
             
     def __int__(self):
-        return self.value
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
 
     def __str__(self):
-        return self.display_name
+        return str(self.display_name)
 
 
     def __init__(self, ID: str, value):
@@ -849,7 +924,10 @@ class EliteModifier:
 
 class BaseEquipment:
     def __init__(self, ID = 0):
-        self.id = ID
+        try:
+            self.id = int(ID)
+        except ValueError:
+            self.id = ID
         if self.id == 'empty':
             self.load(['empty', 'Empty', 'Nothing is equipped', 'all', 1, 1000, 0, '', '', 'empty:1+0|unsellable:1+0', None, 0])
         elif self.id != 0:
@@ -890,10 +968,17 @@ class BaseEquipment:
 
 class Equipment:
     def __init__(self, ID):
-        self.id = ID
+        try:
+            self.id = int(ID)
+        except ValueError:
+            self.id = ID
         if self.id == 'empty':
             data_list = [None, 'empty', 1, 0, '', '']
             self.load(data_list=data_list)
+        elif isinstance(self.id, list):
+            self.load(data_list=self.id)
+        elif isinstance(self.id, str):
+            self.load(data_list=self.id.split(','))
         elif self.id != 0:
             self.load()
 
@@ -1039,6 +1124,8 @@ class Equipment:
                 data = data_list
             else:
                 data = db.get_equipment(self.id)
+            if data[0] == 'None':
+                self.id = None
             self.base_equipment = BaseEquipment(data[1])
             self.level = int(data[2])
             self.rarity = int(data[3])
@@ -1062,7 +1149,7 @@ class Equipment:
             for mod_data in starting_mods:
                 if mod_data:
                     tmp = mod_data.split(':')
-                    mod = Modifier(tmp[0], tmp[1])
+                    mod = Modifier(tmp[0], int(tmp[1]))
                     self.starting_mods[mod.id] = mod
 
             for mod_data in random_mods:
@@ -1407,7 +1494,8 @@ class RNGDungeon:
 
         try:
             for _ in range(1, self.lootInt + 1):
-                loot = Equipment(0).generate_new_rng(self.adv.level, Equipment.calculate_drop_rarity())
+                loot = Equipment(0)
+                loot.generate_new_rng(self.adv.level, Equipment.calculate_drop_rarity())
                 self.loot.append(loot)
         except Exception:
             logger.error('RNG Loot Failed to Load', exc_info=True)
@@ -1418,7 +1506,11 @@ class RNGDungeon:
         self.save()
 
     def save(self):
-        loot = '|'.join(str(e) for e in self.loot)
+        loot_tmp = []
+        for l in self.loot:
+            loot_str = ','.join(str(x) for x in l.save(database=False))
+            loot_tmp.append(loot_str)
+        loot = '/'.join(loot_tmp)
         tmp = []
         for stage in self.enemies:
             tmp.append('/'.join(str(e) for e in stage))
@@ -1430,12 +1522,18 @@ class RNGDungeon:
     def loadActive(self, aID):
         try:
             save = db.getActiveRNG(aID)
-            self.loot = save[6].split(',')
+            self.loot = []
+            loot_tmp = save[6].split('/')
+            for l in loot_tmp:
+                tmp_list = l.split(',')
+                loot = Equipment(0)
+                loot.load(tmp_list)
+                self.loot.append(loot)
 
             self.enemies = []
-            tmp = save[5].split(';')
+            tmp = save[5].split(',')
             for stage in tmp:
-                self.enemies.append(stage.split(','))
+                self.enemies.append(stage.split('/'))
 
             self.id = save[0]
             self.adv = Player(save[1], False)
@@ -1473,7 +1571,6 @@ class RNGDungeon:
 
         for enemy in enemies:
             tmp = Enemy(enemy)
-            tmp.load()
             bEnemies.append(tmp)
         return Encounter(bPlayers, bEnemies)
 
@@ -1511,7 +1608,9 @@ class RNGDungeon:
             self.adv.rest()
             self.adv.addXP(self.xp)
             for l in self.loot:
-                self.adv.addInv(l)
+                tmp = Equipment(l)
+                save = tmp.save()
+                self.adv.addInv(save[0])
         else:
             self.adv.available = True  # TEMPORARY UNTIL RECOVERY IS CODED
             self.adv.rest()
