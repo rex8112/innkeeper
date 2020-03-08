@@ -73,6 +73,33 @@ class Admin(commands.Cog):
                 pass
         await ctx.message.add_reaction('✅')
 
+    @adminpanel.command()
+    async def generate_equipment(self, ctx, target: discord.Member, lvl: int, rarity: int, index = 0):
+        adv = ac.Player(target.id)
+        if not adv.loaded:
+            await ctx.message.add_reaction('⛔')
+            return
+        e = ac.Equipment(0)
+        e.generate_new(lvl, rarity, index=index)
+        embed = discord.Embed(title='Loot Generated: {}'.format(e.name), colour=Colour.creationColour,
+                              description=e.getInfo())
+        message = await ctx.send(embed=embed)
+        await message.add_reaction('✅')
+        await message.add_reaction('❌')
+        try:
+            reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user.id == ctx.author.id and reaction.message.id == message.id)
+            if str(reaction) == '✅':
+                save = e.save()
+                adv.addInv(save[0])
+                adv.save()
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            try:
+                await message.clear_reactions()
+            except discord.Forbidden:
+                pass
+
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.guild_only()

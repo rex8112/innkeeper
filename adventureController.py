@@ -1032,9 +1032,12 @@ class Equipment:
         rarity_coefficient = 1 + (self.rarity * 0.5)
         self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * (len(self.starting_mods) + len(self.random_mods)))) * rarity_coefficient)
 
-    def generate_new_rng(self, lvl: int, rarity: int):
-        self.base_equipment = BaseEquipment()
-        self.base_equipment.new(lvl)
+    def generate_new(self, lvl: int, rarity: int, index = 0):
+        if index == 0:
+            self.base_equipment = BaseEquipment()
+            self.base_equipment.new(lvl)
+        else:
+            self.base_equipment = BaseEquipment(index)
 
         self.id = None
         self.name = self.base_equipment.name
@@ -1465,7 +1468,7 @@ class RNGDungeon:
         try:
             for _ in range(1, self.lootInt + 1):
                 loot = Equipment(0)
-                loot.generate_new_rng(self.adv.level, Equipment.calculate_drop_rarity())
+                loot.generate_new(self.adv.level, Equipment.calculate_drop_rarity())
                 self.loot.append(loot)
         except Exception:
             logger.error('RNG Loot Failed to Load', exc_info=True)
@@ -1604,7 +1607,7 @@ class Shop():
 
     def new(self):
         for _ in range(10):
-            equipment = Equipment(0).generate_new_rng(self.adv.lvl, Equipment.calculate_drop_rarity())
+            equipment = Equipment(0).generate_new(self.adv.lvl, Equipment.calculate_drop_rarity())
             self.inventory.append(equipment)
         self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
