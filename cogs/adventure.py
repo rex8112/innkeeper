@@ -387,7 +387,6 @@ class Adventure(commands.Cog):
                 enemies = ''
                 for e in rng.enemies[rng.stage - 1]:
                     t = ac.Enemy(e)
-                    t.load(False)
                     enemies += '**Lv {}** {}\n'.format(t.level, t.name)
 
                 embed.add_field(name='Current Enemies', value=enemies)
@@ -419,7 +418,6 @@ class Adventure(commands.Cog):
         enemies = ''
         for e in rng.enemies[rng.stage - 1]:
             t = ac.Enemy(e)
-            t.load(False)
             enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
 
         embed.add_field(name='Current Enemies', value=enemies)
@@ -668,7 +666,7 @@ class Adventure(commands.Cog):
                         for i in adv.inventory:
                             number += 1
                             e = ac.Equipment(i)
-                            if not e.mods.get('unsellable', False):
+                            if not e.requirements.get('unsellable', False):
                                 embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
                                 ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
                         await shopMessage.edit(embed=embed)
@@ -943,8 +941,7 @@ class Adventure(commands.Cog):
                                               description='{} stage quest completed successfully!\nXP: **{}**'.format(rng.stages, rng.xp))
                         lootStr = ''
                         for l in rng.loot:
-                            tmp = ac.Equipment(l)
-                            lootStr += 'Level {0.level} {1} {0.name}\n'.format(tmp, tmp.getRarity())
+                            lootStr += 'Level {0.level} {1} {0.name}\n'.format(l, l.getRarity())
                         embed.add_field(name='Loot', value=lootStr)
                     else:
                         embed = discord.Embed(title='Quest Failed', colour=Colour.errorColour,

@@ -496,35 +496,6 @@ class Enemy(Character):
         if raw_data:
             self.load(raw_data)
 
-    def new(self, name, cls, race, rawAttributes, skills, rng):
-        self.name = name
-        self.cls = cls
-        self.race = race
-        self.level = 1
-        self.xp = 0
-        # Attributes
-        self.rawStrength = rawAttributes[0]
-        self.rawDexterity = rawAttributes[1]
-        self.rawConstitution = rawAttributes[2]
-        self.rawIntelligence = rawAttributes[3]
-        self.rawWisdom = rawAttributes[4]
-        self.rawCharisma = rawAttributes[5]
-        # Skills
-        self.raw_skills = ['attack'] + skills
-        # Equipment
-        self.mainhand = Equipment('empty')
-        self.offhand = Equipment('empty')
-        self.helmet = Equipment('empty')
-        self.armor = Equipment('empty')
-        self.gloves = Equipment('empty')
-        self.boots = Equipment('empty')
-        self.trinket = Equipment('empty')
-
-        self.inventory = []
-        self.id = db.addEnemy(name, cls, race, ','.join(
-            str(e) for e in rawAttributes), ','.join(str(e) for e in skills), int(rng))
-        logger.info('{}:{} Created Successfully'.format(self.id, self.name))
-
     def process_attributes_string(self, attributes_string: str):
         attributes_list = attributes_string.split('|')
         final_list = []
@@ -602,10 +573,6 @@ class Enemy(Character):
 
         for skill in self.elite.skills:
             self.raw_skills.append(skill)
-
-    def delete(self):
-        db.deleteEnemy(self.id)
-        logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
     def calculate(self):
         self.health = 0
@@ -1415,9 +1382,12 @@ class Encounter:
     def getLoot(self):
         rawLoot = []
         for enemy in self.deadEnemies:
-            for loot in enemy.inventory:
-                if loot:
-                    rawLoot.append(loot)
+            try:
+                for loot in enemy.inventory:
+                    if loot:
+                        rawLoot.append(loot)
+            except AttributeError:
+                pass
         return rawLoot
 
     def getExp(self):
@@ -1608,8 +1578,7 @@ class RNGDungeon:
             self.adv.rest()
             self.adv.addXP(self.xp)
             for l in self.loot:
-                tmp = Equipment(l)
-                save = tmp.save()
+                save = l.save()
                 self.adv.addInv(save[0])
         else:
             self.adv.available = True  # TEMPORARY UNTIL RECOVERY IS CODED
