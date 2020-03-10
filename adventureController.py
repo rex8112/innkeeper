@@ -537,8 +537,8 @@ class Enemy(Character):
         
         self.id = int(data[0])
         self.name = str(data[1])
-        minLevel = int(data[2])
-        maxLevel = int(data[3])
+        # minLevel = int(data[2])
+        # maxLevel = int(data[3])
         self.potential_elites = data[4].split('|')
         attributes_string = data[5]
         modifiers_string = data[6]
@@ -1091,7 +1091,10 @@ class Equipment:
     def load(self, data_list = None):
         try:
             if data_list:
-                data = data_list
+                if isinstance(data_list, list):
+                    data = data_list
+                elif isinstance(data_list, str):
+                    data = data_list.split(',')
             else:
                 data = db.get_equipment(self.id)
             if data[0] == 'None':
@@ -1148,7 +1151,7 @@ class Equipment:
             self.loaded = False
             return False
 
-    def save(self, database = True):
+    def save(self, database = False):
         starting_mods = []
         random_mods = []
         for mod in self.starting_mods.values():
@@ -1162,7 +1165,7 @@ class Equipment:
             self.id = db.save_equipment(save)
             save[0] = self.id
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return save
+        return ','.join(str(x) for x in save)
 
     def delete(self):
         db.delete_equipment(self.id)
@@ -1481,8 +1484,7 @@ class RNGDungeon:
     def save(self):
         loot_tmp = []
         for l in self.loot:
-            loot_str = ','.join(str(x) for x in l.save(database=False))
-            loot_tmp.append(loot_str)
+            loot_tmp.append(l.save())
         loot = '/'.join(loot_tmp)
         tmp = []
         for stage in self.enemies:
@@ -1498,9 +1500,8 @@ class RNGDungeon:
             self.loot = []
             loot_tmp = save[6].split('/')
             for l in loot_tmp:
-                tmp_list = l.split(',')
                 loot = Equipment(0)
-                loot.load(tmp_list)
+                loot.load(l)
                 self.loot.append(loot)
 
             self.enemies = []
@@ -1607,24 +1608,25 @@ class Shop():
 
     def new(self):
         for _ in range(10):
-            equipment = Equipment(0).generate_new(self.adv.lvl, Equipment.calculate_drop_rarity())
-            self.inventory.append(equipment)
+            equipment = Equipment(0)
+            equipment.generate_new(self.adv.lvl, Equipment.calculate_drop_rarity())
+            self.inventory.append(equipment.save())
         self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
     def save(self):
         if len(self.inventory) > 0:
-            equipment_string = '|'.join(str(e) for e in self.inventory)
+            equipment_string = '/'.join(e.save() for e in self.inventory)
         else:
             equipment_string = None
         if len(self.buyback) > 0:
-            buyback_string = '|'.join(str(e) for e in self.buyback)
+            buyback_string = '/'.join(e.save() for e in self.buyback)
         else:
             buyback_string = None
         refresh_string = self.refresh.strftime('%Y-%m-%d %H:%M:%S')
         save = [self.id, self.adv.id, equipment_string, buyback_string, refresh_string]
         self.id = db.SaveShop(save)
 
-    def loadActive(self):
+    def loadActive(self): # Needs to be updated
         save = db.GetActiveShop(self.adv.id)
         if save:
             self.id = save[0]

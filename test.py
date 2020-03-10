@@ -36,15 +36,8 @@ e.generate_new_elite(3)
 e.calculate()
 save = e.save()
 print(save)
-b = ac.Enemy(raw_data=save)
-print(b.save())
-
-m = ac.Modifier('test', 1)
-n = ac.Modifier('test', 1)
-g = m + n
-m += n
-print(m.value)
-
-r = ac.RNGDungeon()
-r.loadActive(180067685986467840)
-print(r)
+b = ac.Equipment(0)
+b.generate_new(5, 2)
+e_save = b.save()
+print(e_save)
+ac.Equipment(e_save)
