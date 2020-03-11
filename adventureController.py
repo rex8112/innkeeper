@@ -93,7 +93,7 @@ class Character:
     def equip(self, e: int):
         try:
             eq = Equipment(self.inventory[e-1])
-            self.remInv(e)
+            self.remInv(e-1)
             if eq.slot == 'mainhand':
                 uneq = self.mainhand
                 self.mainhand = eq
@@ -151,21 +151,21 @@ class Character:
             self.inventory.append(uneq.id)
         self.calculate()
 
-    def addInv(self, id: int):
+    def addInv(self, ID):
         try:
             if len(self.inventory) < self.inventoryCapacity:
-                self.inventory.append(id)
-                logger.debug('Adding {} to Inventory'.format(id))
+                self.inventory.append(ID)
+                logger.debug('Adding {} to Inventory'.format(ID))
                 return True
             else:
                 return False
         except AttributeError:
             self.calculate()
-            return self.addInv(id)
+            return self.addInv(ID)
 
     def remInv(self, e: int):
         try:
-            self.inventory.pop(e-1)
+            self.inventory.pop(e)
             return True
         except ValueError:
             return False
@@ -442,7 +442,7 @@ class Player(Character):
             except AttributeError:
                 self.raw_skills = []
 
-            equipment = raw[9].split(',')  # Get a list of equipped items
+            equipment = raw[9].split('/')  # Get a list of equipped items
             self.mainhand = Equipment(equipment[0])
             self.offhand = Equipment(equipment[1])
             self.helmet = Equipment(equipment[2])
@@ -451,7 +451,7 @@ class Player(Character):
             self.boots = Equipment(equipment[5])
             self.trinket = Equipment(equipment[6])
 
-            self.inventory = raw[10].split(',')
+            self.inventory = raw[10].split('/')
             try:
                 self.inventory.remove('')
             except:
@@ -476,9 +476,9 @@ class Player(Character):
         rawAttributes = ','.join(str(e) for e in rawAttributes)
         # Does the same for skills, though skills aren't currently used
         skills = ','.join(self.raw_skills)
-        equipment = ','.join(str(e) for e in [self.mainhand.id, self.offhand.id,
+        equipment = '/'.join(str(e) for e in [self.mainhand.id, self.offhand.id,
                                               self.helmet.id, self.armor.id, self.gloves.id, self.boots.id, self.trinket.id])
-        inventory = ','.join(str(e) for e in self.inventory)
+        inventory = '/'.join(str(e) for e in self.inventory)
 
         save = [self.id, self.name, self.cls, self.level, int(
             self.xp), self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
@@ -1164,6 +1164,7 @@ class Equipment:
         if database:
             self.id = db.save_equipment(save)
             save[0] = self.id
+            return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return ','.join(str(x) for x in save)
 
@@ -1630,14 +1631,19 @@ class Shop():
         save = db.GetActiveShop(self.adv.id)
         if save:
             self.id = save[0]
-            tmp = save[2].split('|')
-            equipment = list(map(lambda x: int(x), tmp))
+            tmp = save[2].split('/')
+            self.inventory = []
+            for e in tmp:
+                equip = Equipment(e)
+                self.inventory.append(equip)
+            self.buyback = []
             try:
-                buypack = list(map(lambda x: int(x), save[3].split('|')))
+                btmp = save[3].split('/')
+                for e in btmp:
+                    equip = Equipment(e)
+                    self.buyback.append(equip)
             except AttributeError:
-                buypack = []
-            self.inventory = equipment
-            self.buyback = buypack
+                pass
             self.refresh = datetime.datetime.strptime(save[4], '%Y-%m-%d %H:%M:%S')
         else:
             self.new()
@@ -1646,8 +1652,10 @@ class Shop():
 
     def buy(self, index: int): # Index has to be the index in list
         index = int(index)
-        equipment = Equipment(self.inventory[index])
-        if self.adv.addInv(equipment.id):
+        equipment = self.inventory[index]
+        if len(self.adv.inventory) < self.adv.inventoryCapacity:
+            save = equipment.save(database=True)
+            self.adv.addInv(save)
             self.adv.remXP(equipment.price)
             self.inventory.pop(index)
             return True
@@ -1656,8 +1664,10 @@ class Shop():
 
     def buyB(self, index: int): # Index has to be the index in list
         index = int(index)
-        equipment = Equipment(self.buyback[index])
-        if self.adv.addInv(equipment.id):
+        equipment = self.buyback[index]
+        if len(self.adv.inventory) < self.adv.inventoryCapacity:
+            save = equipment.save(database=True)
+            self.adv.addInv(save)
             self.adv.remXP(equipment.price)
             self.buyback.pop(index)
             return True
@@ -1667,8 +1677,9 @@ class Shop():
     def sell(self, index: int):
         index = int(index)
         equipment = Equipment(self.adv.inventory[index])
-        if self.adv.remInv(index + 1):
-            self.buyback.append(index)
+        if self.adv.remInv(index):
+            save = equipment.save(database=True)
+            self.buyback.append(save)
             self.adv.addXP(equipment.price)
             return True
         else:
