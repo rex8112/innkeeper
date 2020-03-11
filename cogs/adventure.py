@@ -427,8 +427,7 @@ class Adventure(commands.Cog):
     @commands.guild_only()
     @is_available()
     async def shop(self, ctx):
-        adv = ac.Player(ctx.author.id, False)
-        adv.load(False)
+        adv = ac.Player(ctx.author.id)
         adv.available = False
         adv.save()
         shop = ac.Shop(adv)
@@ -544,12 +543,9 @@ class Adventure(commands.Cog):
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
                     buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
-                    number = 0
-                    for i in shop.inventory:
-                        number += 1
-                        e = ac.Equipment(i)
-                        buy_embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
-                        ), e.name), value='Buying Cost: **{}** {}'.format(e.price, self.bot.xpName))
+                    for number, i in enumerate(shop.inventory, start=1):
+                        buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(
+                        ), i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -567,17 +563,17 @@ class Adventure(commands.Cog):
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
                                 index = int(vMessage.content) - 1
-                                num = shop.inventory[index]
+                                e = shop.inventory[index]
                             except (ValueError, IndexError) as e:
                                 pass
                             except InterruptedError:
                                 buyExit = True
                             else:
-                                e = ac.Equipment(num)
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
                                                       colour=Colour.infoColour, 
                                                       description=e.getInfo())
                                 await shopMessage.edit(embed=embed)
+                                await asyncio.sleep(0.26)
                                 await shopMessage.add_reaction('✅')
                                 await asyncio.sleep(0.26)
                                 await shopMessage.add_reaction('❌')
@@ -600,12 +596,9 @@ class Adventure(commands.Cog):
                 elif str(reaction) == '3️⃣': # Buyback Equipment
                     buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
-                    number = 0
-                    for i in shop.buyback:
-                        number += 1
-                        e = ac.Equipment(i)
-                        buy_embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
-                        ), e.name), value='Buying Cost: **{}** {}'.format(e.price, self.bot.xpName))
+                    for number, i in enumerate(shop.buyback, start=1):
+                        buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(),
+                            i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -623,13 +616,12 @@ class Adventure(commands.Cog):
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
                                 index = int(vMessage.content) - 1
-                                num = shop.buyback[index]
+                                e = shop.buyback[index]
                             except (ValueError, IndexError) as e:
                                 pass
                             except InterruptedError:
                                 buyExit = True
                             else:
-                                e = ac.Equipment(num)
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
                                                       colour=Colour.infoColour, 
                                                       description=e.getInfo())
@@ -662,9 +654,7 @@ class Adventure(commands.Cog):
                     sellExit = False
                     while sellExit == False:
                         embed.clear_fields()
-                        number = 0
-                        for i in adv.inventory:
-                            number += 1
+                        for number, i in enumerate(adv.inventory, start=1):
                             e = ac.Equipment(i)
                             if not e.requirements.get('unsellable', False):
                                 embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
@@ -687,7 +677,7 @@ class Adventure(commands.Cog):
                                 sellExit = True
                             else:
                                 # In case they type in a number that wasn't listed, which happens to be one of their equipments
-                                if not e.mods.get('unsellable', False):
+                                if not e.requirements.get('unsellable', False):
                                     shop.sell(num)
                                     shop.save()
                             finally:

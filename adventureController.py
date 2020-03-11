@@ -1170,6 +1170,7 @@ class Equipment:
 
     def delete(self):
         db.delete_equipment(self.id)
+        self.id = None
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
 
@@ -1610,8 +1611,8 @@ class Shop():
     def new(self):
         for _ in range(10):
             equipment = Equipment(0)
-            equipment.generate_new(self.adv.lvl, Equipment.calculate_drop_rarity())
-            self.inventory.append(equipment.save())
+            equipment.generate_new(self.adv.level, Equipment.calculate_drop_rarity())
+            self.inventory.append(equipment)
         self.refresh = datetime.datetime.now() + datetime.timedelta(hours=12)
 
     def save(self):
@@ -1678,9 +1679,10 @@ class Shop():
         index = int(index)
         equipment = Equipment(self.adv.inventory[index])
         if self.adv.remInv(index):
-            save = equipment.save(database=True)
+            save = equipment
             self.buyback.append(save)
             self.adv.addXP(equipment.price)
+            save.delete()
             return True
         else:
             return False
