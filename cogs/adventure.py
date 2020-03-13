@@ -815,7 +815,7 @@ class Adventure(commands.Cog):
                             sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
                             try:
                                 loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
-                                loot_winner.addInv(loot.id)
+                                loot_winner.addInv(loot.save(database=True))
                             except IndexError:
                                 pass
                         raid.finish_encounter(True)

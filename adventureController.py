@@ -643,14 +643,6 @@ class RaidBoss(Character):
         if self.id > 0:
             self.load()
 
-    def get_loot(self, rarity: int):
-        loot = []
-        for L in self.inventory:
-            if L.rarity == rarity:
-                loot.append(L)
-        if len(loot) > 0:
-            return random.choice(loot)
-
     def load(self):
         try:
             data = db.get_raid_boss(self.id)
@@ -672,7 +664,10 @@ class RaidBoss(Character):
 
             self.inventory = []
             for L in data[7].split(','):
-                self.inventory.append(Equipment(L))
+                try:
+                    self.inventory.append(int(L))
+                except (AttributeError, ValueError):
+                    logger.error('{} can not be converted to int in {} RaidBoss generation'.format(L, self.id), exc_info=True)
 
             self.mainhand = None
             self.offhand = None
@@ -1712,13 +1707,23 @@ class Raid():
             count += 1
             total += player.level
             player_ids.append(str(player.id))
+        average = round(total / count)
+
+        if average > self.boss.level + 5:
+            level = self.boss.level + 5
+        elif average > self.boss.level:
+            level = average
+        else:
+            level = self.boss.level
+
         self.loot = []
         loot_ids = []
         for _ in range(5):
-            loot = self.boss.get_loot(Equipment.calculate_drop_rarity())
-            if loot:
-                self.loot.append(loot) # Need to get based on rarity
-                loot_ids.append(str(loot.id))
+            base_loot = random.choice(self.boss.inventory)
+            loot = Equipment(0)
+            loot.generate_new(level, Equipment.calculate_drop_rarity(), base_loot)
+            self.loot.append(loot)
+            loot_ids.append(loot.save())
         
         self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
 
