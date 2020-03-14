@@ -639,6 +639,8 @@ class Enemy(Character):
 class RaidBoss(Character):
     def __init__(self, boss_id):
         self.id = boss_id
+        self.raw_mods = {}
+        self.mods = {}
         self.loaded = False
         if self.id > 0:
             self.load()
@@ -679,8 +681,8 @@ class RaidBoss(Character):
 
             for mod_string in data[8].split('|'):
                 mod_tmp = mod_string.split(':')
-                mod = Modifier(mod_tmp[0], mod_tmp[1])
-                self.mods[mod.id] = mod
+                mod = Modifier(mod_tmp[0], int(mod_tmp[1]))
+                self.raw_mods[mod.id] = mod
 
             self.calculate()
             self.loaded = True
