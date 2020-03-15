@@ -21,8 +21,9 @@ def initDB():  # initialize the database
     cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
-    cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command INTEGER NOT NULL)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command TEXT NOT NULL)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
 
     cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEnemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, elite TEXT, attributes TEXT NOT NULL, modifiers TEXT NOT NULL, skills TEXT NOT NULL DEFAULT attack, rng INTEGER NOT NULL DEFAULT 1)""")
     cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
@@ -268,11 +269,32 @@ def del_server(ID: int):
     )
     db.commit()
 
+def get_server(ID: int):
+    cursor.execute(
+        """SELECT * FROM servers WHERE id = ?""",
+        (ID,)
+    )
+    return cursor.fetchone()
+
 def get_all_servers():
     cursor.execute(
         """SELECT * FROM servers"""
     )
     return cursor.fetchall()
+
+def add_raid_channel(cID: int, gID: int, advIDs: str):
+    cursor.execute(
+        """INSERT INTO raidChannels(channelID, guildID, advIDs) VALUES(?, ?, ?)""",
+        (cID, gID, advIDs)
+    )
+    db.commit()
+
+def del_raid_channel(cID: int):
+    cursor.execute(
+        """DELETE FROM raidChannels WHERE channelID = ?""",
+        (cID,)
+    )
+    db.commit()
 
 def get_modifier(ID: str):
     cursor2.execute(

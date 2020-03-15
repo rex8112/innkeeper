@@ -782,6 +782,9 @@ class Adventure(commands.Cog):
         else:
             if str(reaction) == '✅':
                 try:
+                    raw_server_data = db.get_server(ctx.guild.id)
+                    channel = ctx.guid.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
+                    category = ctx.guild.get_channel(raw)
                     for p in players:
                         p.load()
                         p.available = False
