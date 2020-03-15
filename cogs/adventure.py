@@ -275,8 +275,8 @@ class Adventure(commands.Cog):
             else:
                 await ctx.send(embed=embed)
 
-    @profile.command(aliases=['attributes'])
-    async def stats(self, ctx):
+    @profile.command(name='stats', aliases=['attributes'])
+    async def profile_stats(self, ctx):
         """Get a bit more detail about your current stats and attributes"""
         adv = ac.Player(ctx.author.id)
         if not adv.loaded:
@@ -288,13 +288,16 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title=str(
             adv.name), colour=Colour.infoColour, description='Detailed Attributes and Stats')
         embed.add_field(name='Strength: {}'.format(
-            adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {0.unarmDamage}\nInventory Slots: {0.inventoryCapacity}'.format(adv))
+            adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {1}\nInventory Slots: {0.inventoryCapacity}'.format(
+                                    adv, adv.mods.get('unarmDamage', ac.Modifier('unarmDamage', 0)).value))
         embed.add_field(name='Dexterity: {}'.format(
-            adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {0.evasion:.1%}\nCrit Chance: {0.critChance:.1%}'.format(adv))
+            adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {1:.1%}\nCrit Chance: {2:.1%}'.format(
+                                    adv, adv.mods.get('evasion', ac.Modifier('evasion', 0)).value,
+                                    adv.mods.get('critChance', ac.Modifier('critChance', 0)).value))
         embed.add_field(name='Constitution: {}'.format(adv.constitution),
                         value='Base Constitution: {0.rawConstitution}\nMax Health: {0.maxHealth}'.format(adv))
         embed.add_field(name='Intelligence: {}'.format(adv.intelligence),
-                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {0.spellAmp:.1%}'.format(adv))
+                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {1:.1%}'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
         embed.add_field(name='Wisdom: {}'.format(adv.wisdom),
                         value='Base Wisdom: {0.rawWisdom}'.format(adv))
         embed.add_field(name='Charisma: {}'.format(adv.charisma),
