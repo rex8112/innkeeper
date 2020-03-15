@@ -302,7 +302,7 @@ class Character:
         logger.debug(
             '{0.name} Unarmed Damage calculated to: {1}'.format(self, self.mods['unarmDamage']))
 
-        self.inventoryCapacity = (self.strength // PerLevel.inventory_cap + 
+        self.inventoryCapacity = (self.rawStrength // PerLevel.inventory_cap + 
             (10 - (10 // PerLevel.inventory_cap)))
         logger.debug(
             '{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
