@@ -240,7 +240,14 @@ class Adventure(commands.Cog):
             equipment = []
             for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
                 equipment.append(e)
-            embed = discord.Embed(title='{}'.format(adv.name), colour=Colour.infoColour,
+
+            if adv.available:
+                c = Colour.infoColour
+                t = '{}'.format(adv.name)
+            else:
+                c = Colour.errorColour
+                t = '{} (Busy)'.format(adv.name)
+            embed = discord.Embed(title=t, colour=c,
                                     description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
             embed.set_author(name=ctx.author.display_name,
                                 icon_url=ctx.author.avatar_url)
@@ -342,7 +349,7 @@ class Adventure(commands.Cog):
                 e = ac.Equipment(i)
                 count += 1
                 embed.add_field(
-                    name='Slot **{}**'.format(count), value=e.getInfo())
+                    name='Slot **{}**'.format(count), value=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
 
             await ctx.send(embed=embed)
 

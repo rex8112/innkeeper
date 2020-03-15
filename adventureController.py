@@ -211,6 +211,24 @@ class Character:
         except AttributeError:
             return None
 
+    def get_equipment_from_slot(self, slot: str):
+        if slot == 'mainhand':
+            return self.mainhand
+        elif slot == 'offhand':
+            return self.offhand
+        elif slot == 'helmet':
+            return self.helmet
+        elif slot == 'armor':
+            return self.armor
+        elif slot == 'gloves':
+            return self.gloves
+        elif slot == 'boots':
+            return self.boots
+        elif slot == 'trinket':
+            return self.trinket
+        else:
+            raise ValueError('Incorrect Slot Passed')
+
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
 
@@ -932,6 +950,7 @@ class BaseEquipment:
 
 class Equipment:
     def __init__(self, ID):
+        self.loaded = False
         try:
             self.id = int(ID)
         except ValueError:
@@ -974,16 +993,36 @@ class Equipment:
         elif self.rarity == 4:
             return 'Legendary'
 
-    def getInfo(self):
+    def getInfo(self, compare_equipment = None):
         if self.name == 'Empty':
             info = '{}'.format(self.name)
         else:
+            if compare_equipment:
+                mods = {}
+                for mod in compare_equipment.starting_mods.values():
+                    mods[mod.id] = mod
+                for mod in compare_equipment.random_mods.values():
+                    if mods.get(mod.id, False):
+                        mods[mod.id] += mod
+                    else:
+                        mods[mod.id] = mod
+
             info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
                 self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
             for mod in self.starting_mods.values():
-                info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+                if compare_equipment:
+                    other = mods.get(mod.id, Modifier(mod.id, 0))
+                    compare = mod.value - other.value
+                    info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
+                else:
+                    info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
             for mod in self.random_mods.values():
-                info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+                if compare_equipment:
+                    other = mods.get(mod.id, Modifier(mod.id, 0))
+                    compare = mod.value - other.value
+                    info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
+                else:
+                    info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
         return info
 
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
@@ -1581,8 +1620,7 @@ class RNGDungeon:
             self.adv.rest()
             self.adv.addXP(self.xp)
             for l in self.loot:
-                save = l.save()
-                self.adv.addInv(save[0])
+                self.adv.addInv(l.save(database=True))
         else:
             self.adv.available = True  # TEMPORARY UNTIL RECOVERY IS CODED
             self.adv.rest()
