@@ -31,7 +31,7 @@ class Events(commands.Cog):
             embed = discord.Embed(title='Check Failure', colour=Colour.errorColour, description='{}\nCould your adventurer be busy?'.format(str(error)))
         else:
             logger.error('{}: {}'.format(type(error).__name__, error))
-            embed = discord.Embed(title="Error", colour=discord.Colour(0xd0021b), description='{}: {}'.format(type(error).__name__, str(error)))
+            embed = discord.Embed(title="Error", colour=Colour.errorColour, description='{}: {}'.format(type(error).__name__, str(error)))
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
