@@ -727,7 +727,7 @@ class Adventure(commands.Cog):
         for raid in raids:
             count += 1
             embed.add_field(name='Index: **{}**'.format(count), value='__**{}**__\nLevel {}\n{}'.format(raid[1],raid[2],raid[3]))
-        raid_message = await ctx.send(embed=embed)
+        setup_message = await ctx.send(embed=embed)
         try:
             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
         except asyncio.TimeoutError:
@@ -742,7 +742,7 @@ class Adventure(commands.Cog):
         players = [adventurer]
         joinable = True
 
-        await raid_message.add_reaction('✅')
+        await setup_message.add_reaction('✅')
         while joinable:
             players_string = ''
             for adv in players:
@@ -752,10 +752,10 @@ class Adventure(commands.Cog):
                                 description='Level **{0[2]}**\n{0[3]}'.format(selected_raid))
             embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✅.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
             embed.add_field(name='Current Adventurers', value=players_string)
-            await raid_message.edit(embed=embed)
+            await setup_message.edit(embed=embed)
             try:
                 reaction, user = await self.bot.wait_for('reaction_add', timeout=15.0,
-                                                            check = lambda reaction, user: reaction.message.id == raid_message.id and str(reaction) == '✅')
+                                                            check = lambda reaction, user: reaction.message.id == setup_message.id and str(reaction) == '✅')
             except asyncio.TimeoutError:
                 joinable = False
             else:
@@ -772,23 +772,25 @@ class Adventure(commands.Cog):
         embed.clear_fields()
         embed.add_field(name='Raid is now closed', value='To begin the raid, the host must react with ✅ to begin or ❌ to cancel.')
         embed.add_field(name='Current Adventurers', value=players_string)
-        await raid_message.edit(embed=embed)
-        await raid_message.add_reaction('❌')
+        await setup_message.edit(embed=embed)
+        await setup_message.add_reaction('❌')
         try:
             reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0,
-                                                        check = lambda reaction, user: reaction.message.id == raid_message.id and user.id == ctx.author.id)
+                                                        check = lambda reaction, user: reaction.message.id == setup_message.id and user.id == ctx.author.id)
         except asyncio.TimeoutError:
-            await raid_message.edit(embed=timeoutEmbed)
+            await setup_message.edit(embed=timeoutEmbed)
             await asyncio.sleep(0.26)
-            await raid_message.clear_reactions()
+            await setup_message.clear_reactions()
             return
         else:
             if str(reaction) == '✅':
                 try:
                     raw_server_data = db.get_server(ctx.guild.id)
-                    channel = ctx.guid.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
+                    channel = ctx.guild.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
                     category = channel.category
-                    name = ''
+                    name = 'Raid_'
+                    mentions = ''
+                    ids = []
                     overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(view_channel=False)}
 
                     for p in players:
@@ -796,14 +798,20 @@ class Adventure(commands.Cog):
                         p.available = False
                         p.save()
                         name += p.name[0]
+                        ids.append(p.id)
                         member = ctx.guild.get_member(p.id)
+                        mentions += member.mention
                         overwrites[member] = discord.PermissionOverwrite(view_channel = True)
 
                     raid = ac.Raid(players, selected_raid[0])
                     raid.build_encounter()
                     await asyncio.sleep(0.26)
-                    await raid_message.clear_reactions()
-                    raid_channel = await category.create_text_channel()
+                    await setup_message.clear_reactions()
+                    raid_channel = await category.create_text_channel(name, overwrites=overwrites, reason='For Raid')
+                    db.add_raid_channel(raid_channel.id, raid_channel.guild.id, '|'.join(str(e) for e in ids))
+                    raid_message = await raid_channel.send(content=mentions)
+                    await setup_message.edit(embed = discord.Embed(title='{} Raid In Progress'.format(selected_raid[1]), description='[Raid Channel](https://discordapp.com/channels/{}/{})'.format(ctx.guild.id, raid_channel.id),
+                                                                   colour=Colour.infoColour))
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
                     if winner == 1: # 1 signifies player wins
                         await raid_message.add_reaction('✅')
@@ -844,9 +852,15 @@ class Adventure(commands.Cog):
                         raid.finish_encounter(False)
                     embed = discord.Embed(title='Raid Over', colour=Colour.errorColour)
                     await raid_message.edit(embed=embed)
+                    await setup_message.edit(embed=embed)
                 except:
                     logger.error('Error in Raid Host', exc_info=True)
                 finally:
+                    try:
+                        await raid_channel.delete(reason='Raid Finished')
+                        db.del_raid_channel(raid_channel.id)
+                    except (discord.NotFound, UnboundLocalError):
+                        pass
                     for p in players:
                         p.available = True
                         p.save()
