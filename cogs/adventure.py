@@ -341,16 +341,14 @@ class Adventure(commands.Cog):
                                     description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
-            count = 0
             embed = discord.Embed(title='{}\'s Inventory'.format(
                 adv.name), colour=Colour.infoColour)
             embed.set_author(name=ctx.author.display_name,
                              icon_url=ctx.author.avatar_url)
             embed.set_footer(
-                text='{} / {}'.format(len(adv.inventory), adv.inventoryCapacity))
-            for i in adv.inventory:
+                text='Inventory Capacity: {} / {}'.format(len(adv.inventory), adv.inventoryCapacity))
+            for count, i in enumerate(adv.inventory, start=1):
                 e = ac.Equipment(i)
-                count += 1
                 embed.add_field(
                     name='Slot **{}**'.format(count), value=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
 
