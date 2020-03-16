@@ -166,11 +166,40 @@ class Admin(commands.Cog):
                 description='I have arrived to answer a plea for adventure, and a plea for drinks. Both I can offer and both you can have, with a little work that is. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.\n\n***(Bot is heavily still in early alpha and has a hard limitation at this moment until a few things are reworked. Think of this as more of a preview for what is to come.)***')
             announceEmbed.add_field(name='How to get started',
                                     value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP, commandChannel.mention))
-            announceEmbed.add_field(name='Current Early Alpha Limitations',
-                                    value='Max level: 5\nVery Limited Equipment\nOne Raid\nAbsolutely NO balancing has been done.\n\nThese limitations will be lifted once equipment is reworked.')
-            announceEmbed.add_field(name='Suggestions suggestions suggestions',
-                                    value='One of the main purposes for this bot being released early is so that anyone interested can help find bugs, balancing issues, and suggest any change or feature along the way. I am making this bot, from scratch, and anything could be done. No suggestion is too much or too little, if you feel like it should be implemented, suggest away.')
             await announcementChannel.send(embed=announceEmbed)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def leave_server(self, ctx):
+        embed = discord.Embed(title='Are you sure you want me to leave?', colour=Colour.errorColour,
+                              description='Leaving will result in my deleting all my channels (Not including raid channels) and erasing server settings.')
+        confirm_message = await ctx.send(embed=embed)
+        await confirm_message.add_reaction('✅')
+        await asyncio.sleep(0.26)
+        await confirm_message.add_reaction('❌')
+        try:
+            reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: reaction.message.id == confirm_message.id and user.id == ctx.author.id)
+        except asyncio.TimeoutError:
+            await confirm_message.clear_reactions()
+        else:
+            if str(reaction) == '✅':
+                raw_server_data = db.get_server(ctx.guild.id)
+                tmp = ctx.guild.get_channel(raw_server_data[5])
+                ID = ctx.guild.id
+                category = tmp.category
+                try:
+                    for channel in category.channels:
+                        await channel.delete('Cleaning up my mess before I go')
+                    await category.delete('Cleaning up my mess before I go')
+                    await ctx.guild.leave()
+                    db.del_server(ID)
+                except discord.Forbidden:
+                    embed = discord.Embed(title='I do not have permission to clear up my channels.', colour=Colour.errorColour)
+                    await confirm_message.edit(embed=embed)
+            else:
+                await asyncio.sleep(0.26)
+                await confirm_message.clear_reactions()
 
 
 def setup(bot):
