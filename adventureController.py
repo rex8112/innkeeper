@@ -1304,11 +1304,9 @@ class Encounter:
                 self.deadEnemies.append(check)
 
         if len(self.players) <= len(self.deadPlayers):
-            print('Enemy wins')
             self.winner = 2
             return True
         elif len(self.enemies) <= len(self.deadEnemies):
-            print('Player wins')
             self.winner = 1
             return True
 
