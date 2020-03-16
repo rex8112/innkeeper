@@ -787,15 +787,23 @@ class Adventure(commands.Cog):
                 try:
                     raw_server_data = db.get_server(ctx.guild.id)
                     channel = ctx.guid.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
-                    category = ctx.guild.get_channel(raw)
+                    category = channel.category
+                    name = ''
+                    overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(view_channel=False)}
+
                     for p in players:
                         p.load()
                         p.available = False
                         p.save()
+                        name += p.name[0]
+                        member = ctx.guild.get_member(p.id)
+                        overwrites[member] = discord.PermissionOverwrite(view_channel = True)
+
                     raid = ac.Raid(players, selected_raid[0])
                     raid.build_encounter()
                     await asyncio.sleep(0.26)
                     await raid_message.clear_reactions()
+                    raid_channel = await category.create_text_channel()
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
                     if winner == 1: # 1 signifies player wins
                         await raid_message.add_reaction('✅')
