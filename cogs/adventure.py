@@ -760,7 +760,7 @@ class Adventure(commands.Cog):
                 tmp = ac.Player(user.id)
                 valid = True
                 for p in players:
-                    if tmp.id == p.id and tmp.available:
+                    if tmp.id == p.id or not tmp.available:
                         valid = False
                 if valid and tmp.loaded:
                     players.append(tmp)
