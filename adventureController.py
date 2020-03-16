@@ -93,7 +93,7 @@ class Character:
     def equip(self, e: int):
         try:
             eq = Equipment(self.inventory[e-1])
-            self.remInv(e-1)
+            self.remInv(e)
             if eq.slot == 'mainhand':
                 uneq = self.mainhand
                 self.mainhand = eq
@@ -117,7 +117,7 @@ class Character:
                 self.trinket = eq
 
             if not uneq.requirements.get('empty', False):
-                self.inventory.append(uneq.id)
+                self.inventory.append(uneq.save())
             self.calculate()
             return True
         except IndexError:
@@ -148,7 +148,7 @@ class Character:
             self.trinket = eq
 
         if not uneq.mods.get('empty', False):
-            self.inventory.append(uneq.id)
+            self.inventory.append(uneq.save())
         self.calculate()
 
     def addInv(self, ID):
@@ -1200,6 +1200,8 @@ class Equipment:
         if database:
             self.id = db.save_equipment(save)
             save[0] = self.id
+            return str(self.id)
+        elif self.id:
             return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return ','.join(str(x) for x in save)

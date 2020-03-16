@@ -367,7 +367,7 @@ class Adventure(commands.Cog):
                                     description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
-            if adv.equip(slot):
+            if adv.equip(slot-1):
                 adv.save()
                 await ctx.message.add_reaction('✅')
             else:
