@@ -5,6 +5,7 @@ import random
 
 import adventureController as ac
 import tools.database as db
+import tools.exceptions as exceptions
 from tools.colour import Colour
 
 from discord.ext import tasks, commands
@@ -372,7 +373,11 @@ class Adventure(commands.Cog):
                 await ctx.message.add_reaction('✅')
             else:
                 await ctx.message.add_reaction('⛔')
-        except Exception as _:
+        except (exceptions.InvalidLevel, exceptions.InvalidRequirements) as e:
+            error_embed = discord.Embed(title='{}'.format(type(e).__name__), colour=Colour.errorColour, description='{}'.format(e))
+            await ctx.message.add_reaction('⛔')
+            await ctx.send(embed=error_embed)
+        except Exception:
             logger.warning('Equipping Failed', exc_info=True)
             await ctx.message.add_reaction('⛔')
 

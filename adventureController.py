@@ -9,6 +9,7 @@ import asyncio
 from discord.ext import commands
 import tools.skills as Skills
 import tools.database as db
+import tools.exceptions as exceptions
 from tools.colour import Colour
 
 logger = logging.getLogger('adventureController')
@@ -92,7 +93,23 @@ class Character:
 
     def equip(self, e: int):
         try:
-            eq = Equipment(self.inventory[e-1])
+            eq = Equipment(self.inventory[e])
+
+            if self.level < eq.level:
+                raise exceptions.InvalidLevel('{} is too low level to equip level {} {}'.format(self.name, eq.level, eq.name))
+            elif self.rawStrength < eq.requirements.get('strength', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough strength to equip {}'.format(self.name, eq.name))
+            elif self.rawDexterity < eq.requirements.get('dexterity', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough dexterity to equip {}'.format(self.name, eq.name))
+            elif self.rawConstitution < eq.requirements.get('constitution', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough constitution to equip {}'.format(self.name, eq.name))
+            elif self.rawIntelligence < eq.requirements.get('intelligence', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough intelligence to equip {}'.format(self.name, eq.name))
+            elif self.rawWisdom < eq.requirements.get('wisdom', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough wisdom to equip {}'.format(self.name, eq.name))
+            elif self.rawCharisma < eq.requirements.get('charisma', 0):
+                raise exceptions.InvalidRequirements('{} does not have enough charisma to equip {}'.format(self.name, eq.name))
+
             self.remInv(e)
             if eq.slot == 'mainhand':
                 uneq = self.mainhand
