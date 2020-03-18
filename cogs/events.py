@@ -28,7 +28,7 @@ class Events(commands.Cog):
         elif isinstance(error, commands.CommandNotFound):
             return
         elif isinstance(error, commands.CheckFailure):
-            embed = discord.Embed(title='Check Failure', colour=Colour.errorColour, description='{}\nCould your adventurer be busy?'.format(str(error)))
+            embed = discord.Embed(title='Check Failure', colour=Colour.errorColour, description='{}\nCould your adventurer be busy?'.format(error))
         elif isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
             embed = discord.Embed(title='Incomplete Arguments', colour=Colour.errorColour, description='{}: {}'.format(type(error).__name__, str(error)))
         else:
