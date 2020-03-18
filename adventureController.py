@@ -232,6 +232,26 @@ class Character:
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
 
+    def deal_physical_damage(self, value: float):
+        parmor = self.mods.get('parmor', 0)
+        if parmor > 100:
+            parmor = 100
+        elif parmor < 0:
+            parmor = 0
+        damage = value * ((100 - parmor) / 100)
+        self.health -= damage
+        return self.health
+
+    def deal_magical_damage(self, value: float):
+        marmor = self.mods.get('marmor', 0.00)
+        if marmor > 100:
+            marmor = 100
+        elif marmor < 0:
+            marmor = 0
+        damage = value * ((100 - marmor) / 100)
+        self.health -= damage
+        return self.health
+
     def addLevel(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0

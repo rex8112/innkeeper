@@ -66,7 +66,7 @@ class AttackSkill(Skill):
                     if random.uniform(0.0, 1.0) <= critChance:
                         dmg = dmg * 2
                         self.log = '**{}** crit **{}** for **{}** Damage.'.format(user.name, target.name, dmg)
-                    target.health -= dmg
+                    target.deal_physical_damage(dmg)
                     logger.debug('Character hit for {} DMG'.format(dmg))
                     self.log = '**{}** hit **{}** for **{}** Damage.'.format(user.name, target.name, dmg)
                     self.cooldown = self.max_cooldown
