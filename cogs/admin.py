@@ -21,7 +21,10 @@ logger.addHandler(handler2)
 
 def is_admin():
     def predicate(ctx):
-        admins = [180067685986467840]
+        admins = [
+            180067685986467840, # Rex8112
+            216388852066156544  # Nub
+        ]
         return ctx.author.id in admins
     return commands.check(predicate)
 
