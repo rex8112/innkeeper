@@ -13,3 +13,7 @@ class InvalidRequirements(Error):
 class AdventurerBusy(Error):
     """Raised when an adventurer can not complete a task because he is busy"""
     pass
+
+class InvalidBaseEquipment(Error):
+    """Raised when no base equipment is found"""
+    pass

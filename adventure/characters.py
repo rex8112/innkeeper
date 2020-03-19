@@ -431,12 +431,17 @@ class Player(Character):
         # Skills
         self.raw_skills = ['attack']
         # Equipment
-        self.mainhand = Equipment('empty')
+        self.mainhand = Equipment(0)
+        self.mainhand.generate_new(1, 0, index=5)
         self.offhand = Equipment('empty')
-        self.helmet = Equipment('empty')
-        self.armor = Equipment('empty')
-        self.gloves = Equipment('empty')
-        self.boots = Equipment('empty')
+        self.helmet = Equipment(0)
+        self.helmet.generate_new(1, 0, index=1)
+        self.armor = Equipment(0)
+        self.armor.generate_new(1, 0, index=3)
+        self.gloves = Equipment(0)
+        self.gloves.generate_new(1, 0, index=3)
+        self.boots = Equipment(0)
+        self.boots.generate_new(1, 0, index=4)
         self.trinket = Equipment('empty')
 
         self.inventory = []

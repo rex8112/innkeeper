@@ -5,6 +5,7 @@ import math
 from .modifiers import Modifier
 from .skills import Skill
 from .database import db
+from .exceptions import InvalidBaseEquipment
 
 logger = logging.getLogger('characters')
 logger.setLevel(logging.INFO)
@@ -41,23 +42,23 @@ class BaseEquipment:
         self.min_level = int(data[4])
         self.max_level = int(data[5])
         self.starting_rarity = int(data[6])
-        self.starting_mod_string = str(data[7])
-        self.random_mod_string = str(data[8])
-        if data[9]:
-            self.requirement_string = str(data[9])
+        self.max_rarity = int(data[7])
+        self.starting_mod_string = str(data[8])
+        self.random_mod_string = str(data[9])
+        if data[10]:
+            self.requirement_string = str(data[10])
         else:
             self.requirement_string = None
-        if data[10]:
-            self.skills_string = str(data[10])
+        if data[11]:
+            self.skills_string = str(data[11])
         else:
             self.skills_string = None
-        self.rng = bool(data[11])
+        self.rng = bool(data[12])
 
-    def new(self, lvl: int, RNG = True):
-        if RNG:
-            data = db.get_base_equipment_lvl_rng(lvl)
-        else:
-            data = db.get_base_equipment_lvl(lvl)
+    def new(self, lvl: int, rarity: int, RNG = True):
+        data = db.get_base_equipment(lvl=lvl, rarity=rarity, rng=RNG)
+        if not data:
+            raise InvalidBaseEquipment
         chosen_data = random.choice(data)
         self.load(chosen_data)
         
@@ -190,7 +191,7 @@ class Equipment:
     def generate_new(self, lvl: int, rarity: int, index = 0):
         if index == 0:
             self.base_equipment = BaseEquipment()
-            self.base_equipment.new(lvl)
+            self.base_equipment.new(lvl, rarity)
         else:
             self.base_equipment = BaseEquipment(index)
 

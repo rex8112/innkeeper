@@ -27,7 +27,7 @@ class Database:
         cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
 
         cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEnemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, elite TEXT, attributes TEXT NOT NULL, modifiers TEXT NOT NULL, skills TEXT NOT NULL DEFAULT attack, rng INTEGER NOT NULL DEFAULT 1)""")
-        cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
+        cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, maxRarity INTEGER NOT NULL DEFAULT 4, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS eliteModifiers(indx INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, title TEXT, attributes TEXT, modifiers TEXT, skills TEXT)""")
@@ -88,12 +88,37 @@ class Database:
         self.db.commit()
 
 
-    def get_base_equipment(self, ID: int):
+    def get_base_equipment(self, ID = None, lvl = None, rarity = None, rng = True):
         cursor = self.db2.cursor()
-        cursor.execute(
-            """SELECT * FROM baseEquipment WHERE indx = ?""",
-            (ID,)
-        )
+        if ID:
+            cursor.execute(
+                """SELECT * FROM baseEquipment WHERE indx = ?""",
+                (ID,)
+            )
+        elif rng and lvl and rarity:
+            cursor.execute(
+                """SELECT * FROM baseEquipment WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ? AND startingRarity <= ? AND maxRarity >= ?""",
+                (lvl, lvl, rarity, rarity)
+            )
+        elif lvl and rarity:
+            cursor.execute(
+                """SELECT * FROM baseEquipment WHERE minLevel <= ? AND maxLevel >= ? AND startingRarity <= ? AND maxRarity >= ?""",
+                (lvl, lvl, rarity, rarity)
+            )
+        elif lvl:
+            cursor.execute(
+                """SELECT * FROM baseEquipment WHERE minLevel <= ? AND maxLevel >= ?""",
+                (lvl, lvl)
+            )
+        elif rarity:
+            cursor.execute(
+                """SELECT * FROM baseEquipment WHERE startingRarity <= ? AND maxRarity >= ?""",
+                (rarity, rarity)
+            )
+        else:
+            cursor.close()
+            return None
+
         fetch = cursor.fetchone()
         cursor.close()
         return fetch
