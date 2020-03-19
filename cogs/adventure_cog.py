@@ -352,7 +352,7 @@ class Adventure(commands.Cog):
 
             await ctx.send(embed=embed)
 
-    @inventory.command()
+    @commands.command()
     @is_available()
     async def equip(self, ctx, slot: int):
         """Equip a piece of equipment from your inventory

@@ -107,7 +107,7 @@ class Equipment:
         elif self.rarity == 4:
             return 'Legendary'
 
-    def getInfo(self, compare_equipment = None):
+    def getInfo(self, compare_equipment = None, title = True):
         if self.name == 'Empty':
             info = '{}'.format(self.name)
         else:
@@ -120,9 +120,12 @@ class Equipment:
                         mods[mod.id] += mod
                     else:
                         mods[mod.id] = mod
-
-            info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
-                self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
+            if title:
+                info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
+                    self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
+            else:
+                info = '{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
+                    self.flavor, self.level, self.id, self.price)
             for mod in self.starting_mods.values():
                 if compare_equipment:
                     other = mods.get(mod.id, Modifier(mod.id, 0))
