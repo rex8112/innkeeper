@@ -827,6 +827,7 @@ class Adventure(commands.Cog):
                                 else:
                                     loot_list += '*{1}* {0.name}\n'.format(l, l.getRarity())
                             embed = discord.Embed(title='Loot', colour=ac.Colour.get_rarity_colour(loot.rarity), description=loot_list)
+                            embed.set_footer(text='If you roll a 0 then your inventory is full')
                             loot_escape = False
                             while loot_escape == False:
                                 loot_rolls_string = ''
@@ -847,13 +848,18 @@ class Adventure(commands.Cog):
                                     loot_escape = True
                                 else:
                                     if str(reaction) == '✅' and user.id in [int(x) for x in raid.players] and user.id not in loot_rolls:
-                                        loot_rolls[user.id] = random.randint(1, 100)
+                                        t = next(x for x in raid.players if x.id == user.id)
+                                        if len(t.inventory) < t.inventoryCapacity:
+                                            loot_rolls[user.id] = random.randint(1, 100)
+                                        else:
+                                            loot_rolls[user.id] = 0
                                 finally:
                                     await reaction.remove(user)
                             sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
                             try:
                                 loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
-                                loot_winner.addInv(loot.save(database=True))
+                                if not loot_winner.addInv(loot.save(database=True)):
+                                    loot.delete()
                             except IndexError:
                                 pass
                         raid.finish_encounter(True)
