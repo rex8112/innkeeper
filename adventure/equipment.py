@@ -144,14 +144,15 @@ class Equipment:
 
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
         mods = {}
+        level = self.level - self.base_equipment.min_level
         mod_string_list = mod_string.split('|')
         for mod in mod_string_list:
             key, value_string = tuple(mod.split(':'))
             min_string, max_string = tuple(value_string.split('/'))
             min_value, min_per_level = tuple(min_string.split('+'))
             max_value, max_per_level = tuple(max_string.split('+'))
-            final_min_volume = int(min_value) + math.floor(float(min_per_level) * self.level)
-            final_max_volume = int(max_value) + math.floor(float(max_per_level) * self.level)
+            final_min_volume = int(min_value) + math.floor(float(min_per_level) * level)
+            final_max_volume = int(max_value) + math.floor(float(max_per_level) * level)
             final_mod = Modifier(key, random.randint(final_min_volume, final_max_volume))
             if mods.get(key, False): # Determine if this modifier is already in the dictionary
                 final_mod.value += mods.get(key).value
@@ -160,11 +161,12 @@ class Equipment:
 
     def process_requirement_string(self, requirement_string: str):
         requirements = {}
+        level = self.level - self.base_equipment.min_level
         requirement_string_list = requirement_string.split('|')
         for requirement in requirement_string_list:
             key, value_string = tuple(requirement.split(':'))
             value, per_level = tuple(value_string.split('+'))
-            final_value = int(value) + math.floor(float(per_level) * self.level)
+            final_value = int(value) + math.floor(float(per_level) * level)
             final_requirement = Modifier(key, final_value)
             requirements[key] = final_requirement
         return requirements
