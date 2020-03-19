@@ -328,29 +328,34 @@ class Adventure(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.group()
-    async def inventory(self, ctx):
+    @commands.command(aliases=['i'])
+    async def inventory(self, ctx, slot = 0):
         """Command group to manage your inventory
         If ran with no subcommands, will get your current inventory."""
-        if ctx.invoked_subcommand is None:
-            adv = ac.Player(ctx.author.id)
-            if not adv.loaded:
-                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
-                                    description='Please contact rex8112#1200 if this is not the case.')
-                await ctx.send(embed=embed)
-                return
+        adv = ac.Player(ctx.author.id)
+        if not adv.loaded:
+            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
+                                description='Please contact rex8112#1200 if this is not the case.')
+            await ctx.send(embed=embed)
+            return
+        if slot == 0:
             embed = discord.Embed(title='{}\'s Inventory'.format(
                 adv.name), colour=ac.Colour.infoColour)
             embed.set_author(name=ctx.author.display_name,
-                             icon_url=ctx.author.avatar_url)
+                                icon_url=ctx.author.avatar_url)
             embed.set_footer(
                 text='Inventory Capacity: {} / {}'.format(len(adv.inventory), adv.inventoryCapacity))
             for count, i in enumerate(adv.inventory, start=1):
                 e = ac.Equipment(i)
                 embed.add_field(
                     name='Slot **{}**'.format(count), value=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
-
-            await ctx.send(embed=embed)
+        else:
+            try:
+                e = ac.Equipment(adv.inventory[slot-1])
+                embed = discord.Embed(title=e.name, colour=ac.Colour.get_rarity_colour(e.rarity), description=e.getInfo(title=False))
+            except IndexError:
+                embed = discord.Embed(title='Slot Empty', colour=ac.Colour.errorColour, description='Slot {} has no items.'.format(slot))
+        await ctx.send(embed=embed)
 
     @commands.command()
     @is_available()
