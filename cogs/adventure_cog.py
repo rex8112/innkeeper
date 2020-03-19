@@ -3,10 +3,7 @@ import logging
 import asyncio
 import random
 
-import adventureController as ac
-import tools.database as db
-import tools.exceptions as exceptions
-from tools.colour import Colour
+import adventure as ac
 
 from discord.ext import tasks, commands
 
@@ -46,7 +43,7 @@ class Adventure(commands.Cog):
         """Begin your adventure!
         Ultimately, the character creator."""
         adv = ac.Player(ctx.author.id, False)
-        embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
+        embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
                               description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
         embed.add_field(name='Needed Information',
                         value='Name:\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:~~[WIP:Currently Unused But Required]')
@@ -55,7 +52,7 @@ class Adventure(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         embed.set_footer(text='You have 3 minutes to type your response')
         controlMessage = await ctx.send(embed=embed)
-        tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+        tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
 
         try:
             logger.debug('Waiting for name')
@@ -71,7 +68,7 @@ class Adventure(commands.Cog):
 
             while not cont:
 
-                embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
+                embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
                                       description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
                 embed.add_field(name='Needed Information',
                                 value='Name: {}\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:\n~~[WIP:Currently Unused But Required]'.format(name))
@@ -113,9 +110,9 @@ class Adventure(commands.Cog):
                         attributes[:] = [x + 10 for x in attributes]
 
                         if total > 5:
-                            await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=Colour.errorColour), delete_after=3.0)
+                            await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=ac.Colour.errorColour), delete_after=3.0)
                         elif total < 5:
-                            await ctx.send(embed=discord.Embed(title='Total number under 5, try again', colour=Colour.errorColour), delete_after=3.0)
+                            await ctx.send(embed=discord.Embed(title='Total number under 5, try again', colour=ac.Colour.errorColour), delete_after=3.0)
                         else:
                             cont = True
                     finally:
@@ -123,7 +120,7 @@ class Adventure(commands.Cog):
 
             if controlMessage == None:
                 return
-            embed = discord.Embed(title='Adventurer Creator', colour=Colour.creationColour,
+            embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
                                   description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
             embed.add_field(name='Needed Information',
                             value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\n~~Intelligence: {1[3]}\nWisdom: {1[4]}\nCharisma: {1[5]}~~\n[WIP:Currently Unused But Required]'.format(name, attributes))
@@ -150,12 +147,12 @@ class Adventure(commands.Cog):
                     # async with controlMessage.channel.typing():
                     if adv.new(name, 'Adventurer', 'Human', attributes):
                         embed = discord.Embed(title='Adventurer Created!',
-                                              colour=Colour.successColour, description='Welcome {}!'.format(name))
+                                              colour=ac.Colour.successColour, description='Welcome {}!'.format(name))
                     else:
-                        embed = discord.Embed(title='Adventurer Already Created!', colour=Colour.errorColour,
+                        embed = discord.Embed(title='Adventurer Already Created!', colour=ac.Colour.errorColour,
                                               description='You can not make two!')
                 else:
-                    embed = discord.Embed(title='Adventurer Scrapped!', colour=Colour.errorColour,
+                    embed = discord.Embed(title='Adventurer Scrapped!', colour=ac.Colour.errorColour,
                                           description='Rerun the command to try again')
                 await asyncio.sleep(0.26)
                 await controlMessage.clear_reactions()
@@ -167,19 +164,19 @@ class Adventure(commands.Cog):
         if ctx.invoked_subcommand is None:
             adv = ac.Player(ctx.author.id)
             profile_message = None
-            tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+            tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
             first = True
             escape = False
 
             if not adv.loaded:
-                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                     description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
 
             while adv.get_unspent_points() > 0 and escape == False:
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
-                                      colour=Colour.infoColour,
+                                      colour=ac.Colour.infoColour,
                                       description='What would you like to spend them on?\n'
                                       + '1. Strength\n'
                                       + '2. Dexterity\n'
@@ -243,10 +240,10 @@ class Adventure(commands.Cog):
                 equipment.append(e)
 
             if adv.available:
-                c = Colour.infoColour
+                c = ac.Colour.infoColour
                 t = '{}'.format(adv.name)
             else:
-                c = Colour.errorColour
+                c = ac.Colour.errorColour
                 t = '{} (Busy)'.format(adv.name)
             embed = discord.Embed(title=t, colour=c,
                                     description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** XP'.format(adv))
@@ -281,13 +278,13 @@ class Adventure(commands.Cog):
         """Get a bit more detail about your current stats and attributes"""
         adv = ac.Player(ctx.author.id)
         if not adv.loaded:
-            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                   description='Please contact rex8112#1200 if this is not the case.')
             await ctx.send(embed=embed)
             return
 
         embed = discord.Embed(title=str(
-            adv.name), colour=Colour.infoColour, description='Detailed Attributes and Stats')
+            adv.name), colour=ac.Colour.infoColour, description='Detailed Attributes and Stats')
         embed.add_field(name='Strength: {}'.format(
             adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {1}\nInventory Slots: {0.inventoryCapacity}'.format(
                                     adv, adv.mods.get('unarmDamage', ac.Modifier('unarmDamage', 0)).value))
@@ -312,12 +309,12 @@ class Adventure(commands.Cog):
         """Get your currently equipped gear and info"""
         adv = ac.Player(ctx.author.id)
         if not adv.loaded:
-            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+            embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                   description='Please contact rex8112#1200 if this is not the case.')
             await ctx.send(embed=embed)
             return
         embed = discord.Embed(title=str(
-            adv.name), colour=Colour.infoColour, description='Detailed Equipment Statistics')
+            adv.name), colour=ac.Colour.infoColour, description='Detailed Equipment Statistics')
         embed.set_author(name=ctx.author.display_name,
                          icon_url=ctx.author.avatar_url)
 
@@ -338,12 +335,12 @@ class Adventure(commands.Cog):
         if ctx.invoked_subcommand is None:
             adv = ac.Player(ctx.author.id)
             if not adv.loaded:
-                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                     description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
             embed = discord.Embed(title='{}\'s Inventory'.format(
-                adv.name), colour=Colour.infoColour)
+                adv.name), colour=ac.Colour.infoColour)
             embed.set_author(name=ctx.author.display_name,
                              icon_url=ctx.author.avatar_url)
             embed.set_footer(
@@ -364,7 +361,7 @@ class Adventure(commands.Cog):
             adv = ac.Player(ctx.author.id, False)
             adv.load(False)
             if not adv.loaded:
-                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=Colour.errorColour,
+                embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                     description='Please contact rex8112#1200 if this is not the case.')
                 await ctx.send(embed=embed)
                 return
@@ -373,8 +370,8 @@ class Adventure(commands.Cog):
                 await ctx.message.add_reaction('✅')
             else:
                 await ctx.message.add_reaction('⛔')
-        except (exceptions.InvalidLevel, exceptions.InvalidRequirements) as e:
-            error_embed = discord.Embed(title='{}'.format(type(e).__name__), colour=Colour.errorColour, description='{}'.format(e))
+        except (ac.InvalidLevel, ac.InvalidRequirements) as e:
+            error_embed = discord.Embed(title='{}'.format(type(e).__name__), colour=ac.Colour.errorColour, description='{}'.format(e))
             await ctx.message.add_reaction('⛔')
             await ctx.send(embed=error_embed)
         except Exception:
@@ -387,10 +384,10 @@ class Adventure(commands.Cog):
         """Command group to manage quests
         If ran with no subcommands, will output current quest information."""
         if ctx.invoked_subcommand is None:
-            rng = ac.RNGDungeon()
+            rng = ac.Quest()
             if rng.loadActive(ctx.author.id):
                 embed = discord.Embed(
-                    title='**{}** Stage Quest'.format(rng.stages), colour=Colour.infoColour)
+                    title='**{}** Stage Quest'.format(rng.stages), colour=ac.Colour.infoColour)
                 embed.set_author(name=ctx.author.display_name,
                                  icon_url=ctx.author.avatar_url)
                 embed.set_footer(text='ID = {}'.format(rng.id))
@@ -405,7 +402,7 @@ class Adventure(commands.Cog):
                 embed.add_field(name='Current Enemies', value=enemies)
             else:
                 embed = discord.Embed(
-                    title='No Active Quest', colour=Colour.errorColour,
+                    title='No Active Quest', colour=ac.Colour.errorColour,
                     description='To start a new quest, run `{}quest start difficulty`. Replace difficulty with either: `easy`, `medium`, or `hard`.'.format(self.bot.CP))
                 embed.set_author(name=ctx.author.display_name,
                                  icon_url=ctx.author.avatar_url)
@@ -420,11 +417,11 @@ class Adventure(commands.Cog):
         Available difficulties: easy, medium, and hard.
 
         Difficulty increases the amount of stages done in one round while also getting more difficult in the later stages."""
-        rng = ac.RNGDungeon()
+        rng = ac.Quest()
         rng.new(ctx.author.id, difficulty)
 
         embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper(
-        )), colour=Colour.creationColour, description='**{}** Stages'.format(rng.stages))
+        )), colour=ac.Colour.creationColour, description='**{}** Stages'.format(rng.stages))
         embed.set_author(name=ctx.author.display_name,
                          icon_url=ctx.author.avatar_url)
 
@@ -447,19 +444,19 @@ class Adventure(commands.Cog):
         mainExit = False
 
         embed = discord.Embed(title='Generating Shop',
-                              colour=Colour.creationColour)
+                              colour=ac.Colour.creationColour)
         timeoutEmbed = discord.Embed(
-            title='Timed Out', colour=Colour.errorColour)
+            title='Timed Out', colour=ac.Colour.errorColour)
         timeoutEmbed.set_author(
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         goodbyeEmbed = discord.Embed(title='Goodbye {}'.format(
-            adv.name), colour=Colour.infoColour)
+            adv.name), colour=ac.Colour.infoColour)
         goodbyeEmbed.set_author(
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         shopMessage = await ctx.send(embed=embed)
         while mainExit == False:
-            embed = discord.Embed(title='The Innkeeper\'s Shop', colour=Colour.infoColour,
+            embed = discord.Embed(title='The Innkeeper\'s Shop', colour=ac.Colour.infoColour,
                                   description='Welcome {},\nWhat brings you here today?'.format(adv.name))
             embed.set_author(name=ctx.author.display_name,
                              icon_url=ctx.author.avatar_url)
@@ -496,7 +493,7 @@ class Adventure(commands.Cog):
 
             else:
                 if str(reaction) == '1️⃣':  # Looking at a Potion of Peritia
-                    embed = discord.Embed(title='Potion of Peritia', colour=Colour.infoColour,
+                    embed = discord.Embed(title='Potion of Peritia', colour=ac.Colour.infoColour,
                                           description='Interested in more power, {}? It will come with a cost.'.format(adv.name))
                     embed.set_author(name=ctx.author.display_name,
                                      icon_url=ctx.author.avatar_url)
@@ -527,7 +524,7 @@ class Adventure(commands.Cog):
                     else:
                         if str(reaction) == '✅':  # If purchase is accepted
                             if adv.addLevel():  # If adding a level was successful
-                                embed = discord.Embed(title='Level Up!', colour=Colour.successColour,
+                                embed = discord.Embed(title='Level Up!', colour=ac.Colour.successColour,
                                                       description='**Congratulations!**\nYou have achieved level **{}**!\nDo not forget to choose a skill point.'.format(adv.level))
                                 embed.set_author(
                                     name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
@@ -535,7 +532,7 @@ class Adventure(commands.Cog):
                                     text='To spend your skill point, use the {}profile command'.format(self.bot.CP))
                             else:
                                 embed = discord.Embed(title='Insufficient {}'.format(
-                                    self.bot.xpName), colour=Colour.errorColour)
+                                    self.bot.xpName), colour=ac.Colour.errorColour)
                                 embed.set_author(
                                     name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
@@ -554,7 +551,7 @@ class Adventure(commands.Cog):
                             await shopMessage.clear_reactions()
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
-                    buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     for number, i in enumerate(shop.inventory, start=1):
                         buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(
@@ -583,7 +580,7 @@ class Adventure(commands.Cog):
                                 buyExit = True
                             else:
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
-                                                      colour=Colour.infoColour, 
+                                                      colour=ac.Colour.infoColour, 
                                                       description=e.getInfo())
                                 await shopMessage.edit(embed=embed)
                                 await asyncio.sleep(0.26)
@@ -607,7 +604,7 @@ class Adventure(commands.Cog):
                                 await vMessage.delete()
                                 
                 elif str(reaction) == '3️⃣': # Buyback Equipment
-                    buy_embed = discord.Embed(title='Buying Equipment', colour=Colour.infoColour,
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     for number, i in enumerate(shop.buyback, start=1):
                         buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(),
@@ -636,7 +633,7 @@ class Adventure(commands.Cog):
                                 buyExit = True
                             else:
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
-                                                      colour=Colour.infoColour, 
+                                                      colour=ac.Colour.infoColour, 
                                                       description=e.getInfo())
                                 await shopMessage.edit(embed=embed)
                                 await shopMessage.add_reaction('✅')
@@ -659,7 +656,7 @@ class Adventure(commands.Cog):
                                 await vMessage.delete()
 
                 elif str(reaction) == '4️⃣':  # Sell Equipment
-                    embed = discord.Embed(title='Selling Equipment', colour=Colour.infoColour,
+                    embed = discord.Embed(title='Selling Equipment', colour=ac.Colour.infoColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. You must use `0` to go cancel.')
                     await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
@@ -708,22 +705,16 @@ class Adventure(commands.Cog):
 
     @commands.group()
     @commands.guild_only()
+    @is_available()
     async def raid(self, ctx):
         """Host a raid for you and multiple adventurers to partake in."""
-        if ctx.invoked_subcommand == False:
-            embed = discord.Embed(colour=Colour.infoColour, description='Please use `{}raid host`'.format(self.bot.CP))
-            await ctx.send(embed=embed)
-
-    @raid.command(aliases=['start'])
-    @is_available()
-    async def host(self, ctx):
         timeoutEmbed = discord.Embed(
-            title='Timed Out', colour=Colour.errorColour)
+            title='Timed Out', colour=ac.Colour.errorColour)
         timeoutEmbed.set_author(
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
-        raids = db.get_raids()
-        embed = discord.Embed(title='Available Raids', colour=Colour.infoColour,
+        raids = ac.db.get_raids()
+        embed = discord.Embed(title='Available Raids', colour=ac.Colour.infoColour,
                               description='There are no restrictions, choose wisely or death is certain.')
         embed.set_footer(text='Send the *index* number of the raid you wish to do.')
         count = 0
@@ -751,7 +742,7 @@ class Adventure(commands.Cog):
             for adv in players:
                 players_string += '**{0.name}**, Level: {0.level}\n'.format(adv)
 
-            embed = discord.Embed(title='Raid: {}'.format(selected_raid[1]), colour=Colour.infoColour,
+            embed = discord.Embed(title='Raid: {}'.format(selected_raid[1]), colour=ac.Colour.infoColour,
                                 description='Level **{0[2]}**\n{0[3]}'.format(selected_raid))
             embed.add_field(name='Raid is Joinable', value='Join by reacting below with ✅.\nOnce you join, you can not leave.\nRaid will close 15 seconds after the last join.')
             embed.add_field(name='Current Adventurers', value=players_string)
@@ -788,9 +779,10 @@ class Adventure(commands.Cog):
         else:
             if str(reaction) == '✅':
                 try:
-                    raw_server_data = db.get_server(ctx.guild.id)
+                    raw_server_data = ac.db.get_server(ctx.guild.id)
                     channel = ctx.guild.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
-                    category = channel.category
+                    if channel:
+                        category = channel.category
                     name = 'Raid_'
                     mentions = ''
                     ids = []
@@ -810,17 +802,26 @@ class Adventure(commands.Cog):
                     raid.build_encounter()
                     await asyncio.sleep(0.26)
                     await setup_message.clear_reactions()
-                    raid_channel = await category.create_text_channel(name, overwrites=overwrites, reason='For Raid')
-                    db.add_raid_channel(raid_channel.id, raid_channel.guild.id, '|'.join(str(e) for e in ids))
+                    if channel:
+                        raid_channel = await category.create_text_channel(name, overwrites=overwrites, reason='For Raid')
+                    else:
+                        raid_channel = await ctx.guild.create_text_channel(name, overwrites=overwrites, reason='For Raid')
+                    ac.db.add_raid_channel(raid_channel.id, raid_channel.guild.id, '|'.join(str(e) for e in ids))
                     raid_message = await raid_channel.send(content=mentions)
                     await setup_message.edit(embed = discord.Embed(title='{} Raid In Progress'.format(selected_raid[1]), description='[Raid Channel](https://discordapp.com/channels/{}/{})'.format(ctx.guild.id, raid_channel.id),
-                                                                   colour=Colour.infoColour))
+                                                                   colour=ac.Colour.infoColour))
                     winner = await raid.encounter.run_combat(self.bot, raid_message)
                     if winner == 1: # 1 signifies player wins
                         await raid_message.add_reaction('✅')
                         for loot in raid.loot:
                             loot_rolls = {}
-                            embed = discord.Embed(title='Loot', colour=Colour.infoColour, description='\n'.join(list(map(lambda x: x.name, raid.loot))))
+                            loot_list = ''
+                            for l in raid.loot:
+                                if l is loot:
+                                    loot_list += '***{1}* {0.name}**\n'.format(l, l.getRarity())
+                                else:
+                                    loot_list += '*{1}* {0.name}\n'.format(l, l.getRarity())
+                            embed = discord.Embed(title='Loot', colour=ac.Colour.get_rarity_colour(loot.rarity), description=loot_list)
                             loot_escape = False
                             while loot_escape == False:
                                 loot_rolls_string = ''
@@ -853,7 +854,7 @@ class Adventure(commands.Cog):
                         raid.finish_encounter(True)
                     else:
                         raid.finish_encounter(False)
-                    embed = discord.Embed(title='Raid Over', colour=Colour.errorColour)
+                    embed = discord.Embed(title='Raid Over', colour=ac.Colour.errorColour)
                     await raid_message.edit(embed=embed)
                     await setup_message.edit(embed=embed)
                 except:
@@ -861,7 +862,7 @@ class Adventure(commands.Cog):
                 finally:
                     try:
                         await raid_channel.delete(reason='Raid Finished')
-                        db.del_raid_channel(raid_channel.id)
+                        ac.db.del_raid_channel(raid_channel.id)
                     except (discord.NotFound, UnboundLocalError):
                         pass
                     for p in players:
@@ -874,10 +875,10 @@ class Adventure(commands.Cog):
         """Source of various information"""
         adv = ac.Player(ctx.author.id)
         timeoutEmbed = discord.Embed(
-            title='Timed Out', colour=Colour.errorColour)
+            title='Timed Out', colour=ac.Colour.errorColour)
         timeoutEmbed.set_author(
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        embed = discord.Embed(title='The Innkeeper', colour=Colour.infoColour,
+        embed = discord.Embed(title='The Innkeeper', colour=ac.Colour.infoColour,
                               description='Hello {},\nHow may I help you today?'.format(adv.name))
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         embed.add_field(name='Information Options', value='1️⃣ Quests\n2️⃣ Raids\n3️⃣ Combat\n4️⃣ AC/WC\n5️⃣ Roadmap')
@@ -903,7 +904,7 @@ class Adventure(commands.Cog):
             information = """Quests is the main idle component that I offer. Quests are structured in stages, \
                 each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.
                 
-                Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.""".format(ac.RNGDungeon.stageTime)
+                Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.""".format(ac.Quest.stageTime)
         elif str(reaction) == '2️⃣':
             name = 'Raids'
             information = """Raids, at the moment, are the only active content that I can offer. \
@@ -941,7 +942,7 @@ class Adventure(commands.Cog):
         else:
             name = 'Not an option'
             information = "I'm not in that big of a mood to talk."
-        embed = discord.Embed(title=name, colour=Colour.infoColour, description=information)
+        embed = discord.Embed(title=name, colour=ac.Colour.infoColour, description=information)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await talk_message.edit(embed=embed)
         await asyncio.sleep(0.26)
@@ -950,9 +951,9 @@ class Adventure(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def quest_check(self):
-        quest_to_update = db.getTimeRNG()
+        quest_to_update = ac.db.getTimeRNG()
         for q in quest_to_update:
-            rng = ac.RNGDungeon()
+            rng = ac.Quest()
             if rng.loadActive(q[1]):  # If quest loaded successfully
                 limiter = 200
                 # While enemies or the player exists
@@ -965,14 +966,14 @@ class Adventure(commands.Cog):
                 if not rng.active:  # Check if the quest is done
                     mem = self.bot.get_user(rng.adv.id)
                     if rng.stage > rng.stages:
-                        embed = discord.Embed(title='Quest Completed', colour=Colour.successColour,
+                        embed = discord.Embed(title='Quest Completed', colour=ac.Colour.successColour,
                                               description='{} stage quest completed successfully!\nXP: **{}**'.format(rng.stages, rng.xp))
                         lootStr = ''
                         for l in rng.loot:
                             lootStr += 'Level {0.level} {1} {0.name}\n'.format(l, l.getRarity())
                         embed.add_field(name='Loot', value=lootStr)
                     else:
-                        embed = discord.Embed(title='Quest Failed', colour=Colour.errorColour,
+                        embed = discord.Embed(title='Quest Failed', colour=ac.Colour.errorColour,
                                               description='{} died on stage {}'.format(rng.adv.name, rng.stage))
                     count = 1
                     while '' in rng.combat_log: rng.combat_log.remove('')

@@ -1,9 +1,7 @@
 import discord
 import logging
 import asyncio
-import adventureController as ac
-import tools.database as db
-from tools.colour import Colour
+import adventure as ac
 
 from discord.ext import tasks, commands
 
@@ -59,10 +57,10 @@ class Admin(commands.Cog):
         
         Format: Embed Title|Embed Description|Field Title|Field Value
         Fields are repeatable but need both a title and a value."""
-        raw_guilds = db.get_all_servers()
+        raw_guilds = ac.db.get_all_servers()
         channels = [self.bot.get_channel(x[5]) for x in raw_guilds]
         message = content.split('|')
-        embed = discord.Embed(title=message[0], colour=Colour.infoColour, description=message[1])
+        embed = discord.Embed(title=message[0], colour=ac.Colour.infoColour, description=message[1])
         for i, x in enumerate(message[2:]):
             if i % 2 != 1:
                 try:
@@ -84,7 +82,7 @@ class Admin(commands.Cog):
             return
         e = ac.Equipment(0)
         e.generate_new(lvl, rarity, index=index)
-        embed = discord.Embed(title='Loot Generated: {}'.format(e.name), colour=Colour.creationColour,
+        embed = discord.Embed(title='Loot Generated: {}'.format(e.name), colour=ac.Colour.creationColour,
                               description=e.getInfo())
         message = await ctx.send(embed=embed)
         await message.add_reaction('✅')
@@ -94,7 +92,7 @@ class Admin(commands.Cog):
             if str(reaction) == '✅':
                 adv.addInv(e.save(database=True))
                 adv.save()
-                await message.edit(embed=discord.Embed(title='Equipment Given', colour=Colour.successColour))
+                await message.edit(embed=discord.Embed(title='Equipment Given', colour=ac.Colour.successColour))
         except asyncio.TimeoutError:
             pass
         finally:
@@ -107,7 +105,7 @@ class Admin(commands.Cog):
     @commands.has_guild_permissions(manage_channels=True)
     @commands.guild_only()
     async def set_action_channels(self, ctx, count: int):
-        raw_server_data = list(db.get_server(ctx.guild.id))
+        raw_server_data = list(ac.db.get_server(ctx.guild.id))
         guild = ctx.guild
         category = next(x for x in guild.categories if x.id == raw_server_data[4])
         action_channels = []
@@ -128,7 +126,7 @@ class Admin(commands.Cog):
                 c = await category.create_text_channel(name='actions_{}'.format(len(action_channels) + 1))
                 action_channels.append(c)
         raw_server_data[7] = '|'.join(str(x.id) for x in action_channels)
-        db.update_server(
+        ac.db.update_server(
             raw_server_data[2],
             raw_server_data[1],
             raw_server_data[3],
@@ -143,12 +141,12 @@ class Admin(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def setup_server(self, ctx):
-        tout = discord.Embed(title='Timed Out', colour=Colour.errorColour)
+        tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
 
         author = ctx.author
         guild = ctx.guild
         guildID = guild.id
-        embed = discord.Embed(title='Setup Progress 1/?', colour=Colour.infoColour, 
+        embed = discord.Embed(title='Setup Progress 1/?', colour=ac.Colour.infoColour, 
             description='For me to work as intended now and in the future I have to work out of a specific channel category. Would you like me to create my own or use a pre-existing one?')
         embed.set_author(name=guild.name, icon_url=guild.icon_url)
         embed.add_field(name='Options', value='1️⃣: Create your own.\n~~2️⃣: Use a pre-existing one.~~')
@@ -217,10 +215,10 @@ class Admin(commands.Cog):
             announcementID = announcementChannel.id
             generalID = generalChannel.id
             commandID = '|'.join(str(x.id) for x in commandChannels)
-            db.add_server(guildID, guild.name, author.id, categoryID, announcementID, generalID, commandID)
+            ac.db.add_server(guildID, guild.name, author.id, categoryID, announcementID, generalID, commandID)
             await ctx.message.add_reaction('✅')
 
-            announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=Colour.infoColour,
+            announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=ac.Colour.infoColour,
                 description='I have arrived to answer a plea for adventure, and a plea for drinks. Both I can offer and both you can have, with a little work that is. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.')
             announceEmbed.add_field(name='How to get started',
                                     value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP, commandChannel.mention))
@@ -230,7 +228,7 @@ class Admin(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def leave_server(self, ctx):
-        embed = discord.Embed(title='Are you sure you want me to leave?', colour=Colour.errorColour,
+        embed = discord.Embed(title='Are you sure you want me to leave?', colour=ac.Colour.errorColour,
                               description='Leaving will result in my deleting all my channels (Not including raid channels) and erasing server settings.')
         confirm_message = await ctx.send(embed=embed)
         await confirm_message.add_reaction('✅')
@@ -242,7 +240,7 @@ class Admin(commands.Cog):
             await confirm_message.clear_reactions()
         else:
             if str(reaction) == '✅':
-                raw_server_data = db.get_server(ctx.guild.id)
+                raw_server_data = ac.db.get_server(ctx.guild.id)
                 tmp = ctx.guild.get_channel(raw_server_data[5])
                 ID = ctx.guild.id
                 category = tmp.category
@@ -251,9 +249,9 @@ class Admin(commands.Cog):
                         await channel.delete(reason='Cleaning up my mess before I go')
                     await category.delete(reason='Cleaning up my mess before I go')
                     await ctx.guild.leave()
-                    db.del_server(ID)
+                    ac.db.del_server(ID)
                 except discord.Forbidden:
-                    embed = discord.Embed(title='I do not have permission to clear up my channels.', colour=Colour.errorColour)
+                    embed = discord.Embed(title='I do not have permission to clear up my channels.', colour=ac.Colour.errorColour)
                     await confirm_message.edit(embed=embed)
             else:
                 await asyncio.sleep(0.26)

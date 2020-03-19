@@ -1,9 +1,6 @@
 import random
 import logging
 
-import adventureController as ac
-
-
 logger = logging.getLogger('skills')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='bot.log', encoding='utf-8')

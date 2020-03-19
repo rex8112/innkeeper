@@ -1,8 +1,7 @@
 import discord
 import logging
-import tools.database as db
-from tools.colour import Colour
 
+from adventure import db, Colour
 from discord.ext import commands
 
 logger = logging.getLogger('eventsCog')
