@@ -26,7 +26,7 @@ class BaseEquipment:
         except ValueError:
             self.id = ID
         if self.id == 'empty':
-            self.load(['empty', 'Empty', 'Nothing is equipped', 'all', 1, 1000, 0, '', '', 'empty:1+0|unsellable:1+0', None, 0])
+            self.load(['empty', 'Empty', 'Nothing is equipped', 'all', 1, 1000, 0, 0, '', '', 'empty:1+0|unsellable:1+0', None, 0])
         elif self.id != 0:
             self.load(self.id)
 
@@ -70,7 +70,7 @@ class Equipment:
             self.id = int(ID)
         except ValueError:
             self.id = ID
-        if self.id == 'empty':
+        if self.id == 'empty' or self.id == 'None':
             data_list = [None, 'empty', 1, 0, '', '']
             self.load(data_list=data_list)
         elif isinstance(self.id, list):
@@ -317,7 +317,9 @@ class Equipment:
 
         save = [self.id, self.base_equipment.id, self.level, self.rarity,
                 '|'.join(starting_mods), '|'.join(random_mods)]
-        if database:
+        if self.id == 'empty':
+            return None
+        elif database:
             self.id = db.save_equipment(save)
             save[0] = self.id
             return str(self.id)
