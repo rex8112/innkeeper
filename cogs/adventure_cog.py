@@ -148,6 +148,7 @@ class Adventure(commands.Cog):
                     if adv.new(name, 'Adventurer', 'Human', attributes):
                         embed = discord.Embed(title='Adventurer Created!',
                                               colour=ac.Colour.successColour, description='Welcome {}!'.format(name))
+                        embed.add_field(name='What to do next?', value='To start getting to work, run `{0}quest` to begin your first journey. Use `{0}talk` for various information.'.format(self.bot.CP))
                     else:
                         embed = discord.Embed(title='Adventurer Already Created!', colour=ac.Colour.errorColour,
                                               description='You can not make two!')
@@ -383,60 +384,79 @@ class Adventure(commands.Cog):
             logger.warning('Equipping Failed', exc_info=True)
             await ctx.message.add_reaction('⛔')
 
-    @commands.group()
+    @commands.command()
     @commands.guild_only()
     async def quest(self, ctx):
         """Command group to manage quests
         If ran with no subcommands, will output current quest information."""
-        if ctx.invoked_subcommand is None:
-            rng = ac.Quest()
-            if rng.loadActive(ctx.author.id):
+        rng = ac.Quest()
+        if rng.loadActive(ctx.author.id):
+            embed = discord.Embed(
+                title='**{}** Stage Quest'.format(rng.stages), colour=ac.Colour.infoColour)
+            embed.set_author(name=ctx.author.display_name,
+                                icon_url=ctx.author.avatar_url)
+            embed.set_footer(text='ID = {}'.format(rng.id))
+            embed.add_field(name='Current Progress', value='Current Stage: **{}**\nStages Completed: **{}**\nTotal Stages: **{}**'.format(
+                rng.stage, rng.stage - 1, rng.stages))
+
+            enemies = ''
+            for e in rng.enemies[rng.stage - 1]:
+                t = ac.Enemy(e)
+                enemies += '**Lv {}** {}\n'.format(t.level, t.name)
+
+            embed.add_field(name='Current Enemies', value=enemies)
+            await ctx.send(embed=embed)
+        else:
+            adv = ac.Player(ctx.author.id)
+            if adv.available:
                 embed = discord.Embed(
-                    title='**{}** Stage Quest'.format(rng.stages), colour=ac.Colour.infoColour)
-                embed.set_author(name=ctx.author.display_name,
-                                 icon_url=ctx.author.avatar_url)
-                embed.set_footer(text='ID = {}'.format(rng.id))
-                embed.add_field(name='Current Progress', value='Current Stage: **{}**\nStages Completed: **{}**\nTotal Stages: **{}**'.format(
-                    rng.stage, rng.stage - 1, rng.stages))
-
-                enemies = ''
-                for e in rng.enemies[rng.stage - 1]:
-                    t = ac.Enemy(e)
-                    enemies += '**Lv {}** {}\n'.format(t.level, t.name)
-
-                embed.add_field(name='Current Enemies', value=enemies)
+                    title='No Active Quest', colour=ac.Colour.errorColour,
+                    description='What level of quest would you like to do?\n1️⃣ 2 Stage Quest\n2️⃣ 5 Stage Quest\n3️⃣ 9 Stage Quest')
             else:
                 embed = discord.Embed(
                     title='No Active Quest', colour=ac.Colour.errorColour,
-                    description='To start a new quest, run `{}quest start difficulty`. Replace difficulty with either: `easy`, `medium`, or `hard`.'.format(self.bot.CP))
-                embed.set_author(name=ctx.author.display_name,
-                                 icon_url=ctx.author.avatar_url)
+                    description='Can not start a new quest while **{}** is busy.'.format(adv.name))
+            embed.set_author(name=ctx.author.display_name,
+                                icon_url=ctx.author.avatar_url)
+            quest_message = await ctx.send(embed=embed)
+            if not adv.available:
+                return
+            await quest_message.add_reaction('1️⃣')
+            await asyncio.sleep(0.26)
+            await quest_message.add_reaction('2️⃣')
+            await asyncio.sleep(0.26)
+            await quest_message.add_reaction('3️⃣')
+            await asyncio.sleep(0.26)
+            await quest_message.add_reaction('❌')
+            try:
+                reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == quest_message.id and user.id == ctx.author.id)
+            except asyncio.TimeoutError:
+                await quest_message.clear_reactions()
+                return
+            if str(reaction) == '1️⃣':
+                difficulty = 2
+            elif str(reaction) == '2️⃣':
+                difficulty = 5
+            elif str(reaction) == '3️⃣':
+                difficulty = 9
+            else:
+                await asyncio.sleep(0.26)
+                await quest_message.clear_reactions()
+                return
+            rng.new(ctx.author.id, difficulty)
 
+            embed = discord.Embed(title='{} STAGE QUEST GENERATED'.format(difficulty),
+                                    colour=ac.Colour.creationColour)
+            embed.set_author(name=ctx.author.display_name,
+                            icon_url=ctx.author.avatar_url)
+
+            enemies = ''
+            for e in rng.enemies[rng.stage - 1]:
+                t = ac.Enemy(e)
+                enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
+
+            embed.add_field(name='Current Enemies', value=enemies)
             await ctx.send(embed=embed)
-
-    @quest.command()
-    @is_available()
-    # Generates a new dungeon based on the inputted difficulty
-    async def start(self, ctx, difficulty: str):
-        """Generates a new dungeon based on the given difficulty
-        Available difficulties: easy, medium, and hard.
-
-        Difficulty increases the amount of stages done in one round while also getting more difficult in the later stages."""
-        rng = ac.Quest()
-        rng.new(ctx.author.id, difficulty)
-
-        embed = discord.Embed(title='{} QUEST GENERATED'.format(difficulty.upper(
-        )), colour=ac.Colour.creationColour, description='**{}** Stages'.format(rng.stages))
-        embed.set_author(name=ctx.author.display_name,
-                         icon_url=ctx.author.avatar_url)
-
-        enemies = ''
-        for e in rng.enemies[rng.stage - 1]:
-            t = ac.Enemy(e)
-            enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
-
-        embed.add_field(name='Current Enemies', value=enemies)
-        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()

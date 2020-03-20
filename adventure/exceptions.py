@@ -17,3 +17,7 @@ class AdventurerBusy(Error):
 class InvalidBaseEquipment(Error):
     """Raised when no base equipment is found"""
     pass
+
+class InvalidAdventurer(Error):
+    """Raised when an adventurer could not be loaded"""
+    pass

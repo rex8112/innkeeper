@@ -26,7 +26,7 @@ class Quest:
         self.id = dID
         self.combat_log = []
 
-    def new(self, aID: int, difficulty: str):
+    def new(self, aID: int, difficulty: int):
         self.adv = Player(aID)
         self.adv.available = False
         self.adv.save()
@@ -34,15 +34,7 @@ class Quest:
         self.active = True
         self.xp = 0
         self.calculateTime(Quest.stageTime)
-
-        if difficulty == 'easy':
-            self.stages = 2
-        elif difficulty == 'medium':
-            self.stages = 5
-        elif difficulty == 'hard':
-            self.stages = 9
-        else:
-            self.stages = 1
+        self.stages = difficulty
 
         self.enemies = []
         for i in range(1, self.stages + 1):
@@ -69,14 +61,7 @@ class Quest:
             self.enemies.append(stageEnemies)
 
         self.loot = []
-        if difficulty == 'easy':
-            self.lootInt = 2
-        elif difficulty == 'medium':
-            self.lootInt = 3
-        elif difficulty == 'hard':
-            self.lootInt = 4
-        else:
-            self.lootInt = 0
+        self.lootInt = difficulty // 2
 
         try:
             for _ in range(1, self.lootInt + 1):
@@ -108,7 +93,10 @@ class Quest:
         try:
             save = db.getActiveRNG(aID)
             self.loot = []
-            loot_tmp = save[6].split('/')
+            if save[6]:
+                loot_tmp = save[6].split('/')
+            else:
+                loot_tmp = []
             for l in loot_tmp:
                 loot = Equipment(0)
                 loot.load(l)
@@ -120,7 +108,7 @@ class Quest:
                 self.enemies.append(stage.split('/'))
 
             self.id = save[0]
-            self.adv = Player(save[1], False)
+            self.adv = Player(save[1])
             self.active = bool(save[2])
             self.stage = save[3]
             self.stages = save[4]

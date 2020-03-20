@@ -433,7 +433,6 @@ class Player(Character):
         # Equipment
         self.mainhand = Equipment(0)
         self.mainhand.generate_new(1, 0, index=5)
-        self.mainhand.save(database=True)
         self.offhand = Equipment('empty')
         self.helmet = Equipment(0)
         self.helmet.generate_new(1, 0, index=1)
@@ -517,10 +516,10 @@ class Player(Character):
         rawAttributes = ','.join(str(e) for e in rawAttributes)
         # Does the same for skills, though skills aren't currently used
         skills = ','.join(self.raw_skills)
-        equipment = '/'.join(str(e) for e in [self.mainhand.save(database=True), self.offhand.save(database=True),
-                                              self.helmet.save(database=True), self.armor.save(database=True),
-                                              self.gloves.save(database=True), self.boots.save(database=True),
-                                              self.trinket.save(database=True)])
+        equipment = '/'.join(str(e) for e in [self.mainhand.save(), self.offhand.save(),
+                                              self.helmet.save(), self.armor.save(),
+                                              self.gloves.save(), self.boots.save(),
+                                              self.trinket.save()])
         inventory = '/'.join(str(e) for e in self.inventory)
 
         save = [self.id, self.name, self.cls, self.level, int(

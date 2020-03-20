@@ -95,31 +95,35 @@ class Database:
                 """SELECT * FROM baseEquipment WHERE indx = ?""",
                 (ID,)
             )
-        elif rng and lvl and rarity:
+            fetch = cursor.fetchone()
+        elif rng and lvl and rarity is not None:
             cursor.execute(
                 """SELECT * FROM baseEquipment WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ? AND startingRarity <= ? AND maxRarity >= ?""",
                 (lvl, lvl, rarity, rarity)
             )
-        elif lvl and rarity:
+            fetch = cursor.fetchall()
+        elif lvl and rarity is not None:
             cursor.execute(
                 """SELECT * FROM baseEquipment WHERE minLevel <= ? AND maxLevel >= ? AND startingRarity <= ? AND maxRarity >= ?""",
                 (lvl, lvl, rarity, rarity)
             )
+            fetch = cursor.fetchall()
         elif lvl:
             cursor.execute(
                 """SELECT * FROM baseEquipment WHERE minLevel <= ? AND maxLevel >= ?""",
                 (lvl, lvl)
             )
-        elif rarity:
+            fetch = cursor.fetchall()
+        elif rarity is not None:
             cursor.execute(
                 """SELECT * FROM baseEquipment WHERE startingRarity <= ? AND maxRarity >= ?""",
                 (rarity, rarity)
             )
+            fetch = cursor.fetchall()
         else:
             cursor.close()
             return None
 
-        fetch = cursor.fetchone()
         cursor.close()
         return fetch
 
@@ -161,12 +165,13 @@ class Database:
                 """INSERT INTO equipment(baseID, level, rarity, startingMods, randomMods) VALUES(?, ?, ?, ?, ?)""",
                 (save[1], save[2], save[3], save[4], save[5])
             )
+            lastrowid = cursor.lastrowid
         else:
             cursor.execute(
                 """UPDATE equipment SET baseID = ?, level = ?, rarity = ?, startingMods = ?, randomMods = ? WHERE indx = ?""",
                 (save[1], save[2], save[3], save[4], save[5], save[0])
             )
-        lastrowid = cursor.lastrowid
+            lastrowid = save[0]
         cursor.close()
         self.db.commit()
         return lastrowid
@@ -359,10 +364,9 @@ class Database:
             """UPDATE servers SET name = ?, ownerID = ?, category = ?, announcement = ?, general = ?, command = ? WHERE id = ?""",
             (name, ownerID, categoryID, announcementID, generalID, commandID, ID)
         )
-        lastrowid = cursor.lastrowid
         cursor.close()
         self.db.commit()
-        return lastrowid
+        return ID
 
     def del_server(self, ID: int):
         cursor = self.db.cursor()
