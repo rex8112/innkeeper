@@ -27,8 +27,6 @@ class Skill():
         for i in skill_list:
             if i.name == name:
                 return i
-            else:
-                return None
 
     def __init__(self):
         self.cooldown = self.max_cooldown 
@@ -51,6 +49,9 @@ class Attack(Skill):
         if self.cooldown <= 0:
             self.log = ''
             dmg = float(user.mods.get('dmg', 0))
+            min_dmg = dmg * 0.9
+            max_dmg = dmg * 1.1
+            dmg = round(random.uniform(min_dmg, max_dmg), 2)
             critChance = float(user.mods.get('critChance'))
             target_ac = target.mods.get('ac', 0)
             user_wc = user.mods.get('wc', 0)
@@ -80,6 +81,10 @@ class Attack(Skill):
             return self.log, False
 
 class BackStab(Skill):
+    """Sneak up behind your target and strike them in the back.
+    
+    `Ignores 10% of AC`
+    `Deals Double Damage`"""
     name = 'backstab'
     targetable = 2
     cleave = 0
@@ -89,10 +94,15 @@ class BackStab(Skill):
         if self.cooldown <= 0:
             self.log = ''
             dmg = float(user.mods.get('dmg', 0))
+            min_dmg = dmg * 0.9
+            max_dmg = dmg * 1.1
+            dmg = round(random.uniform(min_dmg, max_dmg), 2)
             target_ac = target.mods.get('ac', 0)
             user_wc = user.mods.get('wc', 0)
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
+
+            target_ac *= 0.9
 
             if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit

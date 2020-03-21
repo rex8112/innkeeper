@@ -150,9 +150,9 @@ class Quest:
         info = '**{0}**: {0.health}/{0.maxHealth}'.format(self.adv)
         info += '\n__*Enemies*__'
         for e in self.encounter.enemies:
-            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.maxHealth}'.format(e)
+            info += '\n*Lv {0.level}* **{0.name}**: {0.health:.1f}/{0.maxHealth}'.format(e)
         for e in self.encounter.deadEnemies:
-            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.maxHealth}'.format(e)
+            info += '\n*Lv {0.level}* **{0.name}**: {0.health:.1f}/{0.maxHealth}'.format(e)
         info += '\n'
         self.combat_log.append(info)
         if self.adv.health > 0:

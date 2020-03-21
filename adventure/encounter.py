@@ -50,6 +50,10 @@ class Encounter:
             if enemy not in self.deadEnemies:
                 enemy_string += '{}. Level **{}** {}\n'.format(
                     self.enemies.index(enemy) + 1, enemy.level, enemy.name)
+                if enemy.pc:
+                    enemy_string += ' **HP: {:.1f}**\n'.format(enemy.health)
+                else:
+                    enemy_string += '\n'
             else:
                 enemy_string += '~~{}. Level **{}** {}~~\n'.format(
                     self.enemies.index(enemy) + 1, enemy.level, enemy.name)
@@ -57,8 +61,12 @@ class Encounter:
         player_string = ''
         for player in self.players:
             if player not in self.deadPlayers:
-                player_string += '{}. Level **{}** {}\n'.format(
+                player_string += '{}. Level **{}** {}'.format(
                     self.players.index(player) + 1, player.level, player.name)
+                if player.pc:
+                    player_string += ' **HP: {:.1f}**\n'.format(player.health)
+                else:
+                    player_string += '\n'
             else:
                 player_string += '~~{}. Level **{}** {}~~\n'.format(
                     self.players.index(player) + 1, player.level, player.name)
@@ -111,6 +119,8 @@ class Encounter:
                 self.deadPlayers.append(check)
             elif check in self.enemies:
                 self.deadEnemies.append(check)
+        else:
+            check.increment_cooldowns()
 
         if len(self.players) <= len(self.deadPlayers):
             self.winner = 2
@@ -133,8 +143,6 @@ class Encounter:
 
         if check in self.deadEnemies or check in self.deadPlayers:
             return self.next_turn()
-        else:
-            check.increment_cooldowns()
         return False
 
 
