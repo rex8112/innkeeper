@@ -19,10 +19,11 @@ class Skill():
     targetable = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
     cleave = None # 0 = No, 1 = Surrounding, 2 = All
     max_cooldown = None
+    log = ''
 
     @staticmethod
     def get_skill(name: str):
-        skill_list = [AttackSkill]
+        skill_list = [Attack, BackStab]
         for i in skill_list:
             if i.name == name:
                 return i
@@ -39,7 +40,8 @@ class Skill():
         return info, result
 
 
-class AttackSkill(Skill):
+class Attack(Skill):
+    """Normal attack with your mainhand weapon"""
     name = 'attack'
     targetable = 2
     cleave = 0
@@ -47,15 +49,13 @@ class AttackSkill(Skill):
 
     def use(self, user, target, targetGroup: list):
         if self.cooldown <= 0:
+            self.log = ''
             dmg = float(user.mods.get('dmg', 0))
             critChance = float(user.mods.get('critChance'))
-            chanceToHit = float(1 + (user.mods.get('wc', 0) - target.mods.get('ac', 0)) /
-                ((user.mods.get('wc', 0) + target.mods.get('ac', 0)) * 0.5))
-
-            if chanceToHit > 1:  # If you have a chance to hit higher than 100% convert overflow into crit chance
-                critChance += chanceToHit - 1.0
-                logger.debug(
-                    'Player Crit Chance set to: {}'.format(critChance))
+            target_ac = target.mods.get('ac', 0)
+            user_wc = user.mods.get('wc', 0)
+            chanceToHit = float(1 + (user_wc - target_ac) /
+                ((user_wc + target_ac) * 0.5))
 
             if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
@@ -73,7 +73,38 @@ class AttackSkill(Skill):
                     self.log = '**{}** missed trying to hit **{}**.'.format(user.name, target.name)
             else:  # You evaded
                 logger.debug('Player Evaded')
-                self.log = '**{1}** evaded **{0}**\'s strike.'.format(user.name, target.name)
+                self.log = '**{1}** evaded **{0}**\'s backstab.'.format(user.name, target.name)
+            return self.log, True
+        else:
+            self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
+            return self.log, False
+
+class BackStab(Skill):
+    name = 'backstab'
+    targetable = 2
+    cleave = 0
+    max_cooldown = 4
+
+    def use(self, user, target, targetGroup: list):
+        if self.cooldown <= 0:
+            self.log = ''
+            dmg = float(user.mods.get('dmg', 0))
+            target_ac = target.mods.get('ac', 0)
+            user_wc = user.mods.get('wc', 0)
+            chanceToHit = float(1 + (user_wc - target_ac) /
+                ((user_wc + target_ac) * 0.5))
+
+            if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
+                # If random number is lower than the chance to hit, you hit
+                if random.uniform(0.0, 1.0) <= chanceToHit:
+                    dmg = dmg * 2
+                    dealt_damage = target.deal_physical_damage(dmg)
+                    self.log = '**{}** snuck up behind **{}** and backstabbed them for **{}** Damage.'.format(user.name, target.name, dealt_damage)
+                else:  # You miss
+                    self.log = '**{}** missed trying to backstab **{}**.'.format(user.name, target.name)
+            else:  # You evaded
+                self.log = '**{1}** evaded **{0}**\'s backstab.'.format(user.name, target.name)
+                self.cooldown = self.max_cooldown
             return self.log, True
         else:
             self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)

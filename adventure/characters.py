@@ -237,7 +237,7 @@ class Character:
             parmor = 0
         damage = value * ((100 - parmor) / 100)
         self.health -= damage
-        return self.health
+        return damage
 
     def deal_magical_damage(self, value: float):
         marmor = self.mods.get('marmor', 0.00)
@@ -247,7 +247,7 @@ class Character:
             marmor = 0
         damage = value * ((100 - marmor) / 100)
         self.health -= damage
-        return self.health
+        return damage
 
     def addLevel(self, count=1, force=False):
         xpToTake = 0

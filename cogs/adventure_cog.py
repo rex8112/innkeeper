@@ -932,7 +932,7 @@ class Adventure(commands.Cog):
             return
         if str(reaction) == '1️⃣':
             name = 'Quests'
-            information = """Quests is the main idle component that I offer. Quests are structured in stages, \
+            information = """Quests are the main idle component that I offer. Quests are structured in stages, \
                 each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.
                 
                 Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.""".format(ac.Quest.stageTime)
