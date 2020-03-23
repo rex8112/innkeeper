@@ -58,10 +58,10 @@ class Attack(Skill):
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
 
-            if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
+            if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
                 if random.uniform(0.0, 1.0) <= chanceToHit:
-                    if random.uniform(0.0, 1.0) <= critChance:
+                    if random.uniform(1.0, 100.0) <= critChance:
                         dmg = dmg * 2
                         self.log = '**{}** crit **{}** for **{}** Damage.'.format(user.name, target.name, dmg)
                     target.deal_physical_damage(dmg)
@@ -104,7 +104,7 @@ class BackStab(Skill):
 
             target_ac *= 0.9
 
-            if random.uniform(0.0, 1.0) > user.mods.get('evasion', 0):  # Evasion Check
+            if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     dmg = dmg * 2
