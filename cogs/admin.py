@@ -101,6 +101,21 @@ class Admin(commands.Cog):
             except discord.Forbidden:
                 pass
 
+    @adminpanel.command()
+    async def balance_all_equipment(self, ctx):
+        all_data = ac.db.get_all_equipment()
+        async with ctx.channel.typing():
+            counter = 0
+            for data in all_data:
+                e = ac.Equipment(data)
+                changed = e.balance_check()
+                if changed:
+                    e.save(database=True)
+                    counter += 1
+            embed = discord.Embed(title='Balance Check Complete', colour=ac.Colour.successColour,
+                                    description='{} Pieces of Equipment Changed'.format(counter))
+            await ctx.send(embed=embed)
+
     @commands.command()
     @commands.has_guild_permissions(manage_channels=True)
     @commands.guild_only()

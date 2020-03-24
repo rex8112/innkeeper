@@ -68,12 +68,12 @@ class Equipment:
         self.loaded = False
         try:
             self.id = int(ID)
-        except ValueError:
+        except (ValueError, TypeError):
             self.id = ID
         if self.id == 'empty' or self.id == 'None':
             data_list = ['empty', 'empty', 1, 0, '', '']
             self.load(data_list=data_list)
-        elif isinstance(self.id, list):
+        elif isinstance(self.id, (list, tuple)):
             self.load(data_list=self.id)
         elif isinstance(self.id, str):
             self.load(data_list=self.id.split(','))
@@ -143,6 +143,22 @@ class Equipment:
                     info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
         return info
 
+    def process_mod_string_min_max(self, mod_string: str):
+        min_mods = {}
+        max_mods = {}
+        level = self.level - self.base_equipment.min_level
+        mod_string_list = mod_string.split('|')
+        for mod in mod_string_list:
+            key, value_string = tuple(mod.split(':'))
+            min_string, max_string = tuple(value_string.split('/'))
+            min_value, min_per_level = tuple(min_string.split('+'))
+            max_value, max_per_level = tuple(max_string.split('+'))
+            final_min_volume = float(min_value) + (float(min_per_level) * level)
+            final_max_volume = float(max_value) + (float(max_per_level) * level)
+            min_mods[key] = Modifier(key, final_min_volume)
+            max_mods[key] = Modifier(key, final_max_volume)
+        return min_mods, max_mods
+
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
         mods = {}
         level = self.level - self.base_equipment.min_level
@@ -152,9 +168,9 @@ class Equipment:
             min_string, max_string = tuple(value_string.split('/'))
             min_value, min_per_level = tuple(min_string.split('+'))
             max_value, max_per_level = tuple(max_string.split('+'))
-            final_min_volume = int(min_value) + math.floor(float(min_per_level) * level)
-            final_max_volume = int(max_value) + math.floor(float(max_per_level) * level)
-            final_mod = Modifier(key, random.randint(final_min_volume, final_max_volume))
+            final_min_volume = float(min_value) + (float(min_per_level) * level)
+            final_max_volume = float(max_value) + (float(max_per_level) * level)
+            final_mod = Modifier(key, round(random.uniform(final_min_volume, final_max_volume), 1))
             if mods.get(key, False): # Determine if this modifier is already in the dictionary
                 final_mod.value += mods.get(key).value
             mods[key] = final_mod
@@ -247,7 +263,7 @@ class Equipment:
     def load(self, data_list = None):
         try:
             if data_list:
-                if isinstance(data_list, list):
+                if isinstance(data_list, (list, tuple)):
                     data = data_list
                 elif isinstance(data_list, str):
                     data = data_list.split(',')
@@ -255,6 +271,8 @@ class Equipment:
                 data = db.get_equipment(self.id)
             if data[0] == 'None':
                 self.id = None
+            else:
+                self.id = data[0]
             self.base_equipment = BaseEquipment(data[1])
             self.level = int(data[2])
             self.rarity = int(data[3])
@@ -278,13 +296,13 @@ class Equipment:
             for mod_data in starting_mods:
                 if mod_data:
                     tmp = mod_data.split(':')
-                    mod = Modifier(tmp[0], int(tmp[1]))
+                    mod = Modifier(tmp[0], float(tmp[1]))
                     self.starting_mods[mod.id] = mod
 
             for mod_data in random_mods:
                 if mod_data:
                     tmp = mod_data.split(':')
-                    mod = Modifier(tmp[0], int(tmp[1]))
+                    mod = Modifier(tmp[0], float(tmp[1]))
                     if self.random_mods.get(mod.id, False):
                         self.random_mods[mod.id].value += mod.value
                     else:
@@ -326,7 +344,69 @@ class Equipment:
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return ','.join(str(x) for x in save)
 
+    def balance_check(self):
+        changed = False
+        starting_min, starting_max = self.process_mod_string_min_max(self.base_equipment.starting_mod_string)
+        random_min, random_max = self.process_mod_string_min_max(self.base_equipment.random_mod_string)
+        starting_to_delete = []
+        random_to_delete = []
+        for mod in self.starting_mods.values(): # Check min/max of starting mods and also delete mods no longer listed.
+            min_mod = starting_min.get(mod.id, None)
+            max_mod = starting_max.get(mod.id, None)
+            if min_mod:
+                if mod < min_mod:
+                    mod.value = min_mod.value
+                    changed = True
+                elif mod > max_mod:
+                    mod.value = max_mod.value
+                    changed = True
+            else:
+                starting_to_delete.append(mod.id)
+                changed = True
+
+        for ID in starting_to_delete:
+            del self.starting_mods[ID]
+
+        for min_mod in starting_min.values(): # Check if there are any new mods that are not listed in starting mods and random it
+            mod = self.starting_mods.get(min_mod.id, None)
+            if not mod:
+                min_value = min_mod.value
+                max_value = starting_max[min_mod.id].value
+                self.starting_mods[min_mod.id] = Modifier(min_mod.id, round(random.uniform(min_value, max_value), 1))
+                changed = True
+
+        remove_count = 0
+        for mod in self.random_mods.values(): # Check min/max of random mods and delete non-existing mods
+            min_mod = random_min.get(mod.id, None)
+            if min_mod:
+                if mod < min_mod:
+                    mod.value = min_mod.value
+                    changed = True
+                elif mod > random_max[min_mod.id]:
+                    mod.value = random_max[min_mod.id].value
+                    changed = True
+            else:
+                random_to_delete.append(mod.id)
+                remove_count += 1
+                changed = True
+
+        for ID in random_to_delete:
+            del self.random_mods[ID]
+        
+        if remove_count > 0: # If existing random mods were removed, fill their void with new mods
+            for min_mod in random_min.values():
+                mod = self.random_mods.get(min_mod.id, None)
+                if not mod: # Make sure that mod was never used before
+                    min_value = min_mod.value
+                    max_value = random_max[min_mod.id].value
+                    self.random_mods[min_mod.id] = Modifier(min_mod.id, round(random.uniform(min_value, max_value), 1))
+                    remove_count -= 1
+                if remove_count <= 0:
+                    break
+        return changed
+
     def delete(self):
-        db.delete_equipment(self.id)
+        if isinstance(self.id, int):
+            db.delete_equipment(self.id)
         logger.debug('{}:{} Deleted'.format(self.id, self.name))
         self.id = None

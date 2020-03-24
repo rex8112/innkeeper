@@ -157,6 +157,14 @@ class Database:
         cursor.close()
         return fetch
 
+    def get_all_equipment(self):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """SELECT * FROM equipment"""
+        )
+        fetch = cursor.fetchall()
+        cursor.close()
+        return fetch
 
     def save_equipment(self, save):
         cursor = self.db.cursor()

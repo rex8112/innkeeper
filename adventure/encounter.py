@@ -227,6 +227,7 @@ class Encounter:
                 combat_log += info + '\n'
                 escape = self.next_turn()
 
+        await asyncio.sleep(5)
         embed = discord.Embed(title='Combat Over', colour=Colour.combatColour)
         survivors_string = ''
         for player in self.players:
