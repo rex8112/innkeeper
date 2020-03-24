@@ -290,13 +290,13 @@ class Adventure(commands.Cog):
             adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {1}\nInventory Slots: {0.inventoryCapacity}'.format(
                                     adv, adv.mods.get('unarmDamage', ac.Modifier('unarmDamage', 0)).value))
         embed.add_field(name='Dexterity: {}'.format(
-            adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {1:.1%}\nCrit Chance: {2:.1%}'.format(
+            adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {1:.1}\nCrit Chance: {2:.1}'.format(
                                     adv, adv.mods.get('evasion', ac.Modifier('evasion', 0)).value,
                                     adv.mods.get('critChance', ac.Modifier('critChance', 0)).value))
         embed.add_field(name='Constitution: {}'.format(adv.constitution),
                         value='Base Constitution: {0.rawConstitution}\nMax Health: {0.maxHealth}'.format(adv))
         embed.add_field(name='Intelligence: {}'.format(adv.intelligence),
-                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {1:.1%}'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
+                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {1:.1}'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
         embed.add_field(name='Wisdom: {}'.format(adv.wisdom),
                         value='Base Wisdom: {0.rawWisdom}'.format(adv))
         embed.add_field(name='Charisma: {}'.format(adv.charisma),
@@ -304,6 +304,24 @@ class Adventure(commands.Cog):
         embed.set_author(name=ctx.author.display_name,
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
+
+    @profile.command(name='delete')
+    async def profile_delete(self, ctx):
+        adv = ac.Player(ctx.author.id)
+        embed = discord.Embed(title='ARE YOU SURE?', colour=ac.Colour.errorColour, description='Deleting your adventure is COMPLETELY irreversible, even for admins. To delete your adventurer, type `{}`'.format(adv.name.upper()))
+        abort = discord.Embed(title='Deletion aborted', colour=ac.Colour.errorColour)
+        d_message = await ctx.send(embed=embed)
+        try:
+            value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+        except asyncio.TimeoutError:
+            await d_message.edit(embed=abort)
+        else:
+            if value_message.content == adv.name.upper():
+                deleted = discord.Embed(title='{} Deleted'.format(adv.name), colour=ac.Colour.errorColour)
+                adv.delete()
+                await d_message.edit(embed=deleted)
+            else:
+                await d_message.edit(embed=abort)
 
     @commands.command()
     async def equipment(self, ctx):
@@ -456,7 +474,9 @@ class Adventure(commands.Cog):
                 enemies += '**Lv {}**, {}\n'.format(t.level, t.name)
 
             embed.add_field(name='Current Enemies', value=enemies)
-            await ctx.send(embed=embed)
+            await quest_message.edit(embed=embed)
+            await asyncio.sleep(0.26)
+            await quest_message.clear_reactions()
 
     @commands.command()
     @commands.guild_only()

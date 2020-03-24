@@ -456,10 +456,6 @@ class Player(Character):
         else:
             return False
 
-    def delete(self):
-        db.deleteAdventurer(self.id)
-        logger.warning('{}:{} Deleted'.format(self.id, self.name))
-
     def load(self, calculate=True):
         try:
             raw = db.getAdventurer(self.id)
@@ -526,6 +522,21 @@ class Player(Character):
             self.xp), self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return db.saveAdventurer(save)
+
+    def delete(self):
+        """IRREVERSIBLE deletion of an adventurer"""
+        for e in [self.mainhand, self.offhand,
+                  self.helmet, self.armor,
+                  self.gloves, self.boots,
+                  self.trinket]:
+            e.delete()
+
+        for raw_e in self.inventory:
+            e = Equipment(raw_e)
+            e.delete()
+
+        db.deleteAdventurer(self.id)
+        logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
 
 class Enemy(Character):
