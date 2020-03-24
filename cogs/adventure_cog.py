@@ -307,6 +307,7 @@ class Adventure(commands.Cog):
 
     @profile.command(name='delete')
     async def profile_delete(self, ctx):
+        """IRREVERSIBLY delete your adventurer"""
         adv = ac.Player(ctx.author.id)
         embed = discord.Embed(title='ARE YOU SURE?', colour=ac.Colour.errorColour, description='Deleting your adventure is COMPLETELY irreversible, even for admins. To delete your adventurer, type `{}`'.format(adv.name.upper()))
         abort = discord.Embed(title='Deletion aborted', colour=ac.Colour.errorColour)
