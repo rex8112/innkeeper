@@ -239,6 +239,9 @@ class Adventure(commands.Cog):
             equipment = []
             for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
                 equipment.append(e)
+            skill_string = ''
+            for s in adv.skills:
+                skill_string += '__**{}**__\n{}\n'.format(s.name, s.__doc__)
 
             if adv.available:
                 c = ac.Colour.infoColour
@@ -257,6 +260,7 @@ class Adventure(commands.Cog):
                     .format(adv, adv.mods.get('wc'),
                             adv.mods.get('ac'),
                             adv.mods.get('dmg')))
+            embed.add_field(name='Skills', value=skill_string)
             embed.add_field(
                 name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
