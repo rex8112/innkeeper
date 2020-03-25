@@ -99,10 +99,10 @@ class BackStab(Skill):
             dmg = round(random.uniform(min_dmg, max_dmg), 2)
             target_ac = target.mods.get('ac', 0)
             user_wc = user.mods.get('wc', 0)
+            target_ac *= 0.9
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
 
-            target_ac *= 0.9
 
             if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
