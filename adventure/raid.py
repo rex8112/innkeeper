@@ -47,7 +47,7 @@ class Raid():
             self.loot.append(loot)
             loot_ids.append(loot.save())
         
-        self.id = db.add_raid(','.join(player_ids), self.boss.id, ','.join(loot_ids))
+        self.id = db.add_raid(','.join(player_ids), self.boss.id, '/'.join(loot_ids))
 
     def build_encounter(self):
         self.encounter = Encounter(self.players, [self.boss])
