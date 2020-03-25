@@ -5,7 +5,7 @@ import math
 from .modifiers import Modifier
 from .skills import Skill
 from .database import db
-from .exceptions import InvalidBaseEquipment
+from .exceptions import InvalidBaseEquipment, InvalidModString
 
 logger = logging.getLogger('characters')
 logger.setLevel(logging.INFO)
@@ -148,33 +148,39 @@ class Equipment:
         max_mods = {}
         level = self.level - self.base_equipment.min_level
         mod_string_list = mod_string.split('|')
-        for mod in mod_string_list:
-            key, value_string = tuple(mod.split(':'))
-            min_string, max_string = tuple(value_string.split('/'))
-            min_value, min_per_level = tuple(min_string.split('+'))
-            max_value, max_per_level = tuple(max_string.split('+'))
-            final_min_volume = float(min_value) + (float(min_per_level) * level)
-            final_max_volume = float(max_value) + (float(max_per_level) * level)
-            min_mods[key] = Modifier(key, final_min_volume)
-            max_mods[key] = Modifier(key, final_max_volume)
-        return min_mods, max_mods
+        try:
+            for mod in mod_string_list:
+                key, value_string = tuple(mod.split(':'))
+                min_string, max_string = tuple(value_string.split('/'))
+                min_value, min_per_level = tuple(min_string.split('+'))
+                max_value, max_per_level = tuple(max_string.split('+'))
+                final_min_volume = float(min_value) + (float(min_per_level) * level)
+                final_max_volume = float(max_value) + (float(max_per_level) * level)
+                min_mods[key] = Modifier(key, final_min_volume)
+                max_mods[key] = Modifier(key, final_max_volume)
+            return min_mods, max_mods
+        except ValueError as e:
+            raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
         mods = {}
         level = self.level - self.base_equipment.min_level
         mod_string_list = mod_string.split('|')
-        for mod in mod_string_list:
-            key, value_string = tuple(mod.split(':'))
-            min_string, max_string = tuple(value_string.split('/'))
-            min_value, min_per_level = tuple(min_string.split('+'))
-            max_value, max_per_level = tuple(max_string.split('+'))
-            final_min_volume = float(min_value) + (float(min_per_level) * level)
-            final_max_volume = float(max_value) + (float(max_per_level) * level)
-            final_mod = Modifier(key, round(random.uniform(final_min_volume, final_max_volume), 1))
-            if mods.get(key, False): # Determine if this modifier is already in the dictionary
-                final_mod.value += mods.get(key).value
-            mods[key] = final_mod
-        return mods
+        try:
+            for mod in mod_string_list:
+                key, value_string = tuple(mod.split(':'))
+                min_string, max_string = tuple(value_string.split('/'))
+                min_value, min_per_level = tuple(min_string.split('+'))
+                max_value, max_per_level = tuple(max_string.split('+'))
+                final_min_volume = float(min_value) + (float(min_per_level) * level)
+                final_max_volume = float(max_value) + (float(max_per_level) * level)
+                final_mod = Modifier(key, round(random.uniform(final_min_volume, final_max_volume), 1))
+                if mods.get(key, False): # Determine if this modifier is already in the dictionary
+                    final_mod.value += mods.get(key).value
+                mods[key] = final_mod
+            return mods
+        except ValueError as e:
+            raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def process_requirement_string(self, requirement_string: str):
         requirements = {}

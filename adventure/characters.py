@@ -4,7 +4,7 @@ import random
 
 from.per_level import PerLevel
 from .skills import Skill
-from .exceptions import InvalidLevel, InvalidRequirements
+from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
 from .modifiers import Modifier, EliteModifier
 from .database import db
@@ -575,11 +575,14 @@ class Enemy(Character):
     def process_mod_string(self, mod_string: str):
         mods = {}
         mod_string_list = mod_string.split('|')
-        for mod in mod_string_list:
-            key, value = tuple(mod.split(':'))
-            base_value, per_level = tuple(value.split('+'))
-            mods[key] = Modifier(key, math.floor(float(base_value) + (float(per_level) * self.level)))
-        return mods
+        try:
+            for mod in mod_string_list:
+                key, value = tuple(mod.split(':'))
+                base_value, per_level = tuple(value.split('+'))
+                mods[key] = Modifier(key, math.floor(float(base_value) + (float(per_level) * self.level)))
+            return mods
+        except ValueError as e:
+            raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def generate_new(self, lvl: int, rng = True, index = 0):
         if index == 0:

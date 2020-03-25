@@ -21,3 +21,7 @@ class InvalidBaseEquipment(Error):
 class InvalidAdventurer(Error):
     """Raised when an adventurer could not be loaded"""
     pass
+
+class InvalidModString(Error):
+    """Raised when an invalid modstring is passed"""
+    pass
