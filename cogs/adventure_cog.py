@@ -409,7 +409,7 @@ class Adventure(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def quest(self, ctx):
+    async def quest(self, ctx, stages = None):
         """Command group to manage quests
         If ran with no subcommands, will output current quest information."""
         rng = ac.Quest()
@@ -434,7 +434,7 @@ class Adventure(commands.Cog):
             if adv.available:
                 embed = discord.Embed(
                     title='No Active Quest', colour=ac.Colour.errorColour,
-                    description='What level of quest would you like to do?\n1️⃣ 2 Stage Quest\n2️⃣ 5 Stage Quest\n3️⃣ 9 Stage Quest')
+                    description='What level of quest would you like to do?\n1️⃣ 2 Stage Quest\n2️⃣ 6 Stage Quest\n3️⃣ 10 Stage Quest')
             else:
                 embed = discord.Embed(
                     title='No Active Quest', colour=ac.Colour.errorColour,
@@ -444,31 +444,36 @@ class Adventure(commands.Cog):
             quest_message = await ctx.send(embed=embed)
             if not adv.available:
                 return
-            await quest_message.add_reaction('1️⃣')
-            await asyncio.sleep(0.26)
-            await quest_message.add_reaction('2️⃣')
-            await asyncio.sleep(0.26)
-            await quest_message.add_reaction('3️⃣')
-            await asyncio.sleep(0.26)
-            await quest_message.add_reaction('❌')
-            try:
-                reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == quest_message.id and user.id == ctx.author.id)
-            except asyncio.TimeoutError:
-                await quest_message.clear_reactions()
-                return
-            if str(reaction) == '1️⃣':
-                difficulty = 2
-            elif str(reaction) == '2️⃣':
-                difficulty = 5
-            elif str(reaction) == '3️⃣':
-                difficulty = 9
-            else:
+            if not stages:
+                await quest_message.add_reaction('1️⃣')
                 await asyncio.sleep(0.26)
-                await quest_message.clear_reactions()
-                return
-            rng.new(ctx.author.id, difficulty)
+                await quest_message.add_reaction('2️⃣')
+                await asyncio.sleep(0.26)
+                await quest_message.add_reaction('3️⃣')
+                await asyncio.sleep(0.26)
+                await quest_message.add_reaction('❌')
+                try:
+                    reaction, _ = await self.bot.wait_for('reaction_add', timeout=30.0, check=lambda reaction, user: reaction.message.id == quest_message.id and user.id == ctx.author.id)
+                except asyncio.TimeoutError:
+                    await quest_message.clear_reactions()
+                    return
+                if str(reaction) == '1️⃣':
+                    stages = 2
+                elif str(reaction) == '2️⃣':
+                    stages = 6
+                elif str(reaction) == '3️⃣':
+                    stages = 10
+                else:
+                    await asyncio.sleep(0.26)
+                    await quest_message.clear_reactions()
+                    return
+            if int(stages) > 10:
+                stages = 10
+            elif int(stages) < 2:
+                stages = 2
+            rng.new(ctx.author.id, int(stages))
 
-            embed = discord.Embed(title='{} STAGE QUEST GENERATED'.format(difficulty),
+            embed = discord.Embed(title='{} STAGE QUEST GENERATED'.format(stages),
                                     colour=ac.Colour.creationColour)
             embed.set_author(name=ctx.author.display_name,
                             icon_url=ctx.author.avatar_url)
@@ -1027,7 +1032,10 @@ class Adventure(commands.Cog):
                         lootStr = ''
                         for l in rng.loot:
                             lootStr += 'Level {0.level} {1} {0.name}\n'.format(l, l.getRarity())
-                        embed.add_field(name='Loot', value=lootStr)
+                        if lootStr:
+                            embed.add_field(name='Loot', value=lootStr)
+                        else:
+                            embed.add_field(name='Loot', value='None, try doing more stages at a time.')
                     else:
                         embed = discord.Embed(title='Quest Failed', colour=ac.Colour.errorColour,
                                               description='{} died on stage {}'.format(rng.adv.name, rng.stage))
