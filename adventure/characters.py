@@ -325,13 +325,14 @@ class Character:
             '{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
 
         # Dexterity related stats second
-        if self.dexterity <= 40:  # Dexterity below 40
-            evasion = Modifier('evasion', float(self.dexterity) * PerLevel.evasion)
-            crit = Modifier('critChance', float(self.dexterity) * PerLevel.evasion)
+        dex = self.dexterity - 10
+        if dex <= 40:  # Dexterity below 40
+            evasion = Modifier('evasion', float(dex) * PerLevel.evasion)
+            crit = Modifier('critChance', float(dex) * PerLevel.evasion)
 
-        elif self.dexterity > 40 and self.dexterity <= 100:  # Dexterity between 40 and 100
-            evasion = Modifier('evasion', (PerLevel.softcap_evasion * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.evasion))
-            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (float(self.dexterity) - 40.0) + 40.0 * PerLevel.crit_chance))
+        elif dex > 40 and dex <= 100:  # Dexterity between 40 and 100
+            evasion = Modifier('evasion', (PerLevel.softcap_evasion * (float(dex) - 40.0) + 40.0 * PerLevel.evasion))
+            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (float(dex) - 40.0) + 40.0 * PerLevel.crit_chance))
 
         else:  # Dexterity above 100
             evasion = Modifier('evasion', (PerLevel.softcap_evasion * (100.0 - 40.0) + 40.0 * PerLevel.evasion))
@@ -357,7 +358,7 @@ class Character:
             '{0.name} Max health calculated to: {0.maxHealth}'.format(self))
 
         # Intelligence related stats fourth
-        spellAmp = Modifier('spellAmp', (PerLevel.spell_amp * float(self.intelligence)))
+        spellAmp = Modifier('spellAmp', (PerLevel.spell_amp * float(self.intelligence - 10)))
         if self.mods.get(spellAmp.id, False):
             self.mods[spellAmp.id].value += spellAmp.value
         else:
@@ -366,7 +367,11 @@ class Character:
             '{0.name} Spell Amp calculated to: {1}'.format(self, self.mods['spellAmp']))
 
         # Wisdom related stats fifth
-        # self.secretChance = 0
+        out_heal_amp = Modifier('healAmp', (PerLevel.out_heal_amp * float(self.wisdom - 10)))
+        if self.mods.get(out_heal_amp.id, False):
+            self.mods[out_heal_amp.id].value += out_heal_amp.value
+        else:
+            self.mods[out_heal_amp.id] = out_heal_amp
 
         # Charisma related stats sixth
         # self.discount = 0
@@ -380,8 +385,6 @@ class Character:
 
         # Set values to their maximum
         self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
-        if self.mods['dmg'] == 0:
-            self.mods['dmg'].value = self.mods['unarmDamage'].value
 
         if self.maxHealth < self.health:
             self.health = self.maxHealth

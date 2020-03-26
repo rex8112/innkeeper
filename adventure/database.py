@@ -70,6 +70,13 @@ class Database:
         cursor.close()
         return fetch
 
+    def get_all_adventurers(self):
+        cursor = self.db.cursor()
+        cursor.execute("""SELECT * FROM adventurers""")
+        fetch = cursor.fetchall()
+        cursor.close()
+        return fetch
+
 
     def saveAdventurer(self, save):
         cursor = self.db.cursor()

@@ -239,9 +239,7 @@ class Adventure(commands.Cog):
             equipment = []
             for e in [adv.mainhand, adv.offhand, adv.helmet, adv.armor, adv.gloves, adv.boots, adv.trinket]:
                 equipment.append(e)
-            skill_string = ''
-            for s in adv.skills:
-                skill_string += '__**{}**__\n{}\n'.format(s.name, s.__doc__)
+            skill_string = '**{}** Learned skills\nUse `{}skills` for more information.'.format(len(adv.skills), self.bot.CP)
 
             if adv.available:
                 c = ac.Colour.infoColour
@@ -256,10 +254,11 @@ class Adventure(commands.Cog):
             embed.add_field(
                 name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
             embed.add_field(
-                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**'\
+                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**\nUse `{4}profile stats` for more info.'\
                     .format(adv, adv.mods.get('wc'),
                             adv.mods.get('ac'),
-                            adv.mods.get('dmg')))
+                            adv.mods.get('dmg'),
+                            self.bot.CP))
             embed.add_field(name='Skills', value=skill_string)
             embed.add_field(
                 name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
@@ -291,18 +290,17 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title=str(
             adv.name), colour=ac.Colour.infoColour, description='Detailed Attributes and Stats')
         embed.add_field(name='Strength: {}'.format(
-            adv.strength), value='Base Strength: {0.rawStrength}\nUnarmed Damage: {1}\nInventory Slots: {0.inventoryCapacity}'.format(
-                                    adv, adv.mods.get('unarmDamage', ac.Modifier('unarmDamage', 0)).value))
+            adv.strength), value='Base Strength: **{0.rawStrength}**\nInventory Slots: **{0.inventoryCapacity}**'.format(adv))
         embed.add_field(name='Dexterity: {}'.format(
-            adv.dexterity), value='Base Dexterity: {0.rawDexterity}\nEvasion: {1:.1}\nCrit Chance: {2:.1}'.format(
+            adv.dexterity), value='Base Dexterity: **{0.rawDexterity}**\nEvasion: **{1:.1f}%**\nCrit Chance: **{2:.1f}%**'.format(
                                     adv, adv.mods.get('evasion', ac.Modifier('evasion', 0)).value,
                                     adv.mods.get('critChance', ac.Modifier('critChance', 0)).value))
         embed.add_field(name='Constitution: {}'.format(adv.constitution),
-                        value='Base Constitution: {0.rawConstitution}\nMax Health: {0.maxHealth}'.format(adv))
+                        value='Base Constitution: {0.rawConstitution}\nMax Health: **{0.maxHealth}**'.format(adv))
         embed.add_field(name='Intelligence: {}'.format(adv.intelligence),
-                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amplification: {1:.1}'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
+                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amp: **{1:.1f}%**'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
         embed.add_field(name='Wisdom: {}'.format(adv.wisdom),
-                        value='Base Wisdom: {0.rawWisdom}'.format(adv))
+                        value='Base Wisdom: {0.rawWisdom}\nOutgoing Heal Amp: **{1:.1f}%**'.format(adv, adv.mods.get('healAmp', ac.Modifier('healAmp', 0)).value))
         embed.add_field(name='Charisma: {}'.format(adv.charisma),
                         value='Base Charisma: {0.rawCharisma}'.format(adv))
         embed.set_author(name=ctx.author.display_name,
@@ -1054,11 +1052,13 @@ class Adventure(commands.Cog):
     current_activity = None
     @tasks.loop(minutes=5)
     async def activity_change(self):
+        amt = len(ac.db.get_all_adventurers())
         activities = [
             discord.Activity(name='an Adventure', type=discord.ActivityType.watching),
             discord.Activity(name='{}help'.format(self.bot.CP), type=discord.ActivityType.listening),
             discord.Activity(name='with Drinks', type=discord.ActivityType.playing),
-            discord.Activity(name='the Bard', type=discord.ActivityType.listening)
+            discord.Activity(name='the Bard', type=discord.ActivityType.listening),
+            discord.Activity(name='{} Brave Souls'.format(amt), type=discord.ActivityType.watching)
         ]
         old_activity = self.current_activity
         while old_activity == self.current_activity:

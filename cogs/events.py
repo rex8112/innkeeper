@@ -37,7 +37,8 @@ class Events(commands.Cog):
             owner_embed = discord.Embed(title='Error In Command: {}'.format(ctx.command.name), colour=Colour.errorColour, description='```{}: {}```'.format(type(error).__name__, str(error)))
             owner_embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
             owner = self.bot.get_user(self.bot.owner_id)
-            await owner.send(embed=owner_embed)
+            if ctx.author != owner:
+                await owner.send(embed=owner_embed)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
