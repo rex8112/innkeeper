@@ -1,6 +1,8 @@
 import random
 import logging
 
+from .modifiers import Modifier
+
 logger = logging.getLogger('skills')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='bot.log', encoding='utf-8')
@@ -17,19 +19,27 @@ logger.addHandler(handler2)
 class Skill():
     name = None # Identification
     targetable = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
-    cleave = None # 0 = No, 1 = Surrounding, 2 = All
     max_cooldown = None
+    start_cooldown = None
+    requirements = {}
     log = ''
 
     @staticmethod
     def get_skill(name: str):
-        skill_list = [Attack, BackStab]
-        for i in skill_list:
-            if i.name == name:
-                return i
+        skill_list = {
+            Attack.name: Attack,
+            BackStab.name: BackStab
+        }
+        if name == 'all':
+            return skill_list.copy()
+        else:
+            return skill_list.get(name, None)
 
     def __init__(self):
-        self.cooldown = self.max_cooldown 
+        if self.start_cooldown:
+            self.cooldown = self.start_cooldown
+        else:
+            self.cooldown = self.max_cooldown 
         self.log = ''
     
     def use(self, user, target, targetGroup: list):
@@ -42,7 +52,6 @@ class Attack(Skill):
     """Normal attack with your mainhand weapon"""
     name = 'attack'
     targetable = 2
-    cleave = 0
     max_cooldown = 0
 
     def use(self, user, target, targetGroup: list):
@@ -87,8 +96,10 @@ class BackStab(Skill):
     `Deals Double Damage`"""
     name = 'backstab'
     targetable = 2
-    cleave = 0
     max_cooldown = 4
+    requirements = {
+        'dexterity': Modifier('dexterity', 13)
+    }
 
     def use(self, user, target, targetGroup: list):
         if self.cooldown <= 0:
