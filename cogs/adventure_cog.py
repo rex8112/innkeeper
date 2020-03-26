@@ -407,6 +407,30 @@ class Adventure(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    async def skills(self, ctx):
+        adv = ac.Player(ctx.author.id)
+        embed = discord.Embed(title='Skills', colour=ac.Colour.infoColour)
+        embed.set_author(name=adv.name, icon_url=ctx.author.avatar_url)
+        for s in adv.skills:
+            r = ''
+            for req in s.requirements.values():
+                r += '`{0.display_name}: {0.value}`\n'.format(req)
+
+            if s.targetable == 0:
+                t = 'Self'
+            elif s.targetable == 1:
+                t = 'Allies'
+            else:
+                t = 'Enemies'
+
+            d = '`Targets: {}`\n{}'.format(t, s.__doc__)
+            if r:
+                d += '\n**Requirements**\n{}'.format(r)
+            embed.add_field(name='__**{}**__'.format(s.name), value=d)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.guild_only()
     async def quest(self, ctx, stages = None):
         """Command group to manage quests
         If ran with no subcommands, will output current quest information."""
