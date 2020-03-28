@@ -156,8 +156,8 @@ class Equipment:
                 max_value, max_per_level = tuple(max_string.split('+'))
                 final_min_volume = float(min_value) + (float(min_per_level) * level)
                 final_max_volume = float(max_value) + (float(max_per_level) * level)
-                min_mods[key] = Modifier(key, final_min_volume)
-                max_mods[key] = Modifier(key, final_max_volume)
+                min_mods[key] = Modifier(key, round(final_min_volume, 1))
+                max_mods[key] = Modifier(key, round(final_max_volume, 1))
             return min_mods, max_mods
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))

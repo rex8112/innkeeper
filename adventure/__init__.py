@@ -12,7 +12,7 @@ import logging
 from .characters import Player, Enemy, RaidBoss
 from .colour import Colour
 from .encounter import Encounter
-from .equipment import Equipment
+from .equipment import Equipment, BaseEquipment
 from .exceptions import *
 from .quests import Quest
 from .raid import Raid

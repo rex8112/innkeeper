@@ -1,6 +1,7 @@
 import discord
 import logging
 import asyncio
+import random
 import adventure as ac
 
 from discord.ext import tasks, commands
@@ -100,6 +101,55 @@ class Admin(commands.Cog):
                 await message.clear_reactions()
             except discord.Forbidden:
                 pass
+
+    @adminpanel.command()
+    async def show_base_equipment(self, ctx, ID: int):
+        base = ac.BaseEquipment(ID)
+        lowest = ac.Equipment(0)
+        highest = ac.Equipment(0)
+        lowest.generate_new(base.min_level, 0, ID)
+        highest.generate_new(base.max_level, 0, ID)
+        embed = discord.Embed(title='Lvl {} to {}, {}'.format(base.min_level, base.max_level, base.name), colour=ac.Colour.infoColour, description=base.flavor)
+        embed.set_footer(text='ID: {}'.format(ID))
+        embed.add_field(name='Rarity Info', value='Min Rarity: {}\nMax Rarity: {}'.format(base.starting_rarity, base.max_rarity))
+        starting_string = ''
+        
+        low_min, low_max = lowest.process_mod_string_min_max(base.starting_mod_string)
+        high_min, high_max = highest.process_mod_string_min_max(base.starting_mod_string)
+        for mod in low_min.values():
+            starting_string += '`{}: '.format(mod.id)
+            starting_string += '{}-{} / {}-{}`\n'.format(
+                mod.value,
+                low_max[mod.id].value,
+                high_min[mod.id].value,
+                high_max[mod.id].value
+            )
+        embed.add_field(name='Starting Mods', value=starting_string)
+
+        random_string = ''
+        ran_low_min, ran_low_max = lowest.process_mod_string_min_max(base.random_mod_string)
+        ran_high_min, ran_high_max = highest.process_mod_string_min_max(base.random_mod_string)
+        for mod in ran_low_min.values():
+            random_string += '`{}: '.format(mod.id)
+            random_string += '{}-{} / {}-{}`\n'.format(
+                mod.value,
+                ran_low_max[mod.id].value,
+                ran_high_min[mod.id].value,
+                ran_high_max[mod.id].value
+            )
+        embed.add_field(name='Random Mods', value=random_string)
+        await ctx.send(embed=embed)
+
+    @adminpanel.command()
+    async def test_hit_chance(self, ctx, wc: float, ac_: float):
+        chanceToHit = float(1 + (wc - ac_) /
+                ((wc + ac_) * 0.5))
+        if random.uniform(0.0, 1.0) < chanceToHit:
+            succeed = True
+        else:
+            succeed = False
+        embed = discord.Embed(title='{} WC vs {} AC'.format(wc, ac_), colour=ac.Colour.infoColour, description='{:.2%} to hit\nWould succeed? `{}`'.format(chanceToHit, succeed))
+        await ctx.send(embed=embed)
 
     @adminpanel.command()
     async def balance_all_equipment(self, ctx):
