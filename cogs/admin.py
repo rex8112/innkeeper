@@ -138,6 +138,18 @@ class Admin(commands.Cog):
                 ran_high_max[mod.id].value
             )
         embed.add_field(name='Random Mods', value=random_string)
+
+        if base.requirement_string:
+            requirement_string = ''
+            req_low = lowest.process_requirement_string(base.requirement_string)
+            req_high = highest.process_requirement_string(base.requirement_string)
+            for req in req_low.values():
+                requirement_string += '`{}: '.format(req.id)
+                requirement_string += '{} / {}`\n'.format(
+                    req.value,
+                    req_high[req.id].value
+                )
+            embed.add_field(name='Requirements', value=requirement_string)
         await ctx.send(embed=embed)
 
     @adminpanel.command()
