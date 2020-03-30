@@ -984,44 +984,43 @@ class Adventure(commands.Cog):
             return
         if str(reaction) == '1️⃣':
             name = 'Quests'
-            information = """Quests are the main idle component that I offer. Quests are structured in stages, \
-                each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.
-                
-                Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.""".format(ac.Quest.stageTime)
+            information = ('Quests are the main idle component that I offer. Quests are structured in stages, '
+                'each stage consists of a group of enemies that the adventurer must overcome to progress and get loot.\n\n'
+                'Each stage takes **{}** seconds to complete. Every minute the time on your quest is checked and progressed.'.format(ac.Quest.stageTime))
         elif str(reaction) == '2️⃣':
             name = 'Raids'
-            information = """Raids, at the moment, are the only active content that I can offer. \
-                Upon hosting a raid, other adventurers have up to fifteen seconds to join your raid \
-                    and assist you in defeating the boss. At the end, the loot will be cycled through \
-                    and adventurers can opt to roll for the loot and the highest roll will get the item."""
+            information = ('Raids, at the moment, are the only active content that I can offer. '
+                'Upon hosting a raid, other adventurers have up to fifteen seconds to join your raid '
+                'and assist you in defeating the boss. At the end, the loot will be cycled through '
+                'and adventurers can opt to roll for the loot and the highest roll will get the item.')
         elif str(reaction) == '3️⃣':
             name = 'Combat'
-            information = """Combat is turn-based with an order that relies on behind-the-scenes initiative rolls. \
-                Adventurers will be confronted with a list of their skills and cooldowns that they may use. \
-                All forms of skill usage should be formatted as `skill #` where `skill` is the listed \
-                name of the skill and `#` is the index of the target -All this information is listed in the combat screen.\
-                It is important to note how your skills are targetted, if your skill should be cast on an enemy then the \
-                index must match that of the enemy. If it targets an ally, then the index must match your ally. In the event \
-                of a self-cast ability, no target is necessary."""
+            information = ('Combat is turn-based with an order that relies on behind-the-scenes initiative rolls. '
+                'Adventurers will be confronted with a list of their skills and cooldowns that they may use. '
+                'All forms of skill usage should be formatted as `skill #` where `skill` is the listed '
+                'name of the skill and `#` is the index of the target -All this information is listed in the combat screen. '
+                'It is important to note how your skills are targetted, if your skill should be cast on an enemy then the '
+                'index must match that of the enemy. If it targets an ally, then the index must match your ally. In the event '
+                'of a self-cast ability, no target is necessary.')
         elif str(reaction) == '4️⃣':
             name = 'Armor and Weapon Class'
-            information = """Armor Class and Weapon Class is used to determine hit chances based on the percent difference. \
-                In an average scenerio, Weapon Class should be lower and that difference is used for hit chance; however, \
-                if Weapon Class is higher than the armor class, the percent difference is then used for crit chance as a hit \
-                is already guaranteed."""
+            information = ('Armor Class and Weapon Class is used to determine hit chances based on the percent difference. '
+                'In an average scenerio, Weapon Class should be lower and that difference is used for hit chance; however, '
+                'if Weapon Class is higher than the armor class, the percent difference is then used for crit chance as a hit '
+                'is already guaranteed.')
         elif str(reaction) == '5️⃣':
             name = 'Roadmap'
-            information = """
-            Listed by priority.
-            ~~1. Complete Equipment Overhaul~~
-            ~~2. Complete Enemy Overhaul~~
-            3. Storage and Player Trading
-            4. Class and Races
-            5. Status Effects
-            6. Dungeons
-            7. Property Ownership
-            8. Slavery
-            More to come."""
+            information = (
+            'Listed by priority.\n'
+            '~~1. Complete Equipment Overhaul~~ **(COMPLETED)**\n'
+            '~~2. Complete Enemy Overhaul~~ **(COMPLETED)**\n'
+            '**3. Storage and Player Trading**\n'
+            '4. Class and Races\n'
+            '5. Status Effects\n'
+            '6. Dungeons\n'
+            '7. Property Ownership\n'
+            '8. Slavery\n'
+            'More to come.')
         else:
             name = 'Not an option'
             information = "I'm not in that big of a mood to talk."
