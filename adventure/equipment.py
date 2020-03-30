@@ -352,6 +352,13 @@ class Equipment:
 
     def balance_check(self):
         changed = False
+        if self.level > self.base_equipment.max_level:
+            self.level = self.base_equipment.max_level
+            changed = True
+        elif self.level < self.base_equipment.min_level:
+            self.level = self.base_equipment.min_level
+            changed = True
+            
         starting_min, starting_max = self.process_mod_string_min_max(self.base_equipment.starting_mod_string)
         random_min, random_max = self.process_mod_string_min_max(self.base_equipment.random_mod_string)
         starting_to_delete = []
