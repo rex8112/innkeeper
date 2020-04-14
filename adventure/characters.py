@@ -186,7 +186,10 @@ class Character:
                 return False
 
     def getXPToLevel(self):
-        reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
+        if self.level < PerLevel.level_cap:
+            reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
+        else:
+            return math.inf
         return int(reqXP)
 
     def get_unspent_points(self):

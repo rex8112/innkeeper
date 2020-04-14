@@ -2,6 +2,7 @@ import discord
 import logging
 import asyncio
 import random
+import math
 
 import adventure as ac
 
@@ -570,12 +571,16 @@ class Adventure(commands.Cog):
 
             else:
                 if str(reaction) == '1️⃣':  # Looking at a Potion of Peritia
+                    xp_to_level = adv.getXPToLevel()
                     embed = discord.Embed(title='Potion of Peritia', colour=ac.Colour.infoColour,
                                           description='Interested in more power, {}? It will come with a cost.'.format(adv.name))
                     embed.set_author(name=ctx.author.display_name,
                                      icon_url=ctx.author.avatar_url)
-                    embed.add_field(name='Cost to Purchase', value='{} {}'.format(
-                        adv.getXPToLevel(), self.bot.xpName))
+                    if math.isinf(xp_to_level):
+                        embed.add_field(name='Cost to Purchase', value='Infinite {}'.format(self.bot.xpName))
+                    else:
+                        embed.add_field(name='Cost to Purchase', value='{} {}'.format(
+                            xp_to_level, self.bot.xpName))
                     embed.add_field(name='Current {}'.format(
                         self.bot.xpName), value=str(adv.xp))
                     await shopMessage.edit(embed=embed)
@@ -583,7 +588,7 @@ class Adventure(commands.Cog):
                     await shopMessage.clear_reactions()
                     await asyncio.sleep(0.26)
 
-                    if adv.xp >= adv.getXPToLevel():
+                    if adv.xp >= xp_to_level:
                         await shopMessage.add_reaction('✅')
                         await asyncio.sleep(0.26)
 

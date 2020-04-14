@@ -10,3 +10,4 @@ class PerLevel:
     spell_damage = 10
     out_heal_amp = 0.1
     spell_heal = 10
+    level_cap = 29 # Hard cap for level
