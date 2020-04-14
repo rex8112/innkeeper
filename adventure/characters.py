@@ -249,6 +249,13 @@ class Character:
         self.health -= damage
         return damage
 
+    def heal(self, value: float):
+        self.health += value
+        if self.health > self.maxHealth:
+            value -= self.health - self.maxHealth
+            self.health = self.maxHealth
+        return value
+
     def addLevel(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0
