@@ -229,8 +229,8 @@ class Character:
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
 
-    def deal_physical_damage(self, value: float):
-        parmor = self.mods.get('parmor', 0)
+    def deal_physical_damage(self, value: float, penetration = 0):
+        parmor = self.mods.get('parmor', 0) - penetration
         if parmor > 100:
             parmor = 100
         elif parmor < 0:
@@ -239,8 +239,8 @@ class Character:
         self.health -= damage
         return damage
 
-    def deal_magical_damage(self, value: float):
-        marmor = self.mods.get('marmor', 0.00)
+    def deal_magical_damage(self, value: float, penetration = 0):
+        marmor = self.mods.get('marmor', 0) - penetration
         if marmor > 100:
             marmor = 100
         elif marmor < 0:
