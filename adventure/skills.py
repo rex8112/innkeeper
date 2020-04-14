@@ -72,7 +72,7 @@ class Attack(Skill):
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     if random.uniform(1.0, 100.0) <= critChance:
                         dmg = dmg * 2
-                    dealt_damage = target.deal_physical_damage(dmg)
+                    dealt_damage = target.deal_physical_damage(dmg, user.mods.get('penetration', 0))
                     logger.debug('Character hit for {} DMG'.format(dealt_damage))
                     self.log = '**{}** hit **{}** for **{}** Damage.'.format(user.name, target.name, dealt_damage)
                     self.cooldown = self.max_cooldown
@@ -115,7 +115,7 @@ class BackStab(Skill):
                 # If random number is lower than the chance to hit, you hit
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     dmg = dmg * 2
-                    dealt_damage = target.deal_physical_damage(dmg)
+                    dealt_damage = target.deal_physical_damage(dmg, user.mods.get('penetration', 0))
                     self.log = '**{}** snuck up behind **{}** and backstabbed them for **{}** Damage.'.format(user.name, target.name, dealt_damage)
                 else:  # You miss
                     self.log = '**{}** missed trying to backstab **{}**.'.format(user.name, target.name)
@@ -143,6 +143,7 @@ class TripleStrike(Skill):
         if self.cooldown <= 0:
             self.log = '{} Unleashed three strikes towards {}: '.format(user.name, target.name)
             raw_dmg = float(user.mods.get('dmg', 0)) * 0.8
+            pen = user.mods.get('penetration', 0)
             critChance = float(user.mods.get('critChance', 0))
             target_ac = target.mods.get('ac', 0)
             user_wc = user.mods.get('wc', 0)
@@ -158,7 +159,7 @@ class TripleStrike(Skill):
                         if random.uniform(1.0, 100.0) <= critChance:
                             dmg = dmg * 2
                             self.log += '**CRIT** '
-                        dealt_damage = target.deal_physical_damage(dmg)
+                        dealt_damage = target.deal_physical_damage(dmg, pen)
                         logger.debug('Character hit for {} DMG'.format(dealt_damage))
                         self.log += '**{}**, '.format(dealt_damage)
                         self.cooldown = self.max_cooldown
@@ -186,6 +187,7 @@ class Cleave(Skill):
             self.log = ''
             position = targetGroup.index(target)
             dmg = self.get_damage(float(user.mods.get('dmg', 0)))
+            pen = user.mods.get('penetration', 0)
             cleave_damage = dmg * .3
             cleave1 = None
             cleave2 = None
@@ -202,15 +204,15 @@ class Cleave(Skill):
                         dmg = dmg * 2
 
                     try:
-                        cleave1 = targetGroup[position-1].deal_physical_damage(cleave_damage)
+                        cleave1 = targetGroup[position-1].deal_physical_damage(cleave_damage, pen)
                     except IndexError:
                         pass
                     try:
-                        cleave2 = targetGroup[position+1].deal_physical_damage(cleave_damage)
+                        cleave2 = targetGroup[position+1].deal_physical_damage(cleave_damage, pen)
                     except IndexError:
                         pass
 
-                    dealt_damage = target.deal_physical_damage(dmg)
+                    dealt_damage = target.deal_physical_damage(dmg, pen)
                     logger.debug('Character hit for {} DMG'.format(dealt_damage))
                     self.log = '**{}** cleaved through **{}** for **{}** damage and hit '.format(user.name, target.name, dealt_damage)
                     if cleave1 and cleave2:
@@ -235,11 +237,12 @@ class Cleave(Skill):
             return self.log, False
 
 
-    class MagicMissle(Skill):
+class MagicMissile(Skill):
     """A shot of pure magic.
     
+    `60% Damage`
     `Never Misses`"""
-    name = 'attack'
+    name = 'magicmissile'
     targetable = 2
     max_cooldown = 0
 
