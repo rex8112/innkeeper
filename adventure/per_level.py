@@ -7,4 +7,6 @@ class PerLevel:
     softcap_crit_chance = 0.16
     health = 10
     spell_amp = 0.1
+    spell_damage = 10
     out_heal_amp = 0.1
+    spell_heal = 10

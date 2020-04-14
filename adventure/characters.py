@@ -365,6 +365,11 @@ class Character:
             self.mods[spellAmp.id] = spellAmp
         logger.debug(
             '{0.name} Spell Amp calculated to: {1}'.format(self, self.mods['spellAmp']))
+        spell_damage = Modifier('spellDamage', (PerLevel.spell_damage * float(self.intelligence - 10)))
+        if self.mods.get(spell_damage.id, False):
+            self.mods[spell_damage.id].value += spell_damage.value
+        else:
+            self.mods[spell_damage.id] = spell_damage
 
         # Wisdom related stats fifth
         out_heal_amp = Modifier('healAmp', (PerLevel.out_heal_amp * float(self.wisdom - 10)))
@@ -372,6 +377,11 @@ class Character:
             self.mods[out_heal_amp.id].value += out_heal_amp.value
         else:
             self.mods[out_heal_amp.id] = out_heal_amp
+        spell_heal = Modifier('spellHeal', (PerLevel.spell_heal * float(self.wisdom - 10)))
+        if self.mods.get(spell_heal.id, False):
+            self.mods[spell_heal.id].value += spell_heal.value
+        else:
+            self.mods[spell_heal.id] = spell_heal
 
         # Charisma related stats sixth
         # self.discount = 0

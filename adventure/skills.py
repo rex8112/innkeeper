@@ -233,3 +233,43 @@ class Cleave(Skill):
         else:
             self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
             return self.log, False
+
+
+    class MagicMissle(Skill):
+    """A shot of pure magic.
+    
+    `Never Misses`"""
+    name = 'attack'
+    targetable = 2
+    max_cooldown = 0
+
+    def use(self, user, target, targetGroup: list):
+        if self.cooldown <= 0:
+            self.log = ''
+            dmg = self.get_damage(float(user.mods.get('dmg', 0)))
+            critChance = float(user.mods.get('critChance'))
+            target_ac = target.mods.get('ac', 0)
+            user_wc = user.mods.get('wc', 0)
+            chanceToHit = float(1 + (user_wc - target_ac) /
+                ((user_wc + target_ac) * 0.5))
+
+            if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
+                # If random number is lower than the chance to hit, you hit
+                if random.uniform(0.0, 1.0) <= chanceToHit:
+                    if random.uniform(1.0, 100.0) <= critChance:
+                        dmg = dmg * 2
+                    dealt_damage = target.deal_physical_damage(dmg)
+                    logger.debug('Character hit for {} DMG'.format(dealt_damage))
+                    self.log = '**{}** hit **{}** for **{}** Damage.'.format(user.name, target.name, dealt_damage)
+                    self.cooldown = self.max_cooldown
+                else:  # You miss
+                    logger.debug(
+                        'Missed with chanceToHit: {:.1%}'.format(chanceToHit))
+                    self.log = '**{}** missed trying to hit **{}**.'.format(user.name, target.name)
+            else:  # You evaded
+                logger.debug('Player Evaded')
+                self.log = '**{1}** evaded **{0}**\'s backstab.'.format(user.name, target.name)
+            return self.log, True
+        else:
+            self.log = '**{}** on cooldown for **{}** more turns.'.format(self.name.capitalize(), self.cooldown)
+            return self.log, False
