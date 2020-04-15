@@ -157,17 +157,22 @@ class Modifier:
     def load(self):
         data = db.get_modifier(self.id)
         if data:
-            if data[2]:
-                self.display_name = data[2]
+            if data['displayName']:
+                self.display_name = data['displayName']
             else:
                 self.display_name = self.id
-            if data[3]:
-                self.title = data[3]
+            if data['titleName']:
+                self.title = data['titleName']
             else:
                 self.title = None
+            if data['description']:
+                self.description = data['description']
+            else:
+                self.description = None
         else:
             self.display_name = self.id
             self.title = None
+            self.description = None
 
 
 class EliteModifier:

@@ -482,13 +482,13 @@ class Player(Character):
     def load(self, calculate=True):
         try:
             raw = db.getAdventurer(self.id)
-            self.name = raw[2]
-            self.cls = raw[3]
-            self.level = raw[4]
-            self.xp = raw[5]
-            self.race = raw[6]
+            self.name = raw['name']
+            self.cls = raw['class']
+            self.level = raw['level']
+            self.xp = raw['xp']
+            self.race = raw['race']
 
-            rawAttributes = raw[7].split(',')  # Get a list of the attributes
+            rawAttributes = raw['attributes'].split(',')  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
             self.rawDexterity = int(rawAttributes[1])
             self.rawConstitution = int(rawAttributes[2])
@@ -497,11 +497,11 @@ class Player(Character):
             self.rawCharisma = int(rawAttributes[5])
 
             try:
-                self.raw_skills = raw[8].split(',')  # Get a list of skills
+                self.raw_skills = raw['skills'].split(',')  # Get a list of skills
             except AttributeError:
                 self.raw_skills = []
 
-            equipment = raw[9].split('/')  # Get a list of equipped items
+            equipment = raw['equipment'].split('/')  # Get a list of equipped items
             self.mainhand = Equipment(equipment[0])
             self.offhand = Equipment(equipment[1])
             self.helmet = Equipment(equipment[2])
@@ -510,13 +510,13 @@ class Player(Character):
             self.boots = Equipment(equipment[5])
             self.trinket = Equipment(equipment[6])
 
-            self.inventory = raw[10].split('/')
+            self.inventory = raw['inventory'].split('/')
             try:
                 self.inventory.remove('')
             except:
                 pass
-            self.available = bool(raw[11])
-            self.health = int(raw[12])
+            self.available = bool(raw['available'])
+            self.health = int(raw['health'])
 
             if calculate:
                 self.calculate()
