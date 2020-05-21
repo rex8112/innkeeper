@@ -436,7 +436,7 @@ class Player(Character):
     def __ne__(self, value):
         return not self.__eq__(value)
 
-    def new(self, name, cls, race, rawAttributes):
+    def new(self, name, cls, race, rawAttributes, save = True):
         self.name = name
         self.cls = cls
         self.race = race
@@ -468,14 +468,17 @@ class Player(Character):
         self.trinket = Equipment('empty')
 
         self.inventory = []
-        if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
-            self.rest()
-            self.calculate()
-            self.rest()
-            self.save()
-            logger.info('{}:{} Created Successfully'.format(
-                self.id, self.name))
-            return True
+        if save:
+            if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
+                self.rest()
+                self.calculate()
+                self.rest()
+                self.save()
+                logger.info('{}:{} Created Successfully'.format(
+                    self.id, self.name))
+                return True
+            else:
+                return False
         else:
             return False
 
