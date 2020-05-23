@@ -9,7 +9,7 @@ __version__ = '0.2.0'
 
 import logging
 
-from .characters import Player, Enemy, RaidBoss
+from .characters import Player, Enemy, RaidBoss, test_players
 from .colour import Colour
 from .encounter import Encounter
 from .equipment import Equipment, BaseEquipment
