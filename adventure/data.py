@@ -11,3 +11,6 @@ class PerLevel:
     out_heal_amp = 0.1
     spell_heal = 10
     level_cap = 29 # Hard cap for level
+
+class TestData:
+    active_test_players = {}
