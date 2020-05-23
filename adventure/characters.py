@@ -487,6 +487,8 @@ class Player(Character):
 
     def load(self, calculate=True):
         try:
+            if self.id in TestData.active_test_players:
+                self.id = TestData.active_test_players[self.id]
             raw = db.getAdventurer(self.id)
             self.name = raw['name']
             self.cls = raw['class']
