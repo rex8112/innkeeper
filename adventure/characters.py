@@ -2,7 +2,7 @@ import logging
 import math
 import random
 
-from.per_level import PerLevel
+from .data import PerLevel, TestData
 from .skills import Skill
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment

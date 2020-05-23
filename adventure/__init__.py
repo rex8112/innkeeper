@@ -20,6 +20,7 @@ from .modifiers import Modifier, EliteModifier
 from .shop import Shop
 from .skills import Skill
 from .database import db
+from .data import TestData
 
 try:
     from logging import NullHandler
