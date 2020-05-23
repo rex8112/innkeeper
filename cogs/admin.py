@@ -68,12 +68,13 @@ class Admin(commands.Cog):
                     embed.add_field(name=x, value=message[2+i+1])
                 except IndexError:
                     pass
-        for channel in channels:
-            try:
-                await channel.send(embed=embed)
-            except discord.Forbidden:
-                pass
-        await ctx.message.add_reaction('✅')
+        async with ctx.channel.typing():
+            for channel in channels:
+                try:
+                    await channel.send(embed=embed)
+                except discord.Forbidden:
+                    pass
+            await ctx.message.add_reaction('✅')
 
     @adminpanel.command()
     async def generate_equipment(self, ctx, target: discord.Member, lvl: int, rarity: int, index = 0):
