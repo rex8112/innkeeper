@@ -480,6 +480,9 @@ class Player(Character):
             else:
                 return False
         else:
+            self.rest()
+            self.calculate()
+            self.rest()
             return False
 
     def load(self, calculate=True):
