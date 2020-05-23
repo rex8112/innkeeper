@@ -527,7 +527,7 @@ class Player(Character):
                 self.id, self.name))
             self.loaded = True
         except Exception:
-            logger.error('{} Failed to Load Player'.format(
+            logger.debug('{} Failed to Load Player'.format(
                 self.id), exc_info=True)
         finally:
             return self.loaded
