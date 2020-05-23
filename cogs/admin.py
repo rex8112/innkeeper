@@ -77,6 +77,25 @@ class Admin(commands.Cog):
             await ctx.message.add_reaction('✅')
 
     @adminpanel.command()
+    async def test_characters(self, ctx):
+        main_description = ''
+        for count, a in enumerate(ac.test_players, start=1):
+            if a:
+                main_description += '{}. Level {} {} {}, {}\n'.format(a.id, a.level, a.race, a.cls, a.name[6:])
+            else:
+                main_description += '{}. None\n'.format(count)
+        main_embed = discord.Embed(title='Test Characters', description=main_description, colour=ac.Colour.activeColour)
+        main_embed.set_footer(text='Follow up commands: new, delete, activate, deactivate')
+        main_message = await ctx.send(embed=main_embed)
+        try:
+            value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+        except asyncio.TimeoutError:
+            main_embed.colour = ac.Colour.infoColour
+            await main_message.edit(embed=main_embed)
+            return
+
+
+    @adminpanel.command()
     async def generate_equipment(self, ctx, target: discord.Member, lvl: int, rarity: int, index = 0):
         adv = ac.Player(target.id)
         if not adv.loaded:
