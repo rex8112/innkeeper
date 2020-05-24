@@ -2,6 +2,8 @@ import discord
 import logging
 import asyncio
 import random
+import re
+
 import adventure as ac
 
 from discord.ext import tasks, commands
@@ -78,21 +80,86 @@ class Admin(commands.Cog):
 
     @adminpanel.command()
     async def test_characters(self, ctx):
-        main_description = ''
-        for count, a in enumerate(ac.test_players, start=1):
-            if a:
-                main_description += '{}. Level {} {} {}, {}\n'.format(a.id, a.level, a.race, a.cls, a.name[6:])
-            else:
-                main_description += '{}. None\n'.format(count)
-        main_embed = discord.Embed(title='Test Characters', description=main_description, colour=ac.Colour.activeColour)
-        main_embed.set_footer(text='Follow up commands: new, delete, activate, deactivate')
-        main_message = await ctx.send(embed=main_embed)
         try:
-            value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
-        except asyncio.TimeoutError:
-            main_embed.colour = ac.Colour.infoColour
-            await main_message.edit(embed=main_embed)
-            return
+            main_description = ''
+            for count, a in enumerate(ac.test_players, start=1):
+                if a:
+                    main_description += '{}. Level {} {} {}, {}\n'.format(a.id, a.level, a.race, a.cls, a.name[6:])
+                else:
+                    main_description += '{}. None\n'.format(count)
+            main_embed = discord.Embed(title='Test Characters', description=discord.utils.escape_markdown(main_description), colour=ac.Colour.activeColour)
+            main_embed.set_footer(text='Follow up messages: <new/delete/activate/deactivate>')
+            main_message = await ctx.send(embed=main_embed)
+            try:
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+            except asyncio.TimeoutError:
+                main_embed.colour = ac.Colour.infoColour
+                main_embed.set_footer(text='')
+                await main_message.edit(embed=main_embed)
+                return
+            await value_message.delete()
+            if value_message.content.lower() == 'new':
+                new_embed = main_embed.copy()
+                new_description = new_embed.description
+                new_description = '**What slot do you want to create the new adventurer?**\n\n{}'.format(new_description)
+                new_embed.title = 'New Test Character'
+                new_embed.description = new_description
+                new_embed.set_footer(text='Follow up message: <Int: 1-10>')
+                await main_message.edit(embed=new_embed)
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                await value_message.delete()
+
+                try:
+                    slot = int(value_message.content)
+                except ValueError:
+                    raise discord.InvalidArgument('An integer must be provided')
+                if slot > 10 or slot < 1:
+                    raise discord.InvalidArgument('Integer must be between 1 and 10, inclusively.')
+
+                new_embed.description = 'What name would you like to give to this test character?'
+                new_embed.set_footer(text='Follow up message: <Str: 3-20 Characters>')
+                await main_message.edit(embed=new_embed)
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                await value_message.delete()
+
+                name = re.sub('[ ]{2,}', ' ', value_message.content.strip())
+                length = len(name)
+                if length < 3 or length > 20:
+                    raise discord.InvalidArgument('Name must be within 3 and 20 characters')
+                name = 'test__' + name
+                adv_info = 'Name: {}\n'.format(discord.utils.escape_markdown(name))
+                new_embed.description = '**What level should this character be?**\n\n{}'.format(adv_info)
+                new_embed.set_footer(text='Follow up message: <Int: >= 1>')
+                await main_message.edit(embed=new_embed)
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                await value_message.delete()
+                try:
+                    level = int(value_message.content)
+                except ValueError:
+                    raise discord.InvalidArgument('An integer must be provided')
+                if level < 1:
+                    raise discord.InvalidArgument('Integer must be greater than or equal to 1')
+
+                old_adv = ac.test_players[slot-1]
+                if isinstance(old_adv, ac.Player):
+                    old_adv.delete()
+                adv = ac.Player(slot, False)
+                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10])
+                adv.level = level
+                adv.save()
+                ac.test_players[slot-1] = adv
+                new_embed.description = '**{}** Created Successfully'.format(discord.utils.escape_markdown(name))
+                new_embed.set_footer(text='')
+                new_embed.colour = ac.Colour.successColour
+                await main_message.edit(embed=new_embed)
+
+        except (discord.InvalidArgument, asyncio.TimeoutError) as e:
+            error_embed = main_message.embed
+            error_embed.colour = ac.Colour.errorColour
+            error_embed.set_footer(text='{}: {}'.format(type(e), e))
+            await main_message.edit(embed=error_embed)
+
+
 
 
     @adminpanel.command()
