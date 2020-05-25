@@ -91,7 +91,7 @@ class Admin(commands.Cog):
             main_embed.set_footer(text='Follow up messages: <new/delete/activate/deactivate>')
             main_message = await ctx.send(embed=main_embed)
             try:
-                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                value_message = await self.bot.wait_for('message', timeout=10.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
             except asyncio.TimeoutError:
                 main_embed.colour = ac.Colour.infoColour
                 main_embed.set_footer(text='')
@@ -144,7 +144,7 @@ class Admin(commands.Cog):
                 if isinstance(old_adv, ac.Player):
                     old_adv.delete()
                 adv = ac.Player(slot, False)
-                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10])
+                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10], False)
                 adv.level = level
                 adv.save()
                 ac.test_players[slot-1] = adv
@@ -152,6 +152,54 @@ class Admin(commands.Cog):
                 new_embed.set_footer(text='')
                 new_embed.colour = ac.Colour.successColour
                 await main_message.edit(embed=new_embed)
+            elif value_message.content.lower() == 'delete':
+                new_embed = main_embed.copy()
+                new_description = new_embed.description
+                new_description = '**What slot do you want to delete?**\n\n{}'.format(new_description)
+                new_embed.title = 'Delete Test Character'
+                new_embed.description = new_description
+                new_embed.set_footer(text='Follow up message: <Int: 1-10>')
+                await main_message.edit(embed=new_embed)
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                await value_message.delete()
+                try:
+                    slot = int(value_message.content)
+                except ValueError:
+                    raise discord.InvalidArgument('An integer must be provided')
+                if slot > 10 or slot < 1:
+                    raise discord.InvalidArgument('Integer must be between 1 and 10, inclusively.')
+
+                adv = ac.test_players[slot-1]
+                adv.delete()
+                ac.test_players[slot-1] = None
+
+                new_embed.description = '**{}** Deleted Successfully'.format(discord.utils.escape_markdown())
+                new_embed.set_footer(text='')
+                new_embed.colour = ac.Colour.successColour
+                await main_message.edit(embed=new_embed)
+            elif value_message.content.lower() == 'activate':
+                new_embed = main_embed.copy()
+                new_description = new_embed.description
+                new_description = '**What slot do you want to activate?**\n\n{}'.format(new_description)
+                new_embed.title = 'Activate Test Character'
+                new_embed.description = new_description
+                new_embed.set_footer(text='Follow up message: <Int: 1-10>')
+                await main_message.edit(embed=new_embed)
+                value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
+                await value_message.delete()
+                try:
+                    slot = int(value_message.content)
+                except ValueError:
+                    raise discord.InvalidArgument('An integer must be provided')
+                if slot > 10 or slot < 1:
+                    raise discord.InvalidArgument('Integer must be between 1 and 10, inclusively.')
+                ac.TestData.active_test_players[ctx.author.id] = slot
+            elif value_message.content.lower() == 'deactivate':
+                pass
+            else:
+                main_embed.colour = ac.Colour.infoColour
+                main_embed.set_footer(text='Invalid Follow Up')
+                await main_message.edit(embed=main_embed)
 
         except (discord.InvalidArgument, asyncio.TimeoutError) as e:
             error_embed = main_message.embed
