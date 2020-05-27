@@ -221,8 +221,8 @@ class Admin(commands.Cog):
 
 
     @adminpanel.command()
-    async def generate_equipment(self, ctx, target: discord.Member, lvl: int, rarity: int, index = 0):
-        adv = ac.Player(target.id)
+    async def generate_equipment(self, ctx, target_id: int, lvl: int, rarity: int, index = 0):
+        adv = ac.Player(target_id)
         if not adv.loaded:
             await ctx.message.add_reaction('⛔')
             return
