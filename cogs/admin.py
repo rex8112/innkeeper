@@ -144,7 +144,7 @@ class Admin(commands.Cog):
                 if isinstance(old_adv, ac.Player):
                     old_adv.delete()
                 adv = ac.Player(slot, False)
-                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10], False)
+                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10])
                 adv.level = level
                 adv.save()
                 ac.test_players[slot-1] = adv
@@ -173,7 +173,7 @@ class Admin(commands.Cog):
                 adv.delete()
                 ac.test_players[slot-1] = None
 
-                new_embed.description = '**{}** Deleted Successfully'.format(discord.utils.escape_markdown())
+                new_embed.description = '**{}** Deleted Successfully'.format(discord.utils.escape_markdown(adv.name))
                 new_embed.set_footer(text='')
                 new_embed.colour = ac.Colour.successColour
                 await main_message.edit(embed=new_embed)
@@ -194,17 +194,27 @@ class Admin(commands.Cog):
                 if slot > 10 or slot < 1:
                     raise discord.InvalidArgument('Integer must be between 1 and 10, inclusively.')
                 ac.TestData.active_test_players[ctx.author.id] = slot
+                adv = ac.Player(slot)
+                new_embed.description = '**{}** Activated Successfully'.format(discord.utils.escape_markdown(adv.name))
+                new_embed.set_footer(text='')
+                new_embed.colour = ac.Colour.successColour
+                await main_message.edit(embed=new_embed)
             elif value_message.content.lower() == 'deactivate':
-                pass
+                ac.TestData.active_test_players.pop(ctx.author.id, None)
+                main_embed.title = 'Deactivation'
+                main_embed.description = 'Deactivated Successfully'
+                main_embed.set_footer(text='')
+                main_embed.colour = ac.Colour.successColour
+                await main_message.edit(embed=main_embed)
             else:
                 main_embed.colour = ac.Colour.infoColour
                 main_embed.set_footer(text='Invalid Follow Up')
                 await main_message.edit(embed=main_embed)
 
         except (discord.InvalidArgument, asyncio.TimeoutError) as e:
-            error_embed = main_message.embed
+            error_embed = main_message.embeds[0]
             error_embed.colour = ac.Colour.errorColour
-            error_embed.set_footer(text='{}: {}'.format(type(e), e))
+            error_embed.set_footer(text='{}: {}'.format(type(e).__name__, e))
             await main_message.edit(embed=error_embed)
 
 
