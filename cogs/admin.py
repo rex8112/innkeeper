@@ -309,6 +309,40 @@ class Admin(commands.Cog):
         await ctx.send(embed=embed)
 
     @adminpanel.command()
+    async def test_auto_combat(self, ctx, enemies_string, count=100):
+        """
+        Enemies_string: enemy_id|enemy_level|allow_elite,...
+        """
+        wins = 0
+        losses = 0
+        adv = ac.Player(ctx.author.id)
+        for _ in range(count):
+            adv.rest()
+            enemies = []
+            for e in enemies_string.split(','):
+                enemy_id, enemy_level, allow_elite = e.split('|')
+                enemy = ac.Enemy()
+                if bool(allow_elite):
+                    enemy.generate_new_elite(int(enemy_level), True, int(enemy_id))
+                else:
+                    enemy.generate_new(int(enemy_level), True, int(enemy_id))
+                enemies.append(enemy)
+            encounter = ac.Encounter([adv], enemies)
+
+            escape = False
+            while escape == False:
+                escape = encounter.automatic_turn()
+            if encounter.winner == 1:
+                wins += 1
+            elif encounter.winner == 2:
+                losses += 1
+        average_wins = round(wins/count, 3)
+        embed = discord.Embed(title='Results', colour=ac.Colour.infoColour,
+                                description='{}/{}/{}'.format(wins,losses,count)
+                                           +' **{}**'.format(average_wins))
+        await ctx.send(embed=embed)
+
+    @adminpanel.command()
     async def balance_all_equipment(self, ctx):
         all_data = ac.db.get_all_equipment()
         async with ctx.channel.typing():

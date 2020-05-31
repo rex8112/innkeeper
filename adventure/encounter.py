@@ -95,20 +95,23 @@ class Encounter:
             enemy_team = self.players
 
         result = False
-        if skill:
-            if skill.targetable == 0:
-                target_group = self.players
-                target = user
-            elif skill.targetable == 1:
-                target_group = friendly_team
-                target = target_group[target_int - 1]
-            else:
-                target_group = enemy_team
-                target = target_group[target_int - 1]
+        try:
+            if skill:
+                if skill.targetable == 0:
+                    target_group = self.players
+                    target = user
+                elif skill.targetable == 1:
+                    target_group = friendly_team
+                    target = target_group[target_int - 1]
+                else:
+                    target_group = enemy_team
+                    target = target_group[target_int - 1]
 
-            info, result = skill.use(user, target, target_group)
-        else:
-            info = '`{}` not found in your skills.'.format(skill_id)
+                info, result = skill.use(user, target, target_group)
+            else:
+                info = '`{}` not found in your skills.'.format(skill_id)
+        except IndexError:
+            return 'Invalid Target', False
         return info, result
                 
 
@@ -122,10 +125,10 @@ class Encounter:
         else:
             check.increment_cooldowns()
 
-        if len(self.players) <= len(self.deadPlayers):
+        if len(self.players) <= 0:
             self.winner = 2
             return True
-        elif len(self.enemies) <= len(self.deadEnemies):
+        elif len(self.enemies) <= 0:
             self.winner = 1
             return True
 
@@ -147,27 +150,23 @@ class Encounter:
 
 
     def automatic_turn(self):
-        for player in self.players:
-            if self.enemies[-1:]:
-                logger.debug('Living Enemy detected')
-                skill = Skill.get_skill('attack')
-                skill().use(player, self.enemies[-1], self.enemies)
-
-                # If the enemy is dead, remove him from active enemies
-                if self.enemies[-1].health <= 0:
-                    self.deadEnemies.append(self.enemies[-1])
-                    self.enemies.pop()
-
-        for enemy in self.enemies:
-            if self.players[-1:]:
-                logger.debug('Living Player detected')
-                skill = Skill.get_skill('attack')
-                skill().use(enemy, self.players[-1], self.players)
-
-                # If the player is dead, remove him from active players
-                if self.players[-1].health <= 0:
-                    self.deadPlayers.append(self.players[-1])
-                    self.players.pop()
+        active_turn = self.turn_order[self.current_turn]
+        if active_turn in self.players:
+            friendly_team = self.players
+            enemy_team = self.enemies
+        else:
+            friendly_team = self.enemies
+            enemy_team = self.players
+        for skill in active_turn.skills:
+            if skill.cooldown <= 0:
+                if skill.targetable == 0:
+                    info, result = self.use_skill(active_turn, skill.name, 0) #Target int doesn't matter for self cast
+                elif skill.targetable == 1:
+                    info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(friendly_team)))
+                else:
+                    info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(enemy_team)))
+                break
+        return self.next_turn()
 
     async def run_combat(self, bot, encounter_message: discord.Message):
         escape = False
@@ -257,7 +256,7 @@ class Encounter:
         return totalXP
 
     def end(self):
-        if len(self.players) > 0 and len(self.enemies) :
+        if len(self.players) > 0 and len(self.enemies):
             return True
         else:
             return False

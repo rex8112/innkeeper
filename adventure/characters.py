@@ -413,6 +413,8 @@ class Character:
 
     def rest(self):  # Reset anything that needs to on rest
         self.health = self.maxHealth
+        for skill in self.skills:
+            skill.__init__()
 
     def increment_cooldowns(self, amount = 1):
         for skill in self.skills:
