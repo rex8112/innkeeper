@@ -316,31 +316,44 @@ class Admin(commands.Cog):
         wins = 0
         losses = 0
         adv = ac.Player(ctx.author.id)
-        for _ in range(count):
-            adv.rest()
-            enemies = []
-            for e in enemies_string.split(','):
-                enemy_id, enemy_level, allow_elite = e.split('|')
-                enemy = ac.Enemy()
-                if bool(allow_elite):
-                    enemy.generate_new_elite(int(enemy_level), True, int(enemy_id))
-                else:
-                    enemy.generate_new(int(enemy_level), True, int(enemy_id))
-                enemies.append(enemy)
-            encounter = ac.Encounter([adv], enemies)
+        async with ctx.channel.typing():
+            for _ in range(count):
+                adv.rest()
+                enemies = []
+                for e in enemies_string.split(','):
+                    enemy_id, enemy_level, allow_elite = e.split('|')
+                    enemy = ac.Enemy()
+                    if bool(allow_elite):
+                        enemy.generate_new_elite(int(enemy_level), True, int(enemy_id))
+                    else:
+                        enemy.generate_new(int(enemy_level), True, int(enemy_id))
+                    enemy.calculate()
+                    enemies.append(enemy)
+                encounter = ac.Encounter([adv], enemies)
 
-            escape = False
-            while escape == False:
-                escape = encounter.automatic_turn()
-            if encounter.winner == 1:
-                wins += 1
-            elif encounter.winner == 2:
-                losses += 1
-        average_wins = round(wins/count, 3)
-        embed = discord.Embed(title='Results', colour=ac.Colour.infoColour,
-                                description='{}/{}/{}'.format(wins,losses,count)
-                                           +' **{}**'.format(average_wins))
-        await ctx.send(embed=embed)
+                escape = False
+                log = ''
+                limiter = 100
+                while escape == False and limiter > 0:
+                    limiter -= 1
+                    escape = await encounter.automatic_turn()
+                if encounter.winner == 1:
+                    wins += 1
+                elif encounter.winner == 2:
+                    losses += 1
+                else:
+                    logger.warning('COMBAT LIMITED')
+                if count == 1:
+                    log = encounter.log
+            if len(log) > 500:
+                log = log[-500:]
+            average_wins = round(wins/count, 3)
+            embed = discord.Embed(title='Results', colour=ac.Colour.infoColour,
+                                    description='{}/{}/{}'.format(wins,losses,count)
+                                            +' **{}**'.format(average_wins))
+            if log:
+                embed.add_field(name='Combat Log', value=log)
+            await ctx.send(embed=embed)
 
     @adminpanel.command()
     async def balance_all_equipment(self, ctx):

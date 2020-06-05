@@ -72,7 +72,7 @@ class Attack(Skill):
                 if random.uniform(0.0, 1.0) <= chanceToHit:
                     if random.uniform(1.0, 100.0) <= critChance:
                         dmg = dmg * 2
-                    dealt_damage = target.deal_physical_damage(dmg, user.mods.get('penetration', 0))
+                    dealt_damage = target.deal_physical_damage(dmg, user.mods.get('penetration', Modifier('penetration', 0)).value)
                     logger.debug('Character hit for {} DMG'.format(dealt_damage))
                     self.log = '**{}** hit **{}** for **{}** Damage.'.format(user.name, target.name, dealt_damage)
                     self.cooldown = self.max_cooldown

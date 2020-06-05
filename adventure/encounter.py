@@ -26,6 +26,7 @@ class Encounter:
         self.deadPlayers = []
         self.deadEnemies = []
         self.turn_order = []
+        self.log = ''
         self.winner = 0
         for L in [self.players, self.enemies]:
             for c in L:
@@ -125,10 +126,10 @@ class Encounter:
         else:
             check.increment_cooldowns()
 
-        if len(self.players) <= 0:
+        if len(self.players) <= len(self.deadPlayers):
             self.winner = 2
             return True
-        elif len(self.enemies) <= 0:
+        elif len(self.enemies) <= len(self.deadEnemies):
             self.winner = 1
             return True
 
@@ -140,7 +141,7 @@ class Encounter:
 
         if check.health <= 0:
             if check in self.players:
-                    self.deadPlayers.append(check)
+                self.deadPlayers.append(check)
             elif check in self.enemies:
                 self.deadEnemies.append(check)
 
@@ -149,7 +150,7 @@ class Encounter:
         return False
 
 
-    def automatic_turn(self):
+    async def automatic_turn(self):
         active_turn = self.turn_order[self.current_turn]
         if active_turn in self.players:
             friendly_team = self.players
@@ -165,6 +166,7 @@ class Encounter:
                     info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(friendly_team)))
                 else:
                     info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(enemy_team)))
+                self.log += '{}\n'.format(info)
                 break
         return self.next_turn()
 

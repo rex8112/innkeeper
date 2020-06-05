@@ -216,7 +216,7 @@ class Database:
 
     def get_base_enemy_indx(self, indx: int):
         cursor = self.db2.cursor()
-        cursor.execute("""SELECT * FROM enemies WHERE indx = ?""", (indx,))
+        cursor.execute("""SELECT * FROM baseEnemies WHERE indx = ?""", (indx,))
         fetch = cursor.fetchone()
         cursor.close()
         return fetch

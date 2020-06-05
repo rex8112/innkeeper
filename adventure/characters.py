@@ -233,22 +233,26 @@ class Character:
         return random.randint(1, 20) + self.level
 
     def deal_physical_damage(self, value: float, penetration = 0):
-        parmor = self.mods.get('parmor', 0) - penetration
+        parmor = self.mods.get('parmor', Modifier('parmor', 0)) - float(penetration)
         if parmor > 100:
             parmor = 100
         elif parmor < 0:
             parmor = 0
-        damage = value * ((100 - parmor) / 100)
+        damage = value * ((100 - float(parmor)) / 100)
+        if not isinstance(damage, (int, float)):
+            raise ValueError('Dealt Damage returned NaN. This is not supposed to happen.')
         self.health -= damage
         return damage
 
     def deal_magical_damage(self, value: float, penetration = 0):
-        marmor = self.mods.get('marmor', 0) - penetration
+        marmor = self.mods.get('marmor', Modifier('marmor', 0)) - float(penetration)
         if marmor > 100:
             marmor = 100
         elif marmor < 0:
             marmor = 0
-        damage = value * ((100 - marmor) / 100)
+        damage = value * ((100 - float(marmor)) / 100)
+        if not isinstance(damage, (int, float)):
+            raise ValueError('Dealt Damage returned NaN. This is not supposed to happen.')
         self.health -= damage
         return damage
 
