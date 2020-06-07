@@ -1039,15 +1039,17 @@ class Adventure(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def quest_check(self):
+        await self.bot.wait_until_ready()
         quest_to_update = ac.db.getTimeRNG()
         for q in quest_to_update:
             rng = ac.Quest()
             if rng.loadActive(q[1]):  # If quest loaded successfully
                 limiter = 200
+                escape = False
                 # While enemies or the player exists
-                while len(rng.encounter.enemies) > 0 and len(rng.encounter.players) > 0 and limiter > 0:
-                    rng.encounter.automatic_turn()
+                while escape == False and limiter > 0:
                     limiter -= 1
+                    escape = await rng.encounter.automatic_turn()
 
                 rng.nextStage()
                 rng.save()

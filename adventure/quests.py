@@ -155,7 +155,7 @@ class Quest:
             info += '\n*Lv {0.level}* **{0.name}**: {0.health:.1f}/{0.maxHealth}'.format(e)
         info += '\n'
         self.combat_log.append(info)
-        if self.adv.health > 0:
+        if self.encounter.winner == 1:
             self.stage += 1
             self.xp += int(self.encounter.getExp())
             self.loot += self.encounter.getLoot()
