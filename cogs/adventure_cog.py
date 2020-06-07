@@ -533,6 +533,7 @@ class Adventure(commands.Cog):
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         shopMessage = await ctx.send(embed=embed)
+        await asyncio.sleep(0.5)
         while mainExit == False:
             embed = discord.Embed(title='The Innkeeper\'s Shop', colour=ac.Colour.infoColour,
                                   description='Welcome {},\nWhat brings you here today?'.format(adv.name))
