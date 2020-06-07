@@ -410,15 +410,21 @@ class Character:
         # Set values to their maximum
         self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
 
-        if self.maxHealth < self.health:
+        try:
+            if self.maxHealth < self.health:
+                self.health = self.maxHealth
+        except AttributeError:
             self.health = self.maxHealth
 
         logger.debug('{0.name} Calculation complete'.format(self))
 
     def rest(self):  # Reset anything that needs to on rest
         self.health = self.maxHealth
-        for skill in self.skills:
-            skill.__init__()
+        try:
+            for skill in self.skills:
+                skill.__init__()
+        except AttributeError:
+            pass
 
     def increment_cooldowns(self, amount = 1):
         for skill in self.skills:
