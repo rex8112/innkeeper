@@ -448,7 +448,7 @@ class Player(Character):
     def __ne__(self, value):
         return not self.__eq__(value)
 
-    def new(self, name, cls, race, rawAttributes, save = True):
+    def new(self, name, cls, race, rawAttributes, home_id, save = True):
         self.name = name
         self.cls = cls
         self.race = race
@@ -481,7 +481,7 @@ class Player(Character):
 
         self.inventory = []
         if save:
-            if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes)):
+            if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), home_id):
                 self.rest()
                 self.calculate()
                 self.rest()

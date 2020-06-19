@@ -146,7 +146,7 @@ class Adventure(commands.Cog):
             else:
                 if str(reaction) == '✅':
                     # async with controlMessage.channel.typing():
-                    if adv.new(name, 'Adventurer', 'Human', attributes):
+                    if adv.new(name, 'Adventurer', 'Human', attributes, ctx.guild.id):
                         embed = discord.Embed(title='Adventurer Created!',
                                               colour=ac.Colour.successColour, description='Welcome {}!'.format(name))
                         embed.add_field(name='What to do next?', value='To start getting to work, run `{0}quest` to begin your first journey. Use `{0}talk` for various information.'.format(self.bot.CP))

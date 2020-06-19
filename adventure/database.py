@@ -20,7 +20,7 @@ class Database:
         logger.info('Initializing Database')
         cursor = self.db.cursor()
         cursor2 = self.db2.cursor()
-        cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS adventurers( indx INTEGER PRIMARY KEY, id INTEGER UNIQUE, name TEXT, class TEXT, level INTEGER, xp INTEGER DEFAULT 0, race TEXT, attributes TEXT, skills TEXT, equipment TEXT, inventory TEXT, available INTEGER DEFAULT 1, health INTEGER, home INTEGER)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
@@ -33,11 +33,6 @@ class Database:
         cursor2.execute("""CREATE TABLE IF NOT EXISTS raid(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL, flavor TEXT NOT NULL, attributes TEXT NOT NULL, skills TEXT NOT NULL, health INTEGER NOT NULL, loot TEXT NOT NULL, modifiers TEXT NOT NULL, available INTEGER NOT NULL DEFAULT 0)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS modifiers(indx INTEGER PRIMARY KEY NOT NULL, id TEXT UNIQUE NOT NULL, displayName TEXT, titleName TEXT, description TEXT)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS eliteModifiers(indx INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, title TEXT, attributes TEXT, modifiers TEXT, skills TEXT)""")
-        
-        try:
-            cursor.execute("""ALTER TABLE rngdungeons ADD COLUMN combatInfo TEXT""")
-        except sqlite3.OperationalError:
-            logger.error('Unable to create combatInfo column. Ignoring.')
 
         cursor.execute("""DELETE FROM rngdungeons WHERE adv IS NULL""")
         cursor.close()
@@ -45,11 +40,11 @@ class Database:
         self.db.commit()
         self.db2.commit()
 
-    def addAdventurer(self, id, name, cls, race, attributes):
+    def addAdventurer(self, id, name, cls, race, attributes, home):
         cursor = self.db.cursor()
         try:
-            cursor.execute("""INSERT INTO adventurers(id, name, class, level, xp, race, attributes) VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                        (id, name, cls, 1, 0, race, attributes))
+            cursor.execute("""INSERT INTO adventurers(id, name, class, level, xp, race, attributes, home) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (id, name, cls, 1, 0, race, attributes, home))
             return True
         except sqlite3.IntegrityError:
             return False
