@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 game = discord.Activity(
     name='An Adventure', type=discord.ActivityType.watching)
-bot = commands.Bot(description='A Wonderful Adventure',
+bot = commands.Bot(description='A Wonderful Adventure\nHelp command will be reworked in the future.',
                    command_prefix=commandPrefix, owner_id=int(settings.owner))
 bot.CP = commandPrefix
 

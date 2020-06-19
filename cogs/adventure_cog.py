@@ -47,7 +47,7 @@ class Adventure(commands.Cog):
         embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
                               description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
         embed.add_field(name='Needed Information',
-                        value='Name:\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:~~[WIP:Currently Unused But Required]')
+                        value='Name:\nStrength:\nDexterity:\nConstitution:\nIntelligence:\nWisdom:\nCharisma:[WIP:Not currently implemented]')
         embed.add_field(name='Next on the list:',
                         value='**Name**\nYour new adventurer is going to need a name. Type it below.')
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -353,8 +353,8 @@ class Adventure(commands.Cog):
 
     @commands.command(aliases=['i'])
     async def inventory(self, ctx, slot = 0):
-        """Command group to manage your inventory
-        If ran with no subcommands, will get your current inventory."""
+        """Command to view your inventory
+        If slot is provided, will show a more detailed view of the item in that slot."""
         adv = ac.Player(ctx.author.id)
         if not adv.loaded:
             embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
@@ -433,8 +433,8 @@ class Adventure(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def quest(self, ctx, stages = None):
-        """Command group to manage quests
-        If ran with no subcommands, will output current quest information."""
+        """Command to view or starts quests
+        If stages is provided, will shortcut the creation process and allow customization in the quantity of stages."""
         rng = ac.Quest()
         if rng.loadActive(ctx.author.id):
             embed = discord.Embed(
@@ -515,6 +515,7 @@ class Adventure(commands.Cog):
     @commands.guild_only()
     @is_available()
     async def shop(self, ctx):
+        """Opens a shop menu"""
         adv = ac.Player(ctx.author.id)
         adv.available = False
         adv.save()
@@ -790,7 +791,7 @@ class Adventure(commands.Cog):
     @commands.guild_only()
     @is_available()
     async def raid(self, ctx):
-        """Host a raid for you and multiple adventurers to partake in."""
+        """Host a raid"""
         timeoutEmbed = discord.Embed(
             title='Timed Out', colour=ac.Colour.errorColour)
         timeoutEmbed.set_author(
@@ -812,7 +813,12 @@ class Adventure(commands.Cog):
         await vMessage.delete()
         num = int(vMessage.content) - 1
         if num > -1:
-            selected_raid = raids[num]
+            try:
+                selected_raid = raids[num]
+            except IndexError:
+                embed.set_footer(text='')
+                await setup_message.edit(embed=embed)
+                return
         else:
             return
         adventurer = ac.Player(ctx.author.id)
