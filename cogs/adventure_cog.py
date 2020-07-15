@@ -34,7 +34,7 @@ def is_available():
 class Adventure(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.xpName = 'Souls'
+        self.bot.xpName = 'Essence'
         self.quest_check.start()
         self.activity_change.start()
 

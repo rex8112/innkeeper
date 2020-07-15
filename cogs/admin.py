@@ -488,9 +488,12 @@ class Admin(commands.Cog):
             await ctx.message.add_reaction('✅')
 
             announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=ac.Colour.infoColour,
-                description='I have arrived to answer a plea for adventure, and a plea for drinks. Both I can offer and both you can have, with a little work that is. You may call me, **The Innkeeper**.\nMy Inn will always be open to everyone, no matter their alignment.')
+                description=('I have arrived to bestow upon you great abilities and the power to grow stronger than you can imagine. '
+                                'If you come to me, I can turn you from a Citizen to an Adventurer!'))
             announceEmbed.add_field(name='How to get started',
-                                    value='To begin your adventure, run the `{}begin` command in {}. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP, commandChannel.mention))
+                                    value='To begin your adventure, run the `{}begin` command in any of the action channels below. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP))
+            announceEmbed.add_field(name='Current Alpha Limitations',
+                                    value='Max Level: `15`\nVery similar and unbalanced equipment.\nNo Raids Yet.')
             await announcementChannel.send(embed=announceEmbed)
 
     @commands.command()
