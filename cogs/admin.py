@@ -144,7 +144,7 @@ class Admin(commands.Cog):
                 if isinstance(old_adv, ac.Player):
                     old_adv.delete()
                 adv = ac.Player(slot, False)
-                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10])
+                adv.new(name, 'Adventurer', 'Human', [10, 10, 10, 10, 10, 10], ctx.guild.id)
                 adv.level = level
                 adv.save()
                 ac.test_players[slot-1] = adv
@@ -473,7 +473,6 @@ class Admin(commands.Cog):
                             reason=reason,
                             topic='All commands for The Innkeeper goes here.')
                     )
-                commandChannel = commandChannels[0]
             # elif str(reaction) == '2️⃣':
             #     embed.title = 'Setup Progress 2/4'
             #     embed.description = 'I am now going to need the appropriate IDs from you.'
