@@ -540,7 +540,7 @@ class Adventure(commands.Cog):
                                   description='Welcome {},\nWhat brings you here today?'.format(adv.name))
             embed.set_author(name=ctx.author.display_name,
                              icon_url=ctx.author.avatar_url)
-            embed.add_field(name='1. Potion of Peritia',
+            embed.add_field(name='1. Potion of Peritia (Level Up)',
                             value='A fine concoction, my own recipe in fact. It will permanently boost the magnitude of your abilities. Some might even call it, a level up, perhaps.')
             embed.add_field(name='2. Purchase Equipment',
                             value='Choose from a variety of my wares, at least, wares I find fitting for you.')
@@ -635,8 +635,9 @@ class Adventure(commands.Cog):
                             await shopMessage.clear_reactions()
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
-                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.infoColour,
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.activeColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
+                    buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.inventory, start=1):
                         buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(
                         ), i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
@@ -649,7 +650,11 @@ class Adventure(commands.Cog):
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
-                            await shopMessage.edit(embed=timeoutEmbed)
+                            buyExit = True
+                            mainExit = True
+                            buy_embed.colour = ac.Colour.infoColour
+                            buy_embed.set_footer(text='')
+                            await shopMessage.edit(embed=buy_embed)
                             await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
@@ -688,8 +693,9 @@ class Adventure(commands.Cog):
                                 await vMessage.delete()
                                 
                 elif str(reaction) == '3️⃣': # Buyback Equipment
-                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.infoColour,
+                    buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.activeColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
+                    buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.buyback, start=1):
                         buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(),
                             i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
@@ -702,7 +708,11 @@ class Adventure(commands.Cog):
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
-                            await shopMessage.edit(embed=timeoutEmbed)
+                            buyExit = True
+                            mainExit = True
+                            buy_embed.colour = ac.Colour.infoColour
+                            buy_embed.set_footer(text='')
+                            await shopMessage.edit(embed=buy_embed)
                             await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
@@ -740,8 +750,9 @@ class Adventure(commands.Cog):
                                 await vMessage.delete()
 
                 elif str(reaction) == '4️⃣':  # Sell Equipment
-                    embed = discord.Embed(title='Selling Equipment', colour=ac.Colour.infoColour,
+                    embed = discord.Embed(title='Selling Equipment', colour=ac.Colour.activeColour,
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. You must use `0` to go cancel.')
+                    embed.set_footer(text='You have 3 minutes to respond.')
                     await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
 
@@ -757,7 +768,11 @@ class Adventure(commands.Cog):
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
                         except asyncio.TimeoutError:
-                            await shopMessage.edit(embed=timeoutEmbed)
+                            sellExit = True
+                            mainExit = True
+                            embed.colour = ac.Colour.infoColour
+                            embed.set_footer(text='')
+                            await shopMessage.edit(embed=embed)
                             await asyncio.sleep(0.26)
                             await shopMessage.clear_reactions()
                         else:
