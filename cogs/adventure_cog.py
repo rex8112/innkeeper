@@ -351,7 +351,7 @@ class Adventure(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['i'])
+    @commands.command(aliases=['i','inv'])
     async def inventory(self, ctx, slot = 0):
         """Command to view your inventory
         If slot is provided, will show a more detailed view of the item in that slot."""
