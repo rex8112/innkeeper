@@ -112,35 +112,36 @@ class Equipment:
         if self.name == 'Empty':
             info = '{}'.format(self.name)
         else:
-            if compare_equipment:
-                mods = {}
-                for mod in compare_equipment.starting_mods.values():
-                    mods[mod.id] = mod
-                for mod in compare_equipment.random_mods.values():
-                    if mods.get(mod.id, False):
-                        mods[mod.id] += mod
-                    else:
-                        mods[mod.id] = mod
             if title:
                 info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
                     self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
             else:
                 info = '{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
                     self.flavor, self.level, self.id, self.price)
+
+            info += '\n__Item Modifiers__\n'
             for mod in self.starting_mods.values():
                 if compare_equipment:
-                    other = mods.get(mod.id, Modifier(mod.id, 0))
+                    other = compare_equipment.starting_mods.get(mod.id, Modifier(mod.id, 0))
                     compare = mod.value - other.value
                     info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
                 else:
                     info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+
+            if len(self.random_mods) > 0:
+                info += '\n__Rarity Modifiers__\n'
             for mod in self.random_mods.values():
                 if compare_equipment:
-                    other = mods.get(mod.id, Modifier(mod.id, 0))
+                    other = compare_equipment.random_mods.get(mod.id, Modifier(mod.id, 0))
                     compare = mod.value - other.value
                     info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
                 else:
                     info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+            
+            if len(self.requirements) > 0:
+                info += '\n__Requirements__\n'
+            for mod in self.requirements.values():
+                info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
         return info
 
     def process_mod_string_min_max(self, mod_string: str):
