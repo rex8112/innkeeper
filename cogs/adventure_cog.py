@@ -593,9 +593,6 @@ class Adventure(commands.Cog):
                     if adv.xp >= xp_to_level:
                         await shopMessage.add_reaction('✅')
                         await asyncio.sleep(0.26)
-
-                    await shopMessage.add_reaction('🔙')
-                    await asyncio.sleep(0.26)
                     await shopMessage.add_reaction('❌')
 
                     try:
@@ -620,19 +617,10 @@ class Adventure(commands.Cog):
                                 embed.set_author(
                                     name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
-                            mainExit = True
                             await shopMessage.edit(embed=embed)
-                            await asyncio.sleep(0.26)
-                            await shopMessage.clear_reactions()
-
-                        elif str(reaction) == '🔙':  # Go back
-                            pass  # Pass to return to the main menu
-
+                            await asyncio.sleep(3)
                         else:  # Cancel
-                            mainExit = True
-                            await shopMessage.edit(embed=goodbyeEmbed)
-                            await asyncio.sleep(0.26)
-                            await shopMessage.clear_reactions()
+                            pass
 
                 elif str(reaction) == '2️⃣':  # Purchase Equipment
                     buy_embed = discord.Embed(title='Buying Equipment', colour=ac.Colour.activeColour,
