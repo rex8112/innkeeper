@@ -666,9 +666,9 @@ class Adventure(commands.Cog):
                             except InterruptedError:
                                 buyExit = True
                             else:
-                                embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
+                                embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name), 
                                                       colour=ac.Colour.infoColour, 
-                                                      description=e.getInfo())
+                                                      description=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
                                 await shopMessage.edit(embed=embed)
                                 await asyncio.sleep(0.26)
                                 await shopMessage.add_reaction('✅')
