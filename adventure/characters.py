@@ -238,7 +238,7 @@ class Character:
             parmor = 100
         elif parmor < 0:
             parmor = 0
-        damage = round(value * ((100 - float(parmor)) / 100), 2)
+        damage = round(value * ((100 - float(parmor)) / 100))
         if not isinstance(damage, (int, float)):
             raise ValueError('Dealt Damage returned NaN. This is not supposed to happen.')
         self.health -= damage
@@ -250,7 +250,7 @@ class Character:
             marmor = 100
         elif marmor < 0:
             marmor = 0
-        damage = round(value * ((100 - float(marmor)) / 100), 2)
+        damage = round(value * ((100 - float(marmor)) / 100))
         if not isinstance(damage, (int, float)):
             raise ValueError('Dealt Damage returned NaN. This is not supposed to happen.')
         self.health -= damage
