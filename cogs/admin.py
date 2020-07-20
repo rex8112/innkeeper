@@ -269,7 +269,7 @@ class Admin(commands.Cog):
                 high_min[mod.id].value,
                 high_max[mod.id].value
             )
-        embed.add_field(name='Starting Mods', value=starting_string)
+        embed.add_field(name='Item Mods', value=starting_string)
 
         random_string = ''
         ran_low_min, ran_low_max = lowest.process_mod_string_min_max(base.random_mod_string)
@@ -282,7 +282,7 @@ class Admin(commands.Cog):
                 ran_high_min[mod.id].value,
                 ran_high_max[mod.id].value
             )
-        embed.add_field(name='Random Mods', value=random_string)
+        embed.add_field(name='Rarity Mods', value=random_string)
 
         if base.requirement_string:
             requirement_string = ''
