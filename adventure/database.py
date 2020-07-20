@@ -52,7 +52,6 @@ class Database:
             cursor.close()
             self.db.commit()
 
-
     def deleteAdventurer(self, id):
         cursor = self.db.cursor()
         cursor.execute("""DELETE FROM adventurers WHERE id = ?""", (id,))
@@ -74,7 +73,6 @@ class Database:
         cursor.close()
         return fetch
 
-
     def saveAdventurer(self, save):
         cursor = self.db.cursor()
         cursor.execute("""UPDATE adventurers SET name = ?, class = ?, level = ?, xp = ?, race = ?, attributes = ?, skills = ?, equipment = ?, inventory = ?, available = ?, health = ? WHERE id = ?""",
@@ -83,14 +81,12 @@ class Database:
         self.db.commit()
         return save[0]
 
-
     def statusAdventurer(self, id, available: bool):
         cursor = self.db.cursor()
         cursor.execute(
             """UPDATE adventurers SET available = ? WHERE id = ?""", (int(available), id))
         cursor.close()
         self.db.commit()
-
 
     def get_base_equipment(self, ID = None, lvl = None, rarity = None, rng = True):
         cursor = self.db2.cursor()
@@ -128,6 +124,15 @@ class Database:
             cursor.close()
             return None
 
+        cursor.close()
+        return fetch
+
+    def get_all_base_equipment(self):
+        cursor = self.db2.cursor()
+        cursor.execute(
+            """SELECT * FROM baseEquipment"""
+        )
+        fetch = cursor.fetchall()
         cursor.close()
         return fetch
 

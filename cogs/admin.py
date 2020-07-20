@@ -298,6 +298,25 @@ class Admin(commands.Cog):
         await ctx.send(embed=embed)
 
     @adminpanel.command()
+    async def list_all_equipment(self, ctx, page=1):
+        offset = (page-1)*10
+        all_data = ac.db.get_all_base_equipment()
+        trimmed_data = all_data[offset:offset+9]
+        embed = discord.Embed(title=f'Base Equipment {offset} - {offset+9}', colour=ac.Colour.infoColour)
+        embed.set_author(name=ctx.author.display_name,
+                         icon_url=ctx.author.avatar_url)
+        for data in trimmed_data:
+            title = f'**{data["indx"]}.** {data["name"]}'
+            desc = (
+                f'Level: `{data["minLevel"]}-{data["maxLevel"]}`\n'
+                f'Slot: `{data["slot"]}`\n'
+                f'Skills: `{data["skills"]}`\n'
+                f'In Quests: `{bool(data["rng"])}`'
+            )
+            embed.add_field(name=title, value=desc, inline=False)
+        await ctx.send(embed=embed)
+
+    @adminpanel.command()
     async def test_hit_chance(self, ctx, wc: float, ac_: float):
         chanceToHit = float(1 + (wc - ac_) /
                 ((wc + ac_) * 0.5))
