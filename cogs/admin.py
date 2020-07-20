@@ -122,7 +122,7 @@ class Admin(commands.Cog):
                 value_message = await self.bot.wait_for('message', timeout=30.0, check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
                 await value_message.delete()
 
-                name = re.sub('[ ]{2,}', ' ', value_message.content.strip())
+                name = re.sub('([^A-Za-z ]+|[ ]{2,})', ' ', value_message.content.strip())
                 length = len(name)
                 if length < 3 or length > 20:
                     raise discord.InvalidArgument('Name must be within 3 and 20 characters')

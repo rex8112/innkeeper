@@ -3,6 +3,7 @@ import logging
 import asyncio
 import random
 import math
+import re
 
 import adventure as ac
 
@@ -63,7 +64,11 @@ class Adventure(commands.Cog):
             logger.warning('Adventure Creator Timed Out')
         else:
             logger.debug('Adventure Creator acquired name!')
-            name = valueMessage.content
+            name = re.sub('([^A-Za-z ]+|[ ]{2,})', ' ', valueMessage.content.strip())
+            length = len(name)
+            if length < 3 or length > 20:
+                raise discord.InvalidArgument('Name must be within 3 and 20 characters')
+
             await valueMessage.delete()
             cont = False
 
@@ -1027,14 +1032,10 @@ class Adventure(commands.Cog):
             name = 'Roadmap'
             information = (
             'Listed by priority.\n'
-            '~~1. Complete Equipment Overhaul~~ **(COMPLETED)**\n'
-            '~~2. Complete Enemy Overhaul~~ **(COMPLETED)**\n'
-            '**3. Storage and Player Trading**\n'
-            '4. Class and Races\n'
-            '5. Status Effects\n'
-            '6. Dungeons\n'
-            '7. Property Ownership\n'
-            '8. Slavery\n'
+            '**1. Storage and Player Trading**\n'
+            '2. Class and Races\n'
+            '3. Status Effects\n'
+            '4. Dungeons\n'
             'More to come.')
         else:
             name = 'Not an option'
