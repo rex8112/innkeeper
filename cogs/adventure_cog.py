@@ -64,10 +64,15 @@ class Adventure(commands.Cog):
             logger.warning('Adventure Creator Timed Out')
         else:
             logger.debug('Adventure Creator acquired name!')
-            name = re.sub('([^A-Za-z ]+|[ ]{2,})', ' ', valueMessage.content.strip())
+            name = re.sub('[ ]{2,}', ' ', valueMessage.content)
+            name = re.sub('[^A-Za-z ]+', '', name)
+            name = name.strip()
             length = len(name)
             if length < 3 or length > 20:
-                raise discord.InvalidArgument('Name must be within 3 and 20 characters')
+                embed = discord.Embed(title='Name must be 3-20 characters long.',
+                                      colour=ac.Colour.errorColour)
+                await controlMessage.edit(embed=embed)
+                return
 
             await valueMessage.delete()
             cont = False
@@ -129,7 +134,7 @@ class Adventure(commands.Cog):
             embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
                                   description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
             embed.add_field(name='Needed Information',
-                            value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\n~~Intelligence: {1[3]}\nWisdom: {1[4]}\nCharisma: {1[5]}~~\n[WIP:Currently Unused But Required]'.format(name, attributes))
+                            value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\nIntelligence: {1[3]}\nWisdom: {1[4]}\n~~Charisma: {1[5]}~~\n[WIP:Currently Unused But Required]'.format(name, attributes))
             embed.add_field(name='Next on the list:',
                             value='**ALL DONE!**\nTake a look at the information, is it all to your liking?')
             embed.set_author(name=ctx.author.display_name,
