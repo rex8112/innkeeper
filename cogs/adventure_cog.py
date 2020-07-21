@@ -186,16 +186,18 @@ class Adventure(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
+            if isinstance(ctx.channel, discord.DMChannel):
+                escape = True
             while adv.get_unspent_points() > 0 and escape == False:
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
                                       colour=ac.Colour.infoColour,
                                       description='What would you like to spend them on?\n'
-                                      + '1. Strength\n'
-                                      + '2. Dexterity\n'
-                                      + '3. Constitution\n'
-                                      + '4. Intelligence\n'
-                                      + '5. Wisdom\n'
-                                      + '6. Charisma')
+                                      + f'1. Strength ({adv.rawStrength})\n'
+                                      + f'2. Dexterity ({adv.rawDexterity})\n'
+                                      + f'3. Constitution ({adv.rawConstitution})\n'
+                                      + f'4. Intelligence ({adv.rawIntelligence})\n'
+                                      + f'5. Wisdom ({adv.rawWisdom})\n'
+                                      + f'6. Charisma ({adv.rawCharisma})')
                 if profile_message:
                     await profile_message.edit(embed=embed)
                 else:
