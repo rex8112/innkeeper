@@ -156,13 +156,22 @@ class Encounter:
                 if skill.targetable == 0:
                     info, result = self.use_skill(active_turn, skill.name, 0) #Target int doesn't matter for self cast
                 elif skill.targetable == 1:
-                    info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(friendly_team)))
+                    info, result = self.use_skill(active_turn, skill.name, self.get_target(friendly_team))
                 else:
-                    info, result = self.use_skill(active_turn, skill.name, random.randint(1, len(enemy_team)))
+                    info, result = self.use_skill(active_turn, skill.name, self.get_target(enemy_team))
                 self.log += '{}\n'.format(info)
                 break
         return self.next_turn()
 
+    def get_target(self, target_group, heal = False):
+        living = []
+        for t in target_group:
+            if t not in self.deadEnemies and t not in self.deadPlayers:
+                living.append(t)
+        target = random.choice(living)
+        target_int = target_group.index(target)
+        return target_int + 1
+        
     async def run_combat(self, bot, encounter_message: discord.Message):
         escape = False
         combat_log = ''
