@@ -1,3 +1,5 @@
+import math
+
 from .database import db
 
 class Modifier:
@@ -149,7 +151,7 @@ class Modifier:
     def __init__(self, ID: str, value):
         self.id = ID
         if isinstance(value, (int, float)):
-            self.value = value
+            self.value = math.floor(value)
         else:
             raise ValueError('Incorrect Value Type Passed')
         self.load()
