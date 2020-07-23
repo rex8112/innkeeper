@@ -118,13 +118,13 @@ class Encounter:
 
     def next_turn(self):
         check = self.turn_order[self.current_turn]
-        if check.health <= 0:
-            if check in self.players:
-                self.deadPlayers.append(check)
-            elif check in self.enemies:
-                self.deadEnemies.append(check)
-        else:
-            check.increment_cooldowns()
+        check.increment_cooldowns()
+        for p in self.players:
+            if p.health <= 0 and p not in self.deadPlayers:
+                self.deadPlayers.append(p)
+        for e in self.enemies:
+            if e.health <= 0 and e not in self.deadEnemies:
+                self.deadEnemies.append(e)
 
         if len(self.players) <= len(self.deadPlayers):
             self.winner = 2
@@ -138,13 +138,6 @@ class Encounter:
         else:
             self.current_turn = 0
         check = self.turn_order[self.current_turn]
-
-        if check.health <= 0:
-            if check in self.players:
-                self.deadPlayers.append(check)
-            elif check in self.enemies:
-                self.deadEnemies.append(check)
-
         if check in self.deadEnemies or check in self.deadPlayers:
             return self.next_turn()
         return False
