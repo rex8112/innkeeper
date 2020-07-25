@@ -83,7 +83,7 @@ class Equipment:
     @staticmethod
     def calculate_drop_rarity():
         result = 0
-        if random.random() <= 0.05:
+        if random.random() <= 0.01:
             result = 4
         elif random.random() <= 0.10:
             result = 3
