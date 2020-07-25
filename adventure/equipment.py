@@ -113,11 +113,11 @@ class Equipment:
             info = '{}'.format(self.name)
         else:
             if title:
-                info = '***{}*\n{}**\n{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
-                    self.getRarity(), self.name, self.flavor, self.level, self.id, self.price)
+                info = '***{}*\n{}**\n{}\n\nLevel: **{}**\nPrice: **{}** (**{}**)\n'.format(
+                    self.getRarity(), self.name, self.flavor, self.level, self.price, self.sell_price)
             else:
-                info = '{}\n\nLv: **{}**\nID: **{}**\nPrice: **{}**\n'.format(
-                    self.flavor, self.level, self.id, self.price)
+                info = '{}\n\nLevel: **{}**\nPrice (Sell): **{}** (**{}**)\n'.format(
+                    self.flavor, self.level, self.price, self.sell_price)
 
             info += '\n__Item Modifiers__\n'
             for mod in self.starting_mods.values():
@@ -142,6 +142,7 @@ class Equipment:
                 info += '\n__Requirements__\n'
             for mod in self.requirements.values():
                 info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
+            info += f'Identification: **{self.id}**'
         return info
 
     def process_mod_string_min_max(self, mod_string: str):
@@ -210,6 +211,7 @@ class Equipment:
         price_per_level = 10 * math.ceil(self.level / 10)
         rarity_coefficient = 1 + (self.rarity * 0.5)
         self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * (len(self.starting_mods) + len(self.random_mods)))) * rarity_coefficient)
+        self.sell_price = int(self.price * 0.5)
 
     def generate_new(self, lvl: int, rarity: int, index = 0):
         if index == 0:

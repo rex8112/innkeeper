@@ -90,7 +90,7 @@ class Shop():
         if self.adv.remInv(index):
             save = equipment
             self.buyback.append(save)
-            self.adv.addXP(equipment.price)
+            self.adv.addXP(equipment.sell_price)
             save.delete()
             return True
         else:
