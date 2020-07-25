@@ -152,6 +152,8 @@ class Character:
         self.calculate()
 
     def addInv(self, ID):
+        """Adds item to inventory
+        Returns success in bool"""
         try:
             if len(self.inventory) < self.inventoryCapacity:
                 self.inventory.append(ID)
@@ -163,12 +165,15 @@ class Character:
             self.calculate()
             return self.addInv(ID)
 
-    def remInv(self, e: int):
+    def remInv(self, index: int):
+        """Remove indexed item from inventory.
+        Returns item removed or None"""
         try:
-            self.inventory.pop(e)
-            return True
+            item = self.inventory[index]
+            self.inventory.pop(index)
+            return item
         except ValueError:
-            return False
+            return None
 
     def addXP(self, count: int):
         self.xp += count
@@ -507,7 +512,6 @@ class Player(Character):
             self.level = raw['level']
             self.xp = raw['xp']
             self.race = raw['race']
-
             rawAttributes = raw['attributes'].split(',')  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
             self.rawDexterity = int(rawAttributes[1])
@@ -530,6 +534,7 @@ class Player(Character):
             self.boots = Equipment(equipment[5])
             self.trinket = Equipment(equipment[6])
 
+            
             self.inventory = raw['inventory'].split('/')
             try:
                 self.inventory.remove('')
