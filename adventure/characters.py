@@ -751,7 +751,7 @@ class RaidBoss(Character):
             self.level = data[2]
             self.flavor = data[3]
             
-            raw_attributes = data[4].split(',')  # Get a list of the attributes
+            raw_attributes = data[4].split('|')  # Get a list of the attributes
             self.rawStrength = int(raw_attributes[0])
             self.rawDexterity = int(raw_attributes[1])
             self.rawConstitution = int(raw_attributes[2])

@@ -27,6 +27,7 @@ class Database:
         cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command TEXT NOT NULL)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS storage(indx INTEGER PRIMARY KEY UNIQUE, adv INTEGER NOT NULL UNIQUE, slots INTEGER DEFAULT 20, inventory TEXT""")
 
         cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEnemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, elite TEXT, attributes TEXT NOT NULL, modifiers TEXT NOT NULL, skills TEXT NOT NULL DEFAULT attack, rng INTEGER NOT NULL DEFAULT 1)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, maxRarity INTEGER NOT NULL DEFAULT 4, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
@@ -456,5 +457,44 @@ class Database:
         fetch = cursor.fetchone()
         cursor.close()
         return fetch
+
+    def get_storage(self, ID):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """SELECT * FROM storage WHERE adv = ?""",
+            (ID)
+        )
+        fetch = cursor.fetchone()
+        cursor.close()
+        return fetch
+
+    def add_storage(self, ID):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """INSERT INTO storage(adv) VALUES(?)""",
+            (ID,)
+        )
+        lastrowid = cursor.lastrowid
+        cursor.close()
+        self.db.commit()
+        return lastrowid
+
+    def update_storage(self, ID, slot, inventory):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """UPDATE storage SET slots = ?, inventory = ? where adv = ?""",
+            (slot, inventory, ID)
+        )
+        cursor.close()
+        self.db.commit()
+    
+    def delete_storage(self, ID):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """DELETE FROM storage WHERE adv = ?""",
+            (ID)
+        )
+        cursor.close()
+        self.db.commit()
 
 db = Database()
