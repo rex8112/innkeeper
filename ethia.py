@@ -7,6 +7,7 @@ from tools.configLoader import settings
 
 commandPrefix = '-'
 startup_extensions = ['cogs.adventure_cog',
+                        'cogs.inventory',
                         'cogs.admin',
                         'cogs.events']
 logging.basicConfig(level=logging.INFO)
@@ -42,12 +43,10 @@ async def on_ready():
         print('---------')
     logger.info('----- Bot Ready -----')
 
-
 @bot.command()
 @commands.guild_only()
 async def ping(ctx):
     await ctx.send('Pong!')
-
 
 @bot.command(hidden=True)
 @commands.is_owner()
