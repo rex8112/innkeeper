@@ -261,7 +261,7 @@ class Adventure(commands.Cog):
                 c = ac.Colour.errorColour
                 t = '{} (Busy)'.format(adv.name)
             embed = discord.Embed(title=t, colour=c,
-                                    description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** {}'.format(adv, self.bot.xpName))
+                                    description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** {1}'.format(adv, self.bot.xpName))
             embed.set_author(name=ctx.author.display_name,
                                 icon_url=ctx.author.avatar_url)
             embed.add_field(
