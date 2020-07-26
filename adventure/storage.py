@@ -37,9 +37,10 @@ class Storage():
         if raw_data:
             self.inventory = []
             self.slots = raw_data['slots']
-            raw_inventory = raw_data['inventory'].split('/')
-            for i in raw_inventory:
-                self.inventory.append(Equipment(i))
+            if raw_data['inventory']:
+                raw_inventory = raw_data['inventory'].split('/')
+                for i in raw_inventory:
+                    self.inventory.append(Equipment(i))
             self.loaded = True
             logger.debug(f'{str(self.owner)}\'s Storage Loaded')
             return True
@@ -70,7 +71,7 @@ class Storage():
             self.inventory.append(item)
             return True
     
-    def remove_item(self, index, force = False):
+    def remove_item(self, index):
         item = self.inventory[index]
         self.inventory.pop(index)
         return item
