@@ -568,7 +568,7 @@ class Player(Character):
                                               self.trinket.save()])
         temp_inventory = []
         for e in self.inventory:
-            temp_inventory.append(e.save())
+            temp_inventory.append(e.save(database=True))
         inventory = '/'.join(str(e) for e in temp_inventory)
 
         save = [self.id, self.name, self.cls, self.level, int(

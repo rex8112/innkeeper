@@ -178,7 +178,7 @@ class Quest:
             self.adv.rest()
             self.adv.addXP(self.xp)
             for l in self.loot:
-                self.adv.addInv(l.save(database=True))
+                self.adv.addInv(l)
         else:
             self.adv.available = True  # TEMPORARY UNTIL RECOVERY IS CODED
             self.adv.rest()
