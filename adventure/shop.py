@@ -64,8 +64,7 @@ class Shop():
         index = int(index)
         equipment = self.inventory[index]
         if len(self.adv.inventory) < self.adv.inventoryCapacity:
-            save = equipment.save(database=True)
-            self.adv.addInv(save)
+            self.adv.addInv(equipment)
             self.adv.remXP(equipment.price)
             self.inventory.pop(index)
             return True
@@ -76,7 +75,7 @@ class Shop():
         index = int(index)
         equipment = self.buyback[index]
         if len(self.adv.inventory) < self.adv.inventoryCapacity:
-            save = equipment.save(database=True)
+            save = equipment
             self.adv.addInv(save)
             self.adv.remXP(equipment.price)
             self.buyback.pop(index)
@@ -86,7 +85,7 @@ class Shop():
 
     def sell(self, index: int):
         index = int(index)
-        equipment = Equipment(self.adv.inventory[index])
+        equipment = self.adv.inventory[index]
         if self.adv.remInv(index):
             save = equipment
             self.buyback.append(save)

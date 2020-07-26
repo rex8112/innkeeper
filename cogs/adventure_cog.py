@@ -446,10 +446,15 @@ class Adventure(commands.Cog):
                     await asyncio.sleep(0.26)
                     await quest_message.clear_reactions()
                     return
-            if int(stages) > 10:
-                stages = 10
-            elif int(stages) < 2:
-                stages = 2
+            try:
+                if int(stages) > 10:
+                    stages = 10
+                elif int(stages) < 2:
+                    stages = 2
+            except ValueError:
+                embed = discord.Embed(title=f'{stages} is not a number.', colour=ac.Colour.errorColour)
+                await ctx.send(embed=embed)
+                return
             rng.new(ctx.author.id, int(stages))
 
             embed = discord.Embed(title='{} STAGE QUEST GENERATED'.format(stages),
@@ -492,7 +497,7 @@ class Adventure(commands.Cog):
         shopMessage = await ctx.send(embed=embed)
         await asyncio.sleep(0.5)
         while mainExit == False:
-            embed = discord.Embed(title='The Innkeeper\'s Shop', colour=ac.Colour.infoColour,
+            embed = discord.Embed(title='The Innkeeper\'s Shop', colour=ac.Colour.activeColour,
                                   description='Welcome {},\nWhat brings you here today?'.format(adv.name))
             embed.set_author(name=ctx.author.display_name,
                              icon_url=ctx.author.avatar_url)
@@ -706,7 +711,7 @@ class Adventure(commands.Cog):
                         for number, e in enumerate(adv.inventory, start=1):
                             if not e.requirements.get('unsellable', False):
                                 embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
-                                ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))
+                                ), e.name), value='Selling Cost: **{}** {}'.format(e.sell_price, self.bot.xpName))
                         await shopMessage.edit(embed=embed)
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
