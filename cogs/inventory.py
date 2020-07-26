@@ -87,18 +87,23 @@ class Inventory(commands.Cog):
                 await main_message.edit(embed=main_embed)
                 delete = True
             elif content[0] == 'store':
-                storage = ac.Storage(adv)
-                slot = int(content[1])
-                if len(storage.inventory) < storage.slots:
-                    item = adv.remInv(slot-1)
-                    storage.add_item(item)
-                    embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item stored.')
-                    await main_message.edit(embed=embed)
-                    adv.save()
-                    storage.save()
+                if adv.available:
+                    storage = ac.Storage(adv)
+                    slot = int(content[1])
+                    if len(storage.inventory) < storage.slots:
+                        item = adv.remInv(slot-1)
+                        storage.add_item(item)
+                        embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item stored.')
+                        await main_message.edit(embed=embed)
+                        adv.save()
+                        storage.save()
+                    else:
+                        main_embed.colour = ac.Colour.infoColour
+                        main_embed.set_footer(text='Storage Full')
+                        await main_message.edit(embed=main_embed)
                 else:
                     main_embed.colour = ac.Colour.infoColour
-                    main_embed.set_footer(text='Storage Full')
+                    main_embed.set_footer(text='Adventurer Busy')
                     await main_message.edit(embed=main_embed)
                 delete = True
             else:
@@ -191,17 +196,22 @@ class Inventory(commands.Cog):
                 await main_message.edit(embed=main_embed)
                 delete = True
             elif content[0] == 'retrieve':
-                slot = int(content[1])
-                if len(adv.inventory) < adv.inventoryCapacity:
-                    item = storage.remove_item(slot-1)
-                    adv.addInv(item)
-                    embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item retrieved.')
-                    await main_message.edit(embed=embed)
-                    adv.save()
-                    storage.save()
+                if adv.available:
+                    slot = int(content[1])
+                    if len(adv.inventory) < adv.inventoryCapacity:
+                        item = storage.remove_item(slot-1)
+                        adv.addInv(item)
+                        embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item retrieved.')
+                        await main_message.edit(embed=embed)
+                        adv.save()
+                        storage.save()
+                    else:
+                        main_embed.colour = ac.Colour.infoColour
+                        main_embed.set_footer(text='Inventory Full')
+                        await main_message.edit(embed=main_embed)
                 else:
                     main_embed.colour = ac.Colour.infoColour
-                    main_embed.set_footer(text='Inventory Full')
+                    main_embed.set_footer(text='Adventurer Busy')
                     await main_message.edit(embed=main_embed)
                 delete = True
             else:
