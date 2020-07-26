@@ -277,8 +277,7 @@ class Adventure(commands.Cog):
                 name='Equipment', value='Main Hand: **{0[0].name}**\nOff Hand: **{0[1].name}**\nHelmet: **{0[2].name}**\nArmor: **{0[3].name}**\nGloves: **{0[4].name}**\nBoots: **{0[5].name}**\nTrinket: **{0[6].name}**'.format(equipment))
 
             invStr = ''
-            for i in adv.inventory:
-                tmp = ac.Equipment(i)
+            for tmp in adv.inventory:
                 invStr += '**{}** {}, Level **{}**\n'.format(
                     tmp.getRarity(), tmp.name, tmp.level)
             if invStr == '':
@@ -704,8 +703,7 @@ class Adventure(commands.Cog):
                     sellExit = False
                     while sellExit == False:
                         embed.clear_fields()
-                        for number, i in enumerate(adv.inventory, start=1):
-                            e = ac.Equipment(i)
+                        for number, e in enumerate(adv.inventory, start=1):
                             if not e.requirements.get('unsellable', False):
                                 embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
                                 ), e.name), value='Selling Cost: **{}** {}'.format(e.price, self.bot.xpName))

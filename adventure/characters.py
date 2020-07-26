@@ -151,19 +151,19 @@ class Character:
             self.inventory.append(uneq.save())
         self.calculate()
 
-    def addInv(self, ID):
+    def addInv(self, item):
         """Adds item to inventory
         Returns success in bool"""
         try:
             if len(self.inventory) < self.inventoryCapacity:
-                self.inventory.append(ID)
-                logger.debug('Adding {} to Inventory'.format(ID))
+                self.inventory.append(item)
+                logger.debug('Adding {} to Inventory'.format(item))
                 return True
             else:
                 return False
         except AttributeError:
             self.calculate()
-            return self.addInv(ID)
+            return self.addInv(item)
 
     def remInv(self, index: int):
         """Remove indexed item from inventory.
@@ -534,12 +534,14 @@ class Player(Character):
             self.boots = Equipment(equipment[5])
             self.trinket = Equipment(equipment[6])
 
-            
-            self.inventory = raw['inventory'].split('/')
+            self.inventory = []
+            temp_inventory = raw['inventory'].split('/')
             try:
-                self.inventory.remove('')
+                temp_inventory.remove('')
             except:
                 pass
+            for e in temp_inventory:
+                self.inventory.append(Equipment(e))
             self.available = bool(raw['available'])
             self.health = int(raw['health'])
 
@@ -564,7 +566,10 @@ class Player(Character):
                                               self.helmet.save(), self.armor.save(),
                                               self.gloves.save(), self.boots.save(),
                                               self.trinket.save()])
-        inventory = '/'.join(str(e) for e in self.inventory)
+        temp_inventory = []
+        for e in self.inventory:
+            temp_inventory.append(e.save())
+        inventory = '/'.join(str(e) for e in temp_inventory)
 
         save = [self.id, self.name, self.cls, self.level, int(
             self.xp), self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
@@ -579,8 +584,7 @@ class Player(Character):
                   self.trinket]:
             e.delete()
 
-        for raw_e in self.inventory:
-            e = Equipment(raw_e)
+        for e in self.inventory:
             e.delete()
 
         db.deleteAdventurer(self.id)
