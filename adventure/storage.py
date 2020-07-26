@@ -19,9 +19,11 @@ logger.addHandler(handler2)
 
 
 class Storage():
-    def __init__(self, adv_id):
+    def __init__(self, adv):
+        if not isinstance(adv, Player):
+            raise ValueError('Adventurer must be of Player class')
         self.loaded = False
-        self.owner = Player(adv_id)
+        self.owner = adv
         self.slots = 20
         self.inventory = []
         if not self.load():
