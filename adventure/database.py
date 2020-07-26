@@ -462,7 +462,7 @@ class Database:
         cursor = self.db.cursor()
         cursor.execute(
             """SELECT * FROM storage WHERE adv = ?""",
-            (ID)
+            (ID,)
         )
         fetch = cursor.fetchone()
         cursor.close()
