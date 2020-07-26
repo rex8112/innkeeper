@@ -62,8 +62,8 @@ class Attack(Skill):
             self.log = ''
             dmg = self.get_damage(float(user.mods.get('dmg', 0)))
             critChance = float(user.mods.get('critChance'))
-            target_ac = target.mods.get('ac', 0)
-            user_wc = user.mods.get('wc', 0)
+            target_ac = float(target.mods.get('ac', 0))
+            user_wc = float(user.mods.get('wc', 0))
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
 
@@ -104,8 +104,8 @@ class BackStab(Skill):
         if self.cooldown <= 0:
             self.log = ''
             dmg = self.get_damage(float(user.mods.get('dmg', 0)))
-            target_ac = target.mods.get('ac', 0)
-            user_wc = user.mods.get('wc', 0)
+            target_ac = float(target.mods.get('ac', 0))
+            user_wc = float(user.mods.get('wc', 0))
             target_ac *= 0.9
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
@@ -145,8 +145,8 @@ class TripleStrike(Skill):
             raw_dmg = float(user.mods.get('dmg', 0)) * 0.8
             pen = user.mods.get('penetration', 0)
             critChance = float(user.mods.get('critChance', 0))
-            target_ac = target.mods.get('ac', 0)
-            user_wc = user.mods.get('wc', 0)
+            target_ac = float(target.mods.get('ac', 0))
+            user_wc = float(user.mods.get('wc', 0))
             user_wc *= 0.8
 
             for _ in range(3):
@@ -192,8 +192,8 @@ class Cleave(Skill):
             cleave1 = None
             cleave2 = None
             critChance = float(user.mods.get('critChance'))
-            target_ac = target.mods.get('ac', 0)
-            user_wc = user.mods.get('wc', 0)
+            target_ac = float(target.mods.get('ac', 0))
+            user_wc = float(user.mods.get('wc', 0))
             chanceToHit = float(1 + (user_wc - target_ac) /
                 ((user_wc + target_ac) * 0.5))
 
