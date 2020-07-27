@@ -117,7 +117,7 @@ class Character:
                 self.trinket = eq
 
             if not uneq.requirements.get('empty', False):
-                self.inventory.append(uneq.save())
+                self.inventory.append(uneq)
             self.calculate()
             return True
         except IndexError:
@@ -148,7 +148,7 @@ class Character:
             self.trinket = eq
 
         if not uneq.mods.get('empty', False):
-            self.inventory.append(uneq.save())
+            self.inventory.append(uneq)
         self.calculate()
 
     def addInv(self, item):
