@@ -76,7 +76,7 @@ class Character:
 
     def equip(self, e: int):
         try:
-            eq = Equipment(self.inventory[e])
+            eq = self.inventory[e]
 
             if self.level < eq.level:
                 raise InvalidLevel('{} is too low level to equip level {} {}'.format(self.name, eq.level, eq.name))
