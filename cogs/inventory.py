@@ -61,7 +61,7 @@ class Inventory(commands.Cog):
         content = value_message.content.split(' ')
         delete = False
         try:
-            if content[0] == 'examine':
+            if content[0].lower() == 'examine':
                 slot = int(content[1])
                 examined_item = adv.inventory[slot - 1]
                 equipped_item = adv.get_equipment_from_slot(examined_item.slot)
@@ -73,7 +73,7 @@ class Inventory(commands.Cog):
                 main_embed.add_field(name=f'Equipped {equipped_item.slot}', value=equipped_item.getInfo(compare_equipment=examined_item))
                 await main_message.edit(embed=main_embed)
                 delete = True
-            elif content[0] == 'compare':
+            elif content[0].lower() == 'compare':
                 slot_1 = int(content[1])
                 slot_2 = int(content[2])
                 compare_1 = adv.inventory[slot_1 - 1]
@@ -86,7 +86,7 @@ class Inventory(commands.Cog):
                 main_embed.add_field(name=f'Slot {slot_2}', value=compare_2.getInfo(compare_equipment=compare_1))
                 await main_message.edit(embed=main_embed)
                 delete = True
-            elif content[0] == 'store':
+            elif content[0].lower() == 'store':
                 if adv.available:
                     storage = ac.Storage(adv)
                     slot = int(content[1])
@@ -170,7 +170,7 @@ class Inventory(commands.Cog):
         content = value_message.content.split(' ')
         delete = False
         try:
-            if content[0] == 'examine':
+            if content[0].lower() == 'examine':
                 slot = int(content[1])
                 examined_item = storage.inventory[slot - 1]
                 equipped_item = adv.get_equipment_from_slot(examined_item.slot)
@@ -182,7 +182,7 @@ class Inventory(commands.Cog):
                 main_embed.add_field(name=f'Equipped {equipped_item.slot}', value=equipped_item.getInfo(compare_equipment=examined_item))
                 await main_message.edit(embed=main_embed)
                 delete = True
-            elif content[0] == 'compare':
+            elif content[0].lower() == 'compare':
                 slot_1 = int(content[1])
                 slot_2 = int(content[2])
                 compare_1 = storage.inventory[slot_1 - 1]
@@ -195,7 +195,7 @@ class Inventory(commands.Cog):
                 main_embed.add_field(name=f'Slot {slot_2}', value=compare_2.getInfo(compare_equipment=compare_1))
                 await main_message.edit(embed=main_embed)
                 delete = True
-            elif content[0] == 'retrieve':
+            elif content[0].lower() == 'retrieve':
                 if adv.available:
                     slot = int(content[1])
                     if len(adv.inventory) < adv.inventoryCapacity:
