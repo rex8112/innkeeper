@@ -297,6 +297,7 @@ class Character:
         self.wisdom = self.rawWisdom
         self.charisma = self.rawCharisma
         self.maxHealth = 0
+        self.skills = []
         self.mods['wc'] = Modifier('wc', 3)
         self.mods['ac'] = Modifier('ac', 4)
         self.mods['dmg'] = Modifier('dmg', 0)
@@ -324,6 +325,8 @@ class Character:
                     self.mods.get(key).value += mod.value
                 else:
                     self.mods[key] = mod
+            for skill in equip.skills:
+                self.skills.append(skill())
         self.maxHealth += int(self.mods.get('health', 0))
 
         self.strength += int(self.mods.get('strength', 0))
@@ -406,7 +409,6 @@ class Character:
         # self.discount = 0
 
         # Fill in Skills
-        self.skills = []
         for skill in self.raw_skills:
             s = Skill.get_skill(skill)
             if s:

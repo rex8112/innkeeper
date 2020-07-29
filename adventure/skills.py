@@ -28,7 +28,9 @@ class Skill():
     def get_skill(name: str):
         skill_list = {
             Attack.name: Attack,
-            BackStab.name: BackStab
+            BackStab.name: BackStab,
+            Cleave.name: Cleave,
+            TripleStrike.name: TripleStrike
         }
         if name == 'all':
             return skill_list.copy()
@@ -180,7 +182,7 @@ class Cleave(Skill):
     `30% Cleave`"""
     name = 'cleave'
     targetable = 2
-    max_cooldown = 0
+    max_cooldown = 3
 
     def use(self, user, target, targetGroup: list):
         if self.cooldown <= 0:
