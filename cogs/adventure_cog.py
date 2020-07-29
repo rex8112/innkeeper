@@ -905,7 +905,7 @@ class Adventure(commands.Cog):
                             sorted_rolls = sorted(loot_rolls, key=loot_rolls.__getitem__, reverse=True)
                             try:
                                 loot_winner = next(x for x in raid.players if x.id == sorted_rolls[0])
-                                if not loot_winner.addInv(loot.save(database=True)):
+                                if not loot_winner.addInv(loot):
                                     loot.delete()
                             except IndexError:
                                 pass
