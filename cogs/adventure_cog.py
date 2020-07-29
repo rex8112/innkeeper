@@ -186,7 +186,7 @@ class Adventure(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-            if isinstance(ctx.channel, discord.DMChannel):
+            if isinstance(ctx.channel, discord.DMChannel) and not adv.available:
                 escape = True
             while adv.get_unspent_points() > 0 and escape == False:
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
