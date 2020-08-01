@@ -25,3 +25,7 @@ class InvalidAdventurer(Error):
 class InvalidModString(Error):
     """Raised when an invalid modstring is passed"""
     pass
+
+class NotFound(Error):
+    """Raised when target not found in database"""
+    pass

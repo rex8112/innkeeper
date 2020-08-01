@@ -28,6 +28,7 @@ class Database:
         cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS storage(indx INTEGER PRIMARY KEY UNIQUE, adv INTEGER NOT NULL UNIQUE, slots INTEGER DEFAULT 20, inventory TEXT)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS trade(indx INTEGER PRIMARY KEY UNIQUE, adv1 INTEGER NOT NULL, adv2 INTEGER NOT NULL, money1 INTEGER, money2 INTEGER, inventory1 TEXT, inventory2 TEXT, confirm1 INTEGER NOT NULL DEFAULT 0, confirm2 INTEGER NOT NULL DEFAULT 0, waitingOn INTEGER NOT NULL DEFAULT 1, active INTEGER NOT NULL DEFAULT 1)""")
 
         cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEnemies( indx INTEGER PRIMARY KEY, name TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, elite TEXT, attributes TEXT NOT NULL, modifiers TEXT NOT NULL, skills TEXT NOT NULL DEFAULT attack, rng INTEGER NOT NULL DEFAULT 1)""")
         cursor2.execute("""CREATE TABLE IF NOT EXISTS baseEquipment(indx INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, flavor TEXT NOT NULL, slot TEXT NOT NULL, minLevel INTEGER NOT NULL DEFAULT 1, maxLevel INTEGER NOT NULL DEFAULT 1000, startingRarity INTEGER NOT NULL DEFAULT 0, maxRarity INTEGER NOT NULL DEFAULT 4, startingModString TEXT NOT NULL, randomModString TEXT NOT NULL, requirementString TEXT, skills TEXT, rng INTEGER NOT NULL)""")
@@ -496,5 +497,48 @@ class Database:
         )
         cursor.close()
         self.db.commit()
+
+    def add_trade(self, adv1: int, adv2: int):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """INSERT INTO trade(adv1, adv2) VALUES(?, ?)""",
+            (adv1, adv2)
+        )
+        lastrowid = cursor.lastrowid
+        cursor.close()
+        self.db.commit()
+        return lastrowid
+
+    def update_trade(self, money1: int, money2: int, inventory1: str, inventory2: str, confirm1: int, confirm2: int, waiting_on: int, active: int, indx: int):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """UPDATE trade SET money1 = ?, money2 = ?, inventory1 = ?, inventory2 = ?, confirm1 = ?, confirm2 = ?, waitingOn = ?, active = ? where indx = ?""",
+            (money1, money2, inventory1, inventory2, confirm1, confirm2, waiting_on, active, indx)
+        )
+        cursor.close()
+        self.db.commit()
+
+    def get_trade(self, adv: int, active = True, indx = 0):
+        cursor = self.db.cursor()
+        if indx:
+            cursor.execute(
+                """SELECT * FROM trade WHERE indx = ?""",
+                (indx,)
+            )
+            fetch = cursor.fetchone()
+        elif active:
+            cursor.execute(
+                """SELECT * FROM trade WHERE adv1 = ? OR adv2 = ? AND active = 1""",
+                (adv, adv)
+            )
+            fetch = cursor.fetchall()
+        else:
+            cursor.execute(
+                """SELECT * FROM trade WHERE adv1 = ? OR adv2 = ?""",
+                (adv, adv)
+            )
+            fetch = cursor.fetchall()
+        cursor.close()
+        return fetch
 
 db = Database()

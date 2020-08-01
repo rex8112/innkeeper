@@ -19,6 +19,7 @@ from .raid import Raid
 from .modifiers import Modifier, EliteModifier
 from .shop import Shop
 from .storage import Storage
+from .trade import Trade
 from .skills import Skill
 from .database import db
 from .data import TestData
