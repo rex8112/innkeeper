@@ -592,6 +592,14 @@ class Player(Character):
         db.deleteAdventurer(self.id)
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
+    def get_trades(self, active=True):
+        """Get all trades -> Returns list of trade ids"""
+        data = db.get_trade(self.id, active=active)
+        id_list = []
+        for d in data:
+            id_list.append(d['indx'])
+        return id_list
+
 
 class Enemy(Character):
     def __init__(self, raw_data = ''):

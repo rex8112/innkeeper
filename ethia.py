@@ -8,6 +8,7 @@ from tools.configLoader import settings
 commandPrefix = '-'
 startup_extensions = ['cogs.adventure_cog',
                         'cogs.inventory',
+                        'cogs.trade',
                         'cogs.admin',
                         'cogs.events']
 logging.basicConfig(level=logging.INFO)
