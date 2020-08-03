@@ -6,6 +6,7 @@ from .modifiers import Modifier
 from .skills import Skill
 from .database import db
 from .exceptions import InvalidBaseEquipment, InvalidModString
+from .formatting import Formatting
 
 logger = logging.getLogger('characters')
 logger.setLevel(logging.INFO)
@@ -144,6 +145,16 @@ class Equipment:
                 info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
             info += f'Identification: **{self.id}**'
         return info
+
+    def get_name(self, rarity=True, level=True, discord=True):
+        name = self.name
+        if level and discord:
+            name = f'**Lv. {self.level}** {name}'
+        elif level:
+            name = f'Lv. {self.level} {name}'
+        if rarity:
+            name = f'{Formatting.get_rarity_emoji(self.rarity)} {name}'
+        return name
 
     def process_mod_string_min_max(self, mod_string: str):
         min_mods = {}
