@@ -153,7 +153,7 @@ class TripleStrike(Skill):
 
             for _ in range(3):
                 dmg = self.get_damage(raw_dmg)
-                chanceToHit = float(1 + (user_wc - target_ac)
+                chanceToHit = float(1 + (user_wc - target_ac) /
                     ((user_wc + target_ac) * 0.5))
                 if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                     # If random number is lower than the chance to hit, you hit
