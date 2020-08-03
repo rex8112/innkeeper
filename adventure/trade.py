@@ -27,8 +27,8 @@ class Trade:
         if not data:
             raise NotFound('Trade not found')
         self.index = data['indx']
-        self.player_1 = Player(data['player1'])
-        self.player_2 = Player(data['player2'])
+        self.player_1 = Player(data['adv1'])
+        self.player_2 = Player(data['adv2'])
         self.money_1 = data['money1']
         self.money_2 = data['money2']
         self.confirm_1 = bool(data['confirm1'])

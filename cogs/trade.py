@@ -28,10 +28,13 @@ class Trade(commands.Cog):
             raise ac.InvalidAdventurer('Could not load adventurer')
         trades = []
         message = None
+        response = None
         stage = 'menu'
         arguments = [None]
         while stage != 'cancel':
             if stage == 'menu': # Display the top menu
+                if response:
+                    await response.delete()
                 menu_embed = discord.Embed(
                     title='Trades',
                     colour=ac.Colour.activeColour,
@@ -54,6 +57,8 @@ class Trade(commands.Cog):
                 else:
                     await message.edit(embed=menu_embed)
             elif stage == 'view': # View a trade
+                if response:
+                    await response.delete()
                 try:
                     trade = trades[int(arguments[0]) - 1]
                 except IndexError:
