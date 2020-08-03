@@ -49,12 +49,18 @@ class Trade(commands.Cog):
                         value = f'Waiting on: {trade.waiting_on.name}'
                         menu_embed.add_field(name=name, value=value)
                 menu_embed.set_footer(text='Follow up: new/view <index>')
-                if message:
+                if not message:
                     message = await ctx.send(embed=menu_embed)
                 else:
                     await message.edit(embed=menu_embed)
             elif stage == 'view': # View a trade
-                trade = trades[int(arguments[0])]
+                try:
+                    trade = trades[int(arguments[0]) - 1]
+                except IndexError:
+                    menu_embed.colour = ac.Colour.errorColour
+                    menu_embed.set_footer(text='Error: Trade does not exist')
+                    await message.edit(embed=menu_embed)
+                    return
                 menu_embed = discord.Embed(
                     title=f'{trade.player_1.name} -> {trade.player_2.name}',
                     colour=ac.Colour.activeColour,
