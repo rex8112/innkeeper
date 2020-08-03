@@ -2,7 +2,7 @@ from .characters import Player
 from .equipment import Equipment
 from .storage import Storage
 from .database import db
-from .exceptions import NotFound
+from .exceptions import NotFound, InvalidAdventurer
 
 
 class Trade:
@@ -50,7 +50,6 @@ class Trade:
             item = Equipment(raw_item)
             self.inventory_2.append(item)
 
-
     def save(self):
         inventory_1 = '/'.join(self.inventory_1)
         inventory_2 = '/'.join(self.inventory_2)
@@ -69,3 +68,27 @@ class Trade:
             int(self.active),
             self.index
         )
+
+    def add_item(self, adv: Player, item):
+        if adv == self.player_1:
+            if len(self.inventory_1) < 10:
+                self.inventory_1.append(item)
+                return True
+            else:
+                return False
+        elif adv == self.player_2:
+            if len(self.inventory_2) < 10:
+                self.inventory_2.append(item)
+                return True
+            else:
+                return False
+        else:
+            raise InvalidAdventurer('I have no idea who you are.')
+
+    def del_item(self, adv: Player, index: int):
+        if adv == self.player_1:
+            pass
+        elif adv == self.player_2:
+            pass
+        else:
+            raise InvalidAdventurer('I have no idea who you are.')
