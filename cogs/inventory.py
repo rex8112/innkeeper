@@ -110,7 +110,7 @@ class Inventory(commands.Cog):
                 main_embed.colour = ac.Colour.infoColour
                 main_embed.set_footer(text='')
                 await main_message.edit(embed=main_embed)
-            if delete:
+            if delete and not isinstance(main_message.channel, discord.DMChannel):
                 await value_message.delete()
 
         except IndexError:
@@ -218,7 +218,7 @@ class Inventory(commands.Cog):
                 main_embed.colour = ac.Colour.infoColour
                 main_embed.set_footer(text='')
                 await main_message.edit(embed=main_embed)
-            if delete:
+            if delete and not isinstance(main_message.channel, discord.DMChannel):
                 await value_message.delete()
 
         except IndexError:

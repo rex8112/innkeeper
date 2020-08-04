@@ -186,7 +186,7 @@ class Adventure(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-            if isinstance(ctx.channel, discord.DMChannel) and not adv.available:
+            if isinstance(ctx.channel, discord.DMChannel) or not adv.available:
                 escape = True
             while adv.get_unspent_points() > 0 and escape == False:
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
@@ -926,6 +926,9 @@ class Adventure(commands.Cog):
                     for p in players:
                         p.available = True
                         p.save()
+            else:
+                cancel_embed = discord.Embed(title='Raid Canceled', colour=ac.Colour.errorColour)
+                await setup_message.edit(embed=cancel_embed)
 
     @commands.command()
     @commands.guild_only()
