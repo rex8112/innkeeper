@@ -71,13 +71,18 @@ class Trade(commands.Cog):
                     colour=ac.Colour.activeColour,
                     description=f'Waiting on: {trade.waiting_on.name}'
                 )
-
-                inv1 = ''
-                for c, i in enumerate(trade.inventory_1, start=1):
-                    inv1 += f'**{c}.** {i.get_name()}\n'
-                inv2 = ''
-                for c, i in enumerate(trade.inventory_2, start=1):
-                    inv2 += f'**{c}.** {i.get_name()}\n'
+                if trade.inventory_1:
+                    inv1 = ''
+                    for c, i in enumerate(trade.inventory_1, start=1):
+                        inv1 += f'**{c}.** {i.get_name()}\n'
+                else:
+                    inv2 = 'Nothing'
+                if trade.inventory_2:
+                    inv2 = ''
+                    for c, i in enumerate(trade.inventory_2, start=1):
+                        inv2 += f'**{c}.** {i.get_name()}\n'
+                else:
+                    inv2 = 'Nothing'
 
                 menu_embed.add_field(
                     name=f'{trade.player_1.name}\'s Offer',

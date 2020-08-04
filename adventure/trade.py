@@ -41,14 +41,16 @@ class Trade:
             self.waiting_on = self.player_2
 
         self.inventory_1.clear()
-        for raw_item in data['inventory1'].split('/'):
-            item = Equipment(raw_item)
-            self.inventory_1.append(item)
+        if data['inventory1']:
+            for raw_item in data['inventory1'].split('/'):
+                item = Equipment(raw_item)
+                self.inventory_1.append(item)
 
         self.inventory_2.clear()
-        for raw_item in data['inventory2'].split('/'):
-            item = Equipment(raw_item)
-            self.inventory_2.append(item)
+        if data['inventory2']:
+            for raw_item in data['inventory2'].split('/'):
+                item = Equipment(raw_item)
+                self.inventory_2.append(item)
 
     def save(self):
         inventory_1 = '/'.join(self.inventory_1)
