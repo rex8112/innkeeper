@@ -59,11 +59,17 @@ class Trade(commands.Cog):
             elif stage == 'view': # View a trade
                 if response:
                     await response.delete()
+                    response = None
                 try:
                     trade = trades[int(arguments[0]) - 1]
                 except IndexError:
                     menu_embed.colour = ac.Colour.errorColour
                     menu_embed.set_footer(text='Error: Trade does not exist')
+                    await message.edit(embed=menu_embed)
+                    return
+                except TypeError:
+                    menu_embed.colour = ac.Colour.errorColour
+                    menu_embed.set_footer(text='Error: Index missing')
                     await message.edit(embed=menu_embed)
                     return
                 menu_embed = discord.Embed(
@@ -76,7 +82,7 @@ class Trade(commands.Cog):
                     for c, i in enumerate(trade.inventory_1, start=1):
                         inv1 += f'**{c}.** {i.get_name()}\n'
                 else:
-                    inv2 = 'Nothing'
+                    inv1 = 'Nothing'
                 if trade.inventory_2:
                     inv2 = ''
                     for c, i in enumerate(trade.inventory_2, start=1):
@@ -92,9 +98,66 @@ class Trade(commands.Cog):
                     name=f'{trade.player_2.name}\'s Offer',
                     value=inv2
                 )
+                if trade.waiting_on == adv:
+                    menu_embed.set_footer(text='Follow up: add/remove/send/cancel')
+                    allow = True
+                else:
+                    menu_embed.set_footer(text='Follow up: cancel')
+                    allow = False
                 await message.edit(embed=menu_embed)
-                stage = 'cancel'
-                continue
+
+                try:
+                    trade_response = await self.bot.wait_for('message', timeout=60.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+                except asyncio.TimeoutError:
+                    stage = 'cancel'
+                    continue
+                content = trade_response.content.split(' ')
+                action = content[0]
+                try:
+                    await trade_response.delete()
+                except discord.Forbidden:
+                    pass
+                if action == 'add' and allow: # Add items to trade
+                    escape = False
+                    footer = ''
+                    while escape == False:
+                        items_string = ''
+                        for c, i in enumerate(adv.inventory, start=1):
+                            items_string += f'**{c}.** {i.get_name()}'
+                        inv_embed = discord.Embed(
+                            title='Add item to trade',
+                            colour=ac.Colour.activeColour,
+                            description=f'Respond with index number, like the shop.\n\n{items_string}'
+                        )
+                        inv_embed.set_footer(text=footer)
+                        await message.edit(embed=inv_embed)
+                        item_response = await self.bot.wait_for('message', timeout=60.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
+                        try:
+                            index = int(item_response.content)
+                            try:
+                                await item_response.delete()
+                            except discord.Forbidden:
+                                pass
+                        except ValueError:
+                            footer = 'Error: Not a number'
+                            continue
+                        if index == 0:
+                            escape = True
+                        else:
+                            item = adv.remInv(index-1)
+                            if not trade.add_item(adv, item):
+                                adv.addInv(item)
+                                footer = 'Error: Items in trade can not exceed 10'
+                            else:
+                                footer = ''
+                    continue
+                elif action == 'remove' and allow:
+                    pass
+                elif action == 'send' and allow:
+                    pass
+                else:
+                    stage = 'cancel'
+                    continue
             try:
                 response = await self.bot.wait_for('message', timeout=60.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
             except asyncio.TimeoutError:
@@ -109,6 +172,8 @@ class Trade(commands.Cog):
         menu_embed.colour = ac.Colour.infoColour
         menu_embed.set_footer(text='')
         await message.edit(embed=menu_embed)
+        trade.save()
+        adv.save()
 
 
 def setup(bot):
