@@ -94,9 +94,12 @@ class Trade:
             raise InvalidAdventurer('I have no idea who you are.')
 
     def del_item(self, adv: Player, index: int):
-        if adv == self.player_1:
-            pass
-        elif adv == self.player_2:
-            pass
-        else:
-            raise InvalidAdventurer('I have no idea who you are.')
+        try:
+            if adv == self.player_1:
+                return self.inventory_1.pop(index)
+            elif adv == self.player_2:
+                return self.inventory_2.pop(index)
+            else:
+                raise InvalidAdventurer('I have no idea who you are.')
+        except IndexError:
+            return None
