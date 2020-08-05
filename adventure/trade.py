@@ -53,8 +53,14 @@ class Trade:
                 self.inventory_2.append(item)
 
     def save(self):
-        inventory_1 = '/'.join(self.inventory_1)
-        inventory_2 = '/'.join(self.inventory_2)
+        inventory_1_raw = []
+        inventory_2_raw = []
+        for i in self.inventory_1:
+            inventory_1_raw.append(i.save())
+        for i in self.inventory_2:
+            inventory_2_raw.append(i.save())
+        inventory_1 = '/'.join(inventory_1_raw)
+        inventory_2 = '/'.join(inventory_2_raw)
         if self.waiting_on == self.player_1:
             waiting_on = 1
         else:
