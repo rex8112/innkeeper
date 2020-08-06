@@ -23,6 +23,7 @@ from .trade import Trade
 from .skills import Skill
 from .database import db
 from .data import TestData
+from .formatting import Formatting
 
 try:
     from logging import NullHandler

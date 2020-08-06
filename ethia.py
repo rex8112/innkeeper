@@ -2,6 +2,8 @@ import discord
 import logging
 import sys
 
+from adventure import Formatting
+
 from discord.ext import commands
 from tools.configLoader import settings
 
@@ -42,6 +44,10 @@ async def on_ready():
         print(guild.name)
         print(guild.id)
         print('---------')
+
+        if guild.id == 732720938470211735:
+            for e in guild.emojis:
+                Formatting.emojis[e.name] = e
     logger.info('----- Bot Ready -----')
 
 @bot.command()
