@@ -528,7 +528,7 @@ class Database:
             fetch = cursor.fetchone()
         elif active:
             cursor.execute(
-                """SELECT * FROM trade WHERE adv1 = ? OR adv2 = ? AND active = 1""",
+                """SELECT * FROM trade WHERE adv1 = ? AND active = 1 OR adv2 = ? AND active = 1""",
                 (adv, adv)
             )
             fetch = cursor.fetchall()
