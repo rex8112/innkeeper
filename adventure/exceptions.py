@@ -27,5 +27,5 @@ class InvalidModString(Error):
     pass
 
 class NotFound(Error):
-    """Raised when target not found in database"""
+    """Raised when target not found"""
     pass

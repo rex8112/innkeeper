@@ -154,11 +154,11 @@ class Encounter:
         for skill in active_turn.skills:
             if skill.cooldown <= 0:
                 if skill.targetable == 0:
-                    info, result = self.use_skill(active_turn, skill.name, 0) #Target int doesn't matter for self cast
+                    info, _ = self.use_skill(active_turn, skill.name, 0) #Target int doesn't matter for self cast
                 elif skill.targetable == 1:
-                    info, result = self.use_skill(active_turn, skill.name, self.get_target(friendly_team))
+                    info, _ = self.use_skill(active_turn, skill.name, self.get_target(friendly_team))
                 else:
-                    info, result = self.use_skill(active_turn, skill.name, self.get_target(enemy_team))
+                    info, _ = self.use_skill(active_turn, skill.name, self.get_target(enemy_team))
                 self.log += '{}\n'.format(info)
                 break
         return self.next_turn()
