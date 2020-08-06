@@ -52,6 +52,20 @@ class Trade:
                 item = Equipment(raw_item)
                 self.inventory_2.append(item)
 
+    def set_confirm(self, adv: Player, value: bool):
+        if adv == self.player_1:
+            self.confirm_1 = value
+        elif adv == self.player_2:
+            self.confirm_2 = value
+        else:
+            raise NotFound('Adventurer not found')
+
+    def toggle_waiting_on(self):
+        if self.waiting_on == self.player_1:
+            self.waiting_on = self.player_2
+        elif self.waiting_on == self.player_2:
+            self.waiting_on = self.player_1
+
     def save(self):
         inventory_1_raw = []
         inventory_2_raw = []
@@ -76,30 +90,42 @@ class Trade:
             int(self.active),
             self.index
         )
+        self.player_1.save()
+        self.player_2.save()
 
-    def add_item(self, adv: Player, item):
+    def add_item(self, adv: Player, index: int):
         if adv == self.player_1:
             if len(self.inventory_1) < 10:
-                self.inventory_1.append(item)
+                item = self.player_1.remInv(index)
+                if item:
+                    self.inventory_1.append(item)
                 return True
             else:
                 return False
         elif adv == self.player_2:
             if len(self.inventory_2) < 10:
-                self.inventory_2.append(item)
+                item = self.player_2.remInv(index)
+                if item:
+                    self.inventory_2.append(item)
                 return True
             else:
                 return False
         else:
-            raise InvalidAdventurer('I have no idea who you are.')
+            raise NotFound('Adventurer not found')
 
     def del_item(self, adv: Player, index: int):
         try:
             if adv == self.player_1:
-                return self.inventory_1.pop(index)
+                item = self.inventory_1.pop(index)
+                if not self.player_1.addInv(item):
+                    storage = Storage(self.player_1)
+                    storage.add_item(item, True)
             elif adv == self.player_2:
-                return self.inventory_2.pop(index)
+                item = self.inventory_2.pop(index)
+                if not self.player_2.addInv(item):
+                    storage = Storage(self.player_2)
+                    storage.add_item(item, True)
             else:
-                raise InvalidAdventurer('I have no idea who you are.')
+                raise NotFound('Adventurer not found')
         except IndexError:
             return None
