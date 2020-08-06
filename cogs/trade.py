@@ -72,7 +72,10 @@ class Trade(commands.Cog):
                     await message.edit(embed=menu_embed)
             elif stage == 'view': # View a trade
                 if response:
-                    await response.delete()
+                    try:
+                        await response.delete()
+                    except discord.Forbidden:
+                        pass
                     response = None
                 try:
                     trade = trades[int(arguments[0]) - 1]
@@ -137,7 +140,7 @@ class Trade(commands.Cog):
                     await trade_response.delete()
                 except discord.Forbidden:
                     pass
-                if action == 'add' and allow: # Add items to trade
+                if action.lower() == 'add' and allow: # Add items to trade
                     save = True
                     trade.set_confirm(trade.player_1, False)
                     trade.set_confirm(trade.player_2, False)
@@ -173,7 +176,7 @@ class Trade(commands.Cog):
                             else:
                                 footer = ''
                     continue
-                elif action == 'remove' and allow:
+                elif action.lower() == 'remove' and allow:
                     save = True
                     trade.set_confirm(trade.player_1, False)
                     trade.set_confirm(trade.player_2, False)
@@ -191,7 +194,7 @@ class Trade(commands.Cog):
                         footer = 'Error: Inventory full'
                         continue
                     continue
-                elif action == 'send' and allow:
+                elif action.lower() == 'send' and allow:
                     save = True
                     trade.set_confirm(trade.player_1, False)
                     trade.set_confirm(trade.player_2, False)
@@ -216,7 +219,7 @@ class Trade(commands.Cog):
                     await message.edit(embed=menu_embed)
                     stage = 'cancel'
                     continue
-                elif action == 'confirm' and allow:
+                elif action.lower() == 'confirm' and allow:
                     save = True
                     sender = trade.waiting_on
                     trade.set_confirm(adv, True)

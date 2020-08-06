@@ -19,7 +19,7 @@ class Trade:
         self.index = 0
 
     def new(self, adv1: Player, adv2: Player):
-        self.index = db.add_trade(adv1, adv2)
+        self.index = db.add_trade(adv1.id, adv2.id)
         self.load(self.index)
 
     def load(self, id: int):
