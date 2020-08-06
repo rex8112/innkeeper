@@ -149,7 +149,7 @@ class Trade(commands.Cog):
                     while escape == False:
                         items_string = ''
                         for c, i in enumerate(trade.waiting_on.inventory, start=1):
-                            items_string += f'**{c}.** {i.get_name()}'
+                            items_string += f'**{c}.** {i.get_name()}\n'
                         inv_embed = discord.Embed(
                             title='Add item to trade',
                             colour=ac.Colour.activeColour,
