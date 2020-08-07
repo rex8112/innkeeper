@@ -114,36 +114,34 @@ class Equipment:
             info = '{}'.format(self.name)
         else:
             if title:
-                info = '***{}*\n{}**\n{}\n\nLevel: **{}**\nPrice: **{}** (**{}**)\n'.format(
-                    self.getRarity(), self.name, self.flavor, self.level, self.price, self.sell_price)
+                info = f'{self.get_name(level=False)}\nLevel: **{self.level}**\n\nPrice: **{self.price}** (**{self.sell_price}**)\n'
             else:
-                info = '{}\n\nLevel: **{}**\nPrice (Sell): **{}** (**{}**)\n'.format(
-                    self.flavor, self.level, self.price, self.sell_price)
+                info = f'{self.flavor}\n\nLevel: **{self.level}**\nPrice (Sell): **{self.price}** (**{self.sell_price}**)\n'
 
             info += '\n__Item Modifiers__\n'
             for mod in self.starting_mods.values():
                 if compare_equipment:
                     other = compare_equipment.starting_mods.get(mod.id, Modifier(mod.id, 0))
                     compare = mod.value - other.value
-                    info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
+                    info += f'{str(mod).capitalize()}: **{int(mod)}** *({int(compare)})*{Formatting.get_difference_emoji(compare)}\n'
                 else:
-                    info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+                    info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
 
             if len(self.random_mods) > 0:
                 info += '\n__Rarity Modifiers__\n'
             for mod in self.random_mods.values():
                 if compare_equipment:
-                    other = compare_equipment.random_mods.get(mod.id, Modifier(mod.id, 0))
+                    other = compare_equipment.starting_mods.get(mod.id, Modifier(mod.id, 0))
                     compare = mod.value - other.value
-                    info += '{}: **{}** *({})*\n'.format(str(mod).capitalize(), int(mod), int(compare))
+                    info += f'{str(mod).capitalize()}: **{int(mod)}** *({int(compare)})*{Formatting.get_difference_emoji(compare)}\n'
                 else:
-                    info += '{}: **{}**\n'.format(str(mod).capitalize(), int(mod))
+                    info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
             
             if len(self.requirements) > 0:
                 info += '\n__Requirements__\n'
             for mod in self.requirements.values():
                 info += f'{str(mod).capitalize()}: **{int(mod)}**\n'
-            info += f'Identification: **{self.id}**'
+            info += f'\nIdentification: **{self.id}**'
         return info
 
     def get_name(self, rarity=True, level=True, discord=True):

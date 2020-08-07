@@ -47,7 +47,7 @@ class Inventory(commands.Cog):
         main_embed.set_footer(text='Follow up message: <examine #/compare # #/store #>')
 
         for count, e in enumerate(adv.inventory, start=1):
-            main_embed.add_field(name=f'Slot {count}', value=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
+            main_embed.add_field(name=f'------- Slot {count:02} -------', value=e.getInfo(compare_equipment=adv.get_equipment_from_slot(e.slot)))
 
         main_message = await ctx.send(embed=main_embed)
         try:
