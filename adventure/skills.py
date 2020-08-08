@@ -67,7 +67,7 @@ class Attack(Skill):
             target_ac = float(target.mods.get('ac', 0))
             user_wc = float(user.mods.get('wc', 0))
             chanceToHit = float(1 + (user_wc - target_ac) /
-                ((user_wc + target_ac) * 0.5))
+                ((user_wc + target_ac) * 0.5)) - 0.2
 
             if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit
@@ -110,7 +110,7 @@ class BackStab(Skill):
             user_wc = float(user.mods.get('wc', 0))
             target_ac *= 0.9
             chanceToHit = float(1 + (user_wc - target_ac) /
-                ((user_wc + target_ac) * 0.5))
+                ((user_wc + target_ac) * 0.5)) - 0.2
 
 
             if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
@@ -154,7 +154,7 @@ class TripleStrike(Skill):
             for _ in range(3):
                 dmg = self.get_damage(raw_dmg)
                 chanceToHit = float(1 + (user_wc - target_ac) /
-                    ((user_wc + target_ac) * 0.5))
+                    ((user_wc + target_ac) * 0.5)) - 0.2
                 if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                     # If random number is lower than the chance to hit, you hit
                     if random.uniform(0.0, 1.0) <= chanceToHit:
@@ -197,7 +197,7 @@ class Cleave(Skill):
             target_ac = float(target.mods.get('ac', 0))
             user_wc = float(user.mods.get('wc', 0))
             chanceToHit = float(1 + (user_wc - target_ac) /
-                ((user_wc + target_ac) * 0.5))
+                ((user_wc + target_ac) * 0.5)) - 0.2
 
             if random.uniform(1.0, 100.0) > user.mods.get('evasion', 0):  # Evasion Check
                 # If random number is lower than the chance to hit, you hit

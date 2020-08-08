@@ -400,7 +400,7 @@ class Equipment:
                 self.starting_mods[min_mod.id] = Modifier(min_mod.id, round(random.uniform(min_value, max_value), 1))
                 changed = True
 
-        remove_count = 0
+        amount_to_add = 0
         for mod in self.random_mods.values(): # Check min/max of random mods and delete non-existing mods
             min_mod = random_min.get(mod.id, None)
             if min_mod:
@@ -412,22 +412,36 @@ class Equipment:
                     changed = True
             else:
                 random_to_delete.append(mod.id)
-                remove_count += 1
+                amount_to_add += 1
                 changed = True
 
         for ID in random_to_delete:
             del self.random_mods[ID]
+
+        if self.rarity > self.base_equipment.max_rarity:
+            change = self.rarity - self.base_equipment.max_rarity
+            self.rarity = self.base_equipment.max_rarity
+            amount_to_add -= change
+        elif self.rarity < self.base_equipment.starting_rarity:
+            change = self.base_equipment.starting_rarity - self.rarity
+            self.rarity = self.base_equipment.starting_rarity
+            amount_to_add += change
         
-        if remove_count > 0: # If existing random mods were removed, fill their void with new mods
+        if amount_to_add > 0: # If existing random mods were removed, fill their void with new mods
             for min_mod in random_min.values():
                 mod = self.random_mods.get(min_mod.id, None)
                 if not mod: # Make sure that mod was never used before
                     min_value = min_mod.value
                     max_value = random_max[min_mod.id].value
                     self.random_mods[min_mod.id] = Modifier(min_mod.id, round(random.uniform(min_value, max_value), 1))
-                    remove_count -= 1
-                if remove_count <= 0:
+                    amount_to_add -= 1
+                if amount_to_add <= 0:
                     break
+        elif amount_to_add < 0:
+            while amount_to_add < 0:
+                mod_to_delete = random.choice(self.random_mods)
+                del self.random_mods[mod_to_delete.id]
+                amount_to_add += 1
         return changed
 
     def delete(self):

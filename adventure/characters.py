@@ -31,6 +31,8 @@ class Character:
         self.name = 'Unloaded'
         self.mods = {}
         self.raw_mods = {}
+        self.total_ac = []
+        self.total_wc = []
         self.loaded = False
         if load:
             self.load()
@@ -288,6 +290,16 @@ class Character:
             self.level += count
             return True
     
+    def add_mod(self, mod: Modifier):
+        if mod.id == 'ac':
+            self.total_ac.append(mod.value)
+        elif mod.id == 'wc':
+            self.total_wc.append(mod.value)
+        elif self.mods.get(mod.id, False):
+            self.mods.get(mod.id).value += mod.value
+        else:
+            self.mods[mod.id] = mod
+
     def calculate(self):
         # Checks Race/Class for attribute changes
         self.strength = self.rawStrength
@@ -297,34 +309,28 @@ class Character:
         self.wisdom = self.rawWisdom
         self.charisma = self.rawCharisma
         self.maxHealth = 0
+        self.total_ac.clear()
+        self.total_wc.clear()
+        self.mods.clear()
         self.skills = []
-        self.mods['wc'] = Modifier('wc', 3)
-        self.mods['ac'] = Modifier('ac', 4)
+        self.mods['wc'] = Modifier('wc', 1)
+        self.mods['ac'] = Modifier('ac', 1)
         self.mods['dmg'] = Modifier('dmg', 0)
         self.mods['strdmg'] = Modifier('strdmg', 0)
         self.mods['dexdmg'] = Modifier('dexdmg', 0)
 
         for mod in self.raw_mods.values():
-            if self.mods.get(mod.id, False):
-                self.mods[mod.id].value += mod.value
-            else:
-                self.mods[mod.id] = mod
+            self.add_mod(mod)
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
             if equip == None:
                 equip = Equipment('empty')
 
-            for key, mod in equip.starting_mods.items():
-                if self.mods.get(key, False):
-                    self.mods.get(key).value += mod.value
-                else:
-                    self.mods[key] = mod
-            for key, mod in equip.random_mods.items():
-                if self.mods.get(key, False):
-                    self.mods.get(key).value += mod.value
-                else:
-                    self.mods[key] = mod
+            for _, mod in equip.starting_mods.items():
+                self.add_mod(mod)
+            for _, mod in equip.random_mods.items():
+                self.add_mod(mod)
             for skill in equip.skills:
                 self.skills.append(skill())
         self.maxHealth += int(self.mods.get('health', 0))
@@ -416,6 +422,9 @@ class Character:
 
         # Set values to their maximum
         self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
+
+        self.mods['ac'] = Modifier('ac', sum(self.total_ac) / len(self.total_ac))
+        self.mods['wc'] = Modifier('wc', sum(self.total_wc) / len(self.total_wc))
 
         try:
             if self.maxHealth < self.health:
@@ -606,6 +615,8 @@ class Enemy(Character):
         self.name = 'Unloaded'
         self.mods = {}
         self.raw_mods = {}
+        self.total_ac = []
+        self.total_wc = []
         self.loaded = False
 
         if raw_data:

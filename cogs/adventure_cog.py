@@ -983,9 +983,8 @@ class Adventure(commands.Cog):
         elif str(reaction) == '4️⃣':
             name = 'Armor and Weapon Class'
             information = ('Armor Class and Weapon Class is used to determine hit chances based on the percent difference. '
-                'In an average scenerio, Weapon Class should be lower and that difference is used for hit chance; however, '
-                'if Weapon Class is higher than the armor class, the percent difference is then used for crit chance as a hit '
-                'is already guaranteed.')
+                'In an average scenerio, both should be equal which will give you an 80 percent chance to hit with any percent '
+                'difference causing that chance to hit to be changed accordingly.')
         elif str(reaction) == '5️⃣':
             name = 'Roadmap'
             information = (

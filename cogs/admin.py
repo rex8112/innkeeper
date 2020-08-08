@@ -319,7 +319,7 @@ class Admin(commands.Cog):
     @adminpanel.command()
     async def test_hit_chance(self, ctx, wc: float, ac_: float):
         chanceToHit = float(1 + (wc - ac_) /
-                ((wc + ac_) * 0.5))
+                ((wc + ac_) * 0.5)) - 0.2
         if random.uniform(0.0, 1.0) < chanceToHit:
             succeed = True
         else:
@@ -380,7 +380,7 @@ class Admin(commands.Cog):
         async with ctx.channel.typing():
             counter = 0
             for data in all_data:
-                e = ac.Equipment(data)
+                e = ac.Equipment(data['indx'])
                 changed = e.balance_check()
                 if changed:
                     e.save(database=True)
