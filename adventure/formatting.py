@@ -16,7 +16,9 @@ class Formatting:
 
     @staticmethod
     def get_difference_emoji(value: int):
-        if value >= 0:
+        if value > 0:
             return Formatting.emojis.get('positive_triangle', '')
+        elif value == 0:
+            return Formatting.emojis.get('neutral_dash', '')
         else:
             return Formatting.emojis.get('negative_triangle', '')
