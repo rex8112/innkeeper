@@ -131,7 +131,7 @@ class Equipment:
                 info += '\n__Rarity Modifiers__\n'
             for mod in self.random_mods.values():
                 if compare_equipment:
-                    other = compare_equipment.starting_mods.get(mod.id, Modifier(mod.id, 0))
+                    other = compare_equipment.random_mods.get(mod.id, Modifier(mod.id, 0))
                     compare = mod.value - other.value
                     info += f'{str(mod).capitalize()}: **{int(mod)}** *({int(compare)})*{Formatting.get_difference_emoji(compare)}\n'
                 else:
