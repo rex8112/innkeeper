@@ -37,15 +37,31 @@ class Skill():
         else:
             return skill_list.get(name, None)
 
-    def __init__(self):
+    def __init__(self, skill: str):
+        self.name = skill
+        self.targetable = 2
+        self.max_cooldown = 0
+        self.start_cooldown = 0
+        self.hit_chance_modifier = 1.0
+        self.damage_modifier = 1.0
+        self.flags = {}
+        self.requirements = {}
+        self.log = ''
+        self.load()
+
         if self.start_cooldown:
             self.cooldown = self.start_cooldown
         else:
-            self.cooldown = self.max_cooldown 
-        self.log = ''
+            self.cooldown = self.max_cooldown
 
     def get_damage(self, dmg: float):
         return round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
+    
+    def get_hit_chance(self, ac: float):
+        pass
+
+    def load(self):
+        pass
     
     def use(self, user, target, targetGroup: list):
         result = False
