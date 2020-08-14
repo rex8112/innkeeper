@@ -332,7 +332,7 @@ class Character:
             for _, mod in equip.random_mods.items():
                 self.add_mod(mod)
             for skill in equip.skills:
-                self.skills.append(skill())
+                self.skills.append(Skill(self, skill))
         self.maxHealth += int(self.mods.get('health', 0))
 
         self.strength += int(self.mods.get('strength', 0))
@@ -416,9 +416,8 @@ class Character:
 
         # Fill in Skills
         for skill in self.raw_skills:
-            s = Skill.get_skill(skill)
-            if s:
-                self.skills.append(s())
+            s = Skill(self, skill)
+            self.skills.append(s)
 
         # Set values to their maximum
         self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
@@ -438,7 +437,7 @@ class Character:
         self.health = self.maxHealth
         try:
             for skill in self.skills:
-                skill.__init__()
+                skill.__init__(self, skill.name)
         except AttributeError:
             pass
 

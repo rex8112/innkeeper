@@ -23,44 +23,34 @@ class Skill():
     max_cooldown = None
     start_cooldown = None
     damage_type = 'physical'
-    hit_chance_modifier = 1.0
+    hit_chance_additive = 0.0
     damage_modifier = 1.0
     secondary_damage_modifier = 0.3 # For attacks that do not hit the main target i.e. Cleave
     requirements = {}
     flags = {}
 
-    @staticmethod
-    def get_skill(name: str):
-        skill_list = {
-            Attack.name: Attack,
-            BackStab.name: BackStab,
-            Cleave.name: Cleave,
-            TripleStrike.name: TripleStrike
-        }
-        if name == 'all':
-            return skill_list.copy()
-        else:
-            return skill_list.get(name, None)
+    def __init__(self, adv, skill_name: str):
+            self.name = 'no_skill_loaded'
+            self.targetable = 2
+            self.max_cooldown = 0
+            self.start_cooldown = 0
+            self.damage_type = 'physical'
+            self.hit_count = 1
+            self.hit_chance_additive = 1.0
+            self.damage_modifier = 1.0
+            self.secondary_damage_modifier = 0.3 # For attacks that do not hit the main target i.e. Cleave
+            self.requirements = {}
+            self.flags = []
 
-    def __init__(self, adv, **kwargs):
-        if isinstance(self, Skill):
-            skill_str = kwargs.get('skill', '')
-            if skill_str:
-                found_skill = self.get_skill(skill_str)
-                self = found_skill(adv)
-            else:
-                raise NotFound(f'{skill_str} skill not available.')
-        else:
             self.log = ''
             self.user = adv
             self.ac = int(adv.mods.get('ac', 0))
             self.penetration = int(adv.mods.get('penetration', 0))
             self.critical = False
 
-            if self.start_cooldown:
-                self.cooldown = self.start_cooldown
-            else:
-                self.cooldown = self.max_cooldown
+            self.load(skill_name)
+
+            self.cooldown = self.start_cooldown
 
     def get_targets(self, target, target_group: list):
         if 'cleave' in self.flags:
@@ -88,13 +78,20 @@ class Skill():
         pass
 
     def get_damage(self, dmg: float):
-        return round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
+        damage = round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
+        damage *= self.damage_modifier
+        return damage
+
+    def get_secondary_damage(self, dmg: float):
+        damage = round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
+        damage *= self.secondary_damage_modifier
+        return damage
 
     def deal_damage(self, target, dmg: float):
         if self.damage_type == 'physical':
-            target.deal_physical_damage(dmg, self.penetration)
+            return target.deal_physical_damage(dmg, self.penetration)
         elif self.damage_type == 'magical':
-            target.deal_magical_damage(dmg, self.penetration)
+            return target.deal_magical_damage(dmg, self.penetration)
     
     def get_hit_chance(self, target):
         wc = int(target.mods.get('wc', 0))
@@ -111,16 +108,56 @@ class Skill():
                 return False
 
     def use(self, target, target_group: list):
+        info = f'{self.user.name} used `{self.name}` and dealt '
         targets = self.get_targets(target, target_group)
-        if self.test_hit_chance(self.get_hit_chance(target[0])):
-            self.deal_damage(target[0], self.get_damage(self.user.mods.get('dmg', 0)))
-        if len(targets) > 1:
-            for t in targets[1:]:
-                if self.test_hit_chance(self.get_hit_chance(t)):
-                    self.deal_damage(t, self.get_damage(self.user.mods.get('dmg', 0)) * self.secondary_damage_modifier)
+        for _ in range(self.hit_count):
+            if self.test_hit_chance(self.get_hit_chance(targets[0])):
+                damage = self.deal_damage(targets[0], self.get_damage(float(self.user.mods.get('dmg', 0))))
+                info += f'**{damage}** {self.damage_type} damage to {target.name}'
+                
+                if 'cleave' in self.flags:
+                    if len(targets) > 1:
+                        for t in targets[1:]:
+                            damage = self.deal_damage(t, self.get_secondary_damage(float(self.user.mods.get('dmg', 0))))
+                            info += f', **{damage}** {self.damage_type} damage to {t.name}'
+                info += '.'
+            else:
+                info = f'{self.user.name} missed using `{self.name}` against {target.name}'
         result = True
-        info = 'Invalid Skill'
+        self.cooldown = self.max_cooldown
         return info, result
+
+    def load(self, skill_name: str):
+        if skill_name == 'attack':
+            self.name = 'attack'
+            self.targetable = 2
+            self.max_cooldown = 0
+        elif skill_name == 'backstab':
+            self.name = 'backstab'
+            self.targetable = 2
+            self.max_cooldown = 4
+            self.damage_modifier = 2.0
+            self.hit_chance_additive = 0.1
+            self.requirements = {
+                'dexterity': Modifier('dexterity', 13)
+            }
+        elif skill_name == 'triplestrike':
+            self.name = 'triplestrike'
+            self.targetable = 2
+            self.max_cooldown =  4
+            self.hit_count = 3
+            self.hit_chance_additive = -0.2
+            self.requirements = {
+                'dexterity': Modifier('dexterity', 13)
+            }
+        elif skill_name == 'cleave':
+            self.name = 'cleave'
+            self.targetable = 2
+            self.max_cooldown = 3
+            self.secondary_damage_modifier = 0.3
+            self.flags = [
+                'cleave'
+            ]
 
 
 class Attack(Skill):

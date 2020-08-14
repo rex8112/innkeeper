@@ -206,12 +206,7 @@ class Equipment:
         return requirements
 
     def process_skills_string(self, skills_string: str):
-        skills = []
-        skills_string_list = skills_string.split('|')
-        for skill in skills_string_list:
-            final_skill = Skill.get_skill(skill)
-            if final_skill:
-                skills.append(final_skill)
+        skills = skills_string.split('|')
         return skills
 
     def calculate_price(self):

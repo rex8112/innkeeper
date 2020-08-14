@@ -108,7 +108,7 @@ class Encounter:
                     target_group = enemy_team
                     target = target_group[target_int - 1]
 
-                info, result = skill.use(user, target, target_group)
+                info, result = skill.use(target, target_group)
             else:
                 info = '`{}` not found in your skills.'.format(skill_id)
         except IndexError:
