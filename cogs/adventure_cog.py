@@ -588,8 +588,7 @@ class Adventure(commands.Cog):
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.inventory, start=1):
-                        buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(
-                        ), i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
+                        buy_embed.add_field(name=i.get_name(), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -646,8 +645,7 @@ class Adventure(commands.Cog):
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.buyback, start=1):
-                        buy_embed.add_field(name='{}. {} {}'.format(number, i.getRarity(),
-                            i.name), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
+                        buy_embed.add_field(name=i.get_name(), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -710,8 +708,7 @@ class Adventure(commands.Cog):
                         embed.clear_fields()
                         for number, e in enumerate(adv.inventory, start=1):
                             if not e.requirements.get('unsellable', False):
-                                embed.add_field(name='{}. {} {}'.format(number, e.getRarity(
-                                ), e.name), value='Selling Cost: **{}** {}'.format(e.sell_price, self.bot.xpName))
+                                embed.add_field(name=e.get_name(), value='Selling Cost: **{}** {}'.format(e.sell_price, self.bot.xpName))
                         await shopMessage.edit(embed=embed)
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
@@ -870,9 +867,9 @@ class Adventure(commands.Cog):
                             loot_list = ''
                             for l in raid.loot:
                                 if l is loot:
-                                    loot_list += '***{1}* {0.name}**\n'.format(l, l.getRarity())
+                                    loot_list += f'__{l.get_name()}__\n'
                                 else:
-                                    loot_list += '*{1}* {0.name}\n'.format(l, l.getRarity())
+                                    loot_list += f'{l.get_name()}\n'
                             embed = discord.Embed(title='Loot', colour=ac.Colour.get_rarity_colour(loot.rarity), description=loot_list)
                             embed.set_footer(text='If you roll a 0 then your inventory is full')
                             loot_escape = False
