@@ -769,6 +769,8 @@ class RaidBoss(Character):
         self.id = boss_id
         self.raw_mods = {}
         self.mods = {}
+        self.total_ac = []
+        self.total_wc = []
         self.loaded = False
         if self.id > 0:
             self.load()
