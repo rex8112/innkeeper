@@ -2,6 +2,7 @@ import random
 import logging
 
 from .modifiers import Modifier
+from .exceptions import NotFound
 
 logger = logging.getLogger('skills')
 logger.setLevel(logging.INFO)
@@ -21,8 +22,12 @@ class Skill():
     targetable = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
     max_cooldown = None
     start_cooldown = None
+    damage_type = 'physical'
+    hit_chance_modifier = 1.0
+    damage_modifier = 1.0
+    secondary_damage_modifier = 0.3 # For attacks that do not hit the main target i.e. Cleave
     requirements = {}
-    log = ''
+    flags = {}
 
     @staticmethod
     def get_skill(name: str):
@@ -37,34 +42,83 @@ class Skill():
         else:
             return skill_list.get(name, None)
 
-    def __init__(self, skill: str):
-        self.name = skill
-        self.targetable = 2
-        self.max_cooldown = 0
-        self.start_cooldown = 0
-        self.hit_chance_modifier = 1.0
-        self.damage_modifier = 1.0
-        self.flags = {}
-        self.requirements = {}
-        self.log = ''
-        self.load()
-
-        if self.start_cooldown:
-            self.cooldown = self.start_cooldown
+    def __init__(self, adv, **kwargs):
+        if isinstance(self, Skill):
+            skill_str = kwargs.get('skill', '')
+            if skill_str:
+                found_skill = self.get_skill(skill_str)
+                self = found_skill(adv)
+            else:
+                raise NotFound(f'{skill_str} skill not available.')
         else:
-            self.cooldown = self.max_cooldown
+            self.log = ''
+            self.user = adv
+            self.ac = int(adv.mods.get('ac', 0))
+            self.penetration = int(adv.mods.get('penetration', 0))
+            self.critical = False
+
+            if self.start_cooldown:
+                self.cooldown = self.start_cooldown
+            else:
+                self.cooldown = self.max_cooldown
+
+    def get_targets(self, target, target_group: list):
+        if 'cleave' in self.flags:
+            target_int = target_group.index(target)
+            cleave_1_int = target_int - 1
+            cleave_2_int = target_int + 1
+            if cleave_1_int < 0:
+                cleave_1 = target_group[-1]
+            else:
+                cleave_1 = target_group[cleave_1_int]
+            if cleave_2_int >= len(target_group):
+                cleave_2 = target_group[0]
+            else:
+                cleave_2 = target_group[cleave_2_int]
+            if len(target_group) >= 3:
+                return [target, cleave_1, cleave_2]
+            elif len(target_group) == 2:
+                return [target, cleave_1]
+            else:
+                return [target]
+        else:
+            return [target]
+
+    def apply_status_effects(self, target):
+        pass
 
     def get_damage(self, dmg: float):
         return round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
-    
-    def get_hit_chance(self, ac: float):
-        pass
 
-    def load(self):
-        pass
+    def deal_damage(self, target, dmg: float):
+        if self.damage_type == 'physical':
+            target.deal_physical_damage(dmg, self.penetration)
+        elif self.damage_type == 'magical':
+            target.deal_magical_damage(dmg, self.penetration)
     
-    def use(self, user, target, targetGroup: list):
-        result = False
+    def get_hit_chance(self, target):
+        wc = int(target.mods.get('wc', 0))
+        chance_to_hit = float(1 + (wc - self.ac) / ((wc + self.ac) * 0.5)) - 0.2
+        return chance_to_hit
+
+    def test_hit_chance(self, hit_chance):
+        if 'never_miss' in self.flags:
+            return True
+        else:
+            if random.uniform(0.0, 1.0) <= hit_chance:
+                return True
+            else:
+                return False
+
+    def use(self, target, target_group: list):
+        targets = self.get_targets(target, target_group)
+        if self.test_hit_chance(self.get_hit_chance(target[0])):
+            self.deal_damage(target[0], self.get_damage(self.user.mods.get('dmg', 0)))
+        if len(targets) > 1:
+            for t in targets[1:]:
+                if self.test_hit_chance(self.get_hit_chance(t)):
+                    self.deal_damage(t, self.get_damage(self.user.mods.get('dmg', 0)) * self.secondary_damage_modifier)
+        result = True
         info = 'Invalid Skill'
         return info, result
 
