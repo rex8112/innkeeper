@@ -698,7 +698,7 @@ class Adventure(commands.Cog):
 
                 elif str(reaction) == '4️⃣':  # Sell Equipment
                     embed = discord.Embed(title='Selling Equipment', colour=ac.Colour.activeColour,
-                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. You must use `0` to go cancel.')
+                                          description='Due to limitation, you will have to respond, in a message, with the item you wish to sell. You must use `0` to go back.')
                     embed.set_footer(text='You have 3 minutes to respond.')
                     await asyncio.sleep(0.26)
                     await shopMessage.clear_reactions()
