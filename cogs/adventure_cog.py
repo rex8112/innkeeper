@@ -588,7 +588,7 @@ class Adventure(commands.Cog):
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.inventory, start=1):
-                        buy_embed.add_field(name=i.get_name(), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
+                        buy_embed.add_field(name=f'**{number}.** {i.get_name()}', value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -645,7 +645,7 @@ class Adventure(commands.Cog):
                                           description='Due to limitation, you will have to respond, in a message, with the item you wish to buy. Use `0` to go back.')
                     buy_embed.set_footer(text='You have 3 minutes to respond.')
                     for number, i in enumerate(shop.buyback, start=1):
-                        buy_embed.add_field(name=i.get_name(), value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
+                        buy_embed.add_field(name=f'**{number}.** {i.get_name()}', value='Buying Cost: **{}** {}'.format(i.price, self.bot.xpName))
 
                     buyExit = False
                     while buyExit == False:
@@ -708,7 +708,7 @@ class Adventure(commands.Cog):
                         embed.clear_fields()
                         for number, e in enumerate(adv.inventory, start=1):
                             if not e.requirements.get('unsellable', False):
-                                embed.add_field(name=e.get_name(), value='Selling Cost: **{}** {}'.format(e.sell_price, self.bot.xpName))
+                                embed.add_field(name=f'**{number}.** {e.get_name()}', value='Selling Cost: **{}** {}'.format(e.sell_price, self.bot.xpName))
                         await shopMessage.edit(embed=embed)
                         try:
                             vMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: ctx.author == message.author and ctx.message.channel.id == message.channel.id)
