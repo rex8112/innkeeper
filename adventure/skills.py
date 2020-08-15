@@ -108,23 +108,31 @@ class Skill():
                 return False
 
     def use(self, target, target_group: list):
-        info = f'{self.user.name} used `{self.name}` and dealt '
-        targets = self.get_targets(target, target_group)
-        for _ in range(self.hit_count):
-            if self.test_hit_chance(self.get_hit_chance(targets[0])):
-                damage = self.deal_damage(targets[0], self.get_damage(float(self.user.mods.get('dmg', 0))))
-                info += f'**{damage}** {self.damage_type} damage to {target.name}'
-                
-                if 'cleave' in self.flags:
-                    if len(targets) > 1:
-                        for t in targets[1:]:
-                            damage = self.deal_damage(t, self.get_secondary_damage(float(self.user.mods.get('dmg', 0))))
-                            info += f', **{damage}** {self.damage_type} damage to {t.name}'
-                info += '.'
-            else:
-                info = f'{self.user.name} missed using `{self.name}` against {target.name}'
-        result = True
-        self.cooldown = self.max_cooldown
+        if self.cooldown <= 0:
+            info = f'{self.user.name} used `{self.name}` and dealt '
+            targets = self.get_targets(target, target_group)
+            damage_values = []
+            for t in targets:
+                damage_values.append([])
+            for _ in range(self.hit_count):
+                if self.test_hit_chance(self.get_hit_chance(targets[0])):
+                    damage_values[0].append(self.deal_damage(targets[0], self.get_damage(float(self.user.mods.get('dmg', 0)))))
+                    
+                    if 'cleave' in self.flags:
+                        if len(targets) > 1:
+                            for index, t in enumerate(targets[1:], start=1):
+                                damage_values[index].append(self.deal_damage(t, self.get_secondary_damage(float(self.user.mods.get('dmg', 0)))))
+                else:
+                    for l in damage_values:
+                        l.append('X')
+            for index, l in enumerate(damage_values):
+                damages = ', '.join(str(d) for d in l)
+                info += f'**{damages}** {self.damage_type} damage to {targets[index].name}. '
+            result = True
+            self.cooldown = self.max_cooldown
+        else:
+            info = f'`{self.name}` is on cooldown for `{self.cooldown}` more turns.'
+            result = False
         return info, result
 
     def load(self, skill_name: str):
