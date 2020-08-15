@@ -118,7 +118,6 @@ class Encounter:
 
     def next_turn(self):
         check = self.turn_order[self.current_turn]
-        check.increment_cooldowns()
         for p in self.players:
             if p.health <= 0 and p not in self.deadPlayers:
                 self.deadPlayers.append(p)
@@ -138,6 +137,7 @@ class Encounter:
         else:
             self.current_turn = 0
         check = self.turn_order[self.current_turn]
+        check.increment_cooldowns()
         if check in self.deadEnemies or check in self.deadPlayers:
             return self.next_turn()
         return False
