@@ -18,17 +18,6 @@ logger.addHandler(handler2)
 
 
 class Skill():
-    name = None # Identification
-    targetable = None # 0 = Self Cast, 1 = Ally Cast, 2 = Enemy Cast
-    max_cooldown = None
-    start_cooldown = None
-    damage_type = 'physical'
-    hit_chance_additive = 0.0
-    damage_modifier = 1.0
-    secondary_damage_modifier = 0.3 # For attacks that do not hit the main target i.e. Cleave
-    requirements = {}
-    flags = {}
-
     def __init__(self, adv, skill_name: str):
             self.name = 'no_skill_loaded'
             self.targetable = 2
