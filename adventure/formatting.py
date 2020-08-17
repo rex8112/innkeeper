@@ -1,5 +1,7 @@
 class Formatting:
     emojis = {}
+    xp_name = 'Essence'
+    gold_name = 'Coins'
 
     @staticmethod
     def get_rarity_emoji(rarity):
