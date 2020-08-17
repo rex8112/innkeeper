@@ -192,12 +192,12 @@ class Adventure(commands.Cog):
                 embed = discord.Embed(title='You have **{}** unspent attribute points'.format(adv.get_unspent_points()),
                                       colour=ac.Colour.infoColour,
                                       description='What would you like to spend them on?\n'
-                                      + f'1. Strength ({adv.rawStrength})\n'
-                                      + f'2. Dexterity ({adv.rawDexterity})\n'
-                                      + f'3. Constitution ({adv.rawConstitution})\n'
-                                      + f'4. Intelligence ({adv.rawIntelligence})\n'
-                                      + f'5. Wisdom ({adv.rawWisdom})\n'
-                                      + f'6. Charisma ({adv.rawCharisma})')
+                                      + f'1. Strength ({adv.strength})\n'
+                                      + f'2. Dexterity ({adv.dexterity})\n'
+                                      + f'3. Constitution ({adv.constitution})\n'
+                                      + f'4. Intelligence ({adv.intelligence})\n'
+                                      + f'5. Wisdom ({adv.wisdom})\n'
+                                      + f'6. Charisma ({adv.charisma})')
                 if profile_message:
                     await profile_message.edit(embed=embed)
                 else:
@@ -236,6 +236,7 @@ class Adventure(commands.Cog):
                         adv.rawCharisma += 1
                     else:
                         escape = True
+                    adv.calculate()
                     await reaction.remove(user)
                 except asyncio.TimeoutError:
                     await profile_message.edit(embed=tout)
@@ -261,7 +262,7 @@ class Adventure(commands.Cog):
                 c = ac.Colour.errorColour
                 t = '{} (Busy)'.format(adv.name)
             embed = discord.Embed(title=t, colour=c,
-                                    description='Level **{0.level}** | **{0.race}** | **{0.cls}**\n**{0.xp}** {1}'.format(adv, self.bot.xpName))
+                                    description='Level **{0.level}** | **{0.race.name}** | **{0.cls.name}**\n**{0.xp}** {1}'.format(adv, self.bot.xpName))
             embed.set_author(name=ctx.author.display_name,
                                 icon_url=ctx.author.avatar_url)
             embed.add_field(

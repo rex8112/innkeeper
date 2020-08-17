@@ -8,6 +8,8 @@ from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
 from .modifiers import Modifier, EliteModifier
 from .database import db
+from .character_class import CharacterClass
+from .race import Race
 
 logger = logging.getLogger('characters')
 logger.setLevel(logging.INFO)
@@ -82,17 +84,17 @@ class Character:
 
             if self.level < eq.level:
                 raise InvalidLevel('{} is too low level to equip level {} {}'.format(self.name, eq.level, eq.name))
-            elif self.rawStrength < eq.requirements.get('strength', 0):
+            elif self.strength < eq.requirements.get('strength', 0):
                 raise InvalidRequirements('{} does not have enough strength to equip {}'.format(self.name, eq.name))
-            elif self.rawDexterity < eq.requirements.get('dexterity', 0):
+            elif self.dexterity < eq.requirements.get('dexterity', 0):
                 raise InvalidRequirements('{} does not have enough dexterity to equip {}'.format(self.name, eq.name))
-            elif self.rawConstitution < eq.requirements.get('constitution', 0):
+            elif self.constitution < eq.requirements.get('constitution', 0):
                 raise InvalidRequirements('{} does not have enough constitution to equip {}'.format(self.name, eq.name))
-            elif self.rawIntelligence < eq.requirements.get('intelligence', 0):
+            elif self.intelligence < eq.requirements.get('intelligence', 0):
                 raise InvalidRequirements('{} does not have enough intelligence to equip {}'.format(self.name, eq.name))
-            elif self.rawWisdom < eq.requirements.get('wisdom', 0):
+            elif self.wisdom < eq.requirements.get('wisdom', 0):
                 raise InvalidRequirements('{} does not have enough wisdom to equip {}'.format(self.name, eq.name))
-            elif self.rawCharisma < eq.requirements.get('charisma', 0):
+            elif self.charisma < eq.requirements.get('charisma', 0):
                 raise InvalidRequirements('{} does not have enough charisma to equip {}'.format(self.name, eq.name))
 
             self.remInv(e)
@@ -302,12 +304,12 @@ class Character:
 
     def calculate(self):
         # Checks Race/Class for attribute changes
-        self.strength = self.rawStrength
-        self.dexterity = self.rawDexterity
-        self.constitution = self.rawConstitution
-        self.intelligence = self.rawIntelligence
-        self.wisdom = self.rawWisdom
-        self.charisma = self.rawCharisma
+        self.strength = int(self.rawStrength * self.cls.attribute_bonuses[0])
+        self.dexterity = int(self.rawDexterity * self.cls.attribute_bonuses[1])
+        self.constitution = int(self.rawConstitution * self.cls.attribute_bonuses[2])
+        self.intelligence = int(self.rawIntelligence * self.cls.attribute_bonuses[3])
+        self.wisdom = int(self.rawWisdom * self.cls.attribute_bonuses[4])
+        self.charisma = int(self.rawCharisma * self.cls.attribute_bonuses[5])
         self.maxHealth = 0
         self.total_ac.clear()
         self.total_wc.clear()
@@ -518,10 +520,10 @@ class Player(Character):
                 self.id = TestData.active_test_players[self.id]
             raw = db.getAdventurer(self.id)
             self.name = raw['name']
-            self.cls = raw['class']
+            self.cls = CharacterClass.get_class(raw['class'])
             self.level = raw['level']
             self.xp = raw['xp']
-            self.race = raw['race']
+            self.race = Race.get_race(raw['race'])
             rawAttributes = raw['attributes'].split(',')  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
             self.rawDexterity = int(rawAttributes[1])
@@ -581,8 +583,8 @@ class Player(Character):
             temp_inventory.append(e.save(database=True))
         inventory = '/'.join(str(e) for e in temp_inventory)
 
-        save = [self.id, self.name, self.cls, self.level, int(
-            self.xp), self.race, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
+        save = [self.id, self.name, self.cls.id, self.level, int(
+            self.xp), self.race.id, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         return db.saveAdventurer(save)
 

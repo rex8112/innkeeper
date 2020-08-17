@@ -1,3 +1,7 @@
+import copy
+
+from .exceptions import NotFound
+
 class Race:
     race_dict = {}
     def __init__(self):
@@ -5,6 +9,14 @@ class Race:
         self.name = 'NonRace'
         self.description = 'No Description'
         self.passive_effect = ''
+
+    @staticmethod
+    def get_race(id: str):
+        r = Race.race_dict.get(id, None)
+        if r:
+            return copy.deepcopy(r)
+        else:
+            raise NotFound(f'{id} class does not exist')
 
 human = Race()
 human.id = 'human'
