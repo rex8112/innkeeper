@@ -10,6 +10,9 @@ class Race:
         self.description = 'No Description'
         self.passive_effect = ''
 
+    def __str__(self):
+        return self.name
+
     @staticmethod
     def get_race(id: str):
         r = Race.race_dict.get(id, None)

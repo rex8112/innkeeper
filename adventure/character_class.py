@@ -12,6 +12,9 @@ class CharacterClass:
         if class_id:
             self = CharacterClass.get_class(class_id)
 
+    def __str__(self):
+        return self.name
+
     @staticmethod
     def get_class(id: str):
         c = CharacterClass.class_dict.get(id, None)
