@@ -208,7 +208,7 @@ class Character:
                         + self.rawIntelligence
                         + self.rawWisdom
                         + self.rawCharisma)
-        unspent_points = (self.level - 1) - (total_points - 65)
+        unspent_points = (self.level - 1) - (total_points - 5)
         return unspent_points
 
     def get_skill(self, skill_name: str):
@@ -304,12 +304,12 @@ class Character:
 
     def calculate(self):
         # Checks Race/Class for attribute changes
-        self.strength = int(self.rawStrength * self.cls.attribute_bonuses[0])
-        self.dexterity = int(self.rawDexterity * self.cls.attribute_bonuses[1])
-        self.constitution = int(self.rawConstitution * self.cls.attribute_bonuses[2])
-        self.intelligence = int(self.rawIntelligence * self.cls.attribute_bonuses[3])
-        self.wisdom = int(self.rawWisdom * self.cls.attribute_bonuses[4])
-        self.charisma = int(self.rawCharisma * self.cls.attribute_bonuses[5])
+        self.strength = int((self.rawStrength + 10) * self.cls.attribute_bonuses[0])
+        self.dexterity = int((self.rawDexterity + 10) * self.cls.attribute_bonuses[1])
+        self.constitution = int((self.rawConstitution + 10) * self.cls.attribute_bonuses[2])
+        self.intelligence = int((self.rawIntelligence + 10) * self.cls.attribute_bonuses[3])
+        self.wisdom = int((self.rawWisdom + 10) * self.cls.attribute_bonuses[4])
+        self.charisma = int((self.rawCharisma + 10) * self.cls.attribute_bonuses[5])
         self.maxHealth = 0
         self.total_ac.clear()
         self.total_wc.clear()
