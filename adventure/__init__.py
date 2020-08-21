@@ -24,6 +24,8 @@ from .skills import Skill
 from .database import db
 from .data import TestData
 from .formatting import Formatting
+from .race import Race
+from .character_class import CharacterClass
 
 try:
     from logging import NullHandler
