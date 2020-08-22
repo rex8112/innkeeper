@@ -39,136 +39,258 @@ class Adventure(commands.Cog):
         self.quest_check.start()
         self.activity_change.start()
 
+    async def wait_for_message(self, check, timeout=30.0, delete=True):
+        content = None
+        try:
+            v_message = await self.bot.wait_for('message', timeout=timeout, check=check)
+            content = v_message.content
+            await v_message.delete()
+        except asyncio.TimeoutError:
+            pass
+        except discord.Forbidden:
+            pass
+        finally:
+            return content
+
+    async def wait_for_reaction(self, check, timeout=30.0, delete=True):
+        emoji = None
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=timeout, check=check)
+            emoji = reaction.emoji
+            await reaction.remove(user)
+        except asyncio.TimeoutError:
+            pass
+        except discord.Forbidden:
+            pass
+        finally:
+            return emoji
+
+    async def build_reaction_menu(self, message, reactions: list, clear=True, delete=True):
+        try:
+            if clear:
+                await asyncio.sleep(0.26)
+                await message.clear_reactions()
+        except discord.Forbidden:
+            pass
+        for r in reactions:
+            await asyncio.sleep(0.26)
+            await message.add_reaction(r)
+
     @commands.command()
     @commands.guild_only()
     async def begin(self, ctx):
         """Begin your adventure!
         Ultimately, the character creator."""
-        adv = ac.Player(ctx.author.id, False)
-        embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
-                              description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
-        embed.add_field(name='Needed Information',
-                        value='Name:\nStrength:\nDexterity:\nConstitution:\nIntelligence:\nWisdom:\nCharisma:[WIP:Not currently implemented]')
-        embed.add_field(name='Next on the list:',
-                        value='**Name**\nYour new adventurer is going to need a name. Type it below.')
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        embed.set_footer(text='You have 3 minutes to type your response')
-        controlMessage = await ctx.send(embed=embed)
-        tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
-
-        try:
-            logger.debug('Waiting for name')
-            valueMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: message.author == ctx.author and message.channel == ctx.message.channel)
-        except asyncio.TimeoutError:
-            await controlMessage.edit(embed=tout)
-            logger.warning('Adventure Creator Timed Out')
-        else:
-            logger.debug('Adventure Creator acquired name!')
-            name = re.sub('[ ]{2,}', ' ', valueMessage.content)
-            name = re.sub('[^A-Za-z ]+', '', name)
-            name = name.strip()
-            length = len(name)
-            if length < 3 or length > 20:
-                embed = discord.Embed(title='Name must be 3-20 characters long.',
-                                      colour=ac.Colour.errorColour)
-                await controlMessage.edit(embed=embed)
-                return
-
-            await valueMessage.delete()
-            cont = False
-
-            while not cont:
-
-                embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
-                                      description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
-                embed.add_field(name='Needed Information',
-                                value='Name: {}\nStrength:\nDexterity:\nConstitution:\n~~Intelligence:\nWisdom:\nCharisma:\n~~[WIP:Currently Unused But Required]'.format(name))
-                embed.add_field(name='Next on the list:',
-                                value='**Attributes**\nBy default, you have 10 in every attribute but we are going to change that. You have **5** points to spend. \
-                          You will gain a point per level up, do not worry.\n**Formatting**\nFor this information, I am going to need you to put the points \
-                            you want in the format listed below, the order matters and is the same as listed above.\n`1 2 2 0 0 0`')
-                embed.set_author(name=ctx.author.name,
-                                 icon_url=ctx.author.avatar_url)
-                embed.set_footer(
-                    text='You have 3 minutes to type your response')
-                await controlMessage.edit(embed=embed)
-
-                try:
-                    logger.debug('Waiting for attributes')
-                    valueMessage = await self.bot.wait_for('message', timeout=180.0, check=lambda message: message.author == ctx.author and message.channel == ctx.channel)
-                except asyncio.TimeoutError:
-                    cont = True
-                    await controlMessage.edit(embed=tout)
-                    controlMessage = None
-                    logger.warning('Adventure Creator Timed Out')
-                else:
-                    try:
-                        attributes = list(
-                            map(int, valueMessage.content.split(' ')))
-                    except ValueError:
-                        logger.warning('Invalid Response passed to attributes')
-                    else:
-                        total = 0
-                        if len(attributes) > 6:
-                            del attributes[6:]
-                        elif len(attributes) < 6:
-                            for _ in range(6 - len(attributes)):
-                                attributes.append(0)
-
-                        for att in attributes:
-                            total += att
-
-                        attributes[:] = [x + 10 for x in attributes]
-
-                        if total > 5:
-                            await ctx.send(embed=discord.Embed(title='Total number over 5, try again', colour=ac.Colour.errorColour), delete_after=3.0)
-                        elif total < 5:
-                            await ctx.send(embed=discord.Embed(title='Total number under 5, try again', colour=ac.Colour.errorColour), delete_after=3.0)
-                        else:
-                            cont = True
-                    finally:
-                        await valueMessage.delete()
-
-            if controlMessage == None:
-                return
-            embed = discord.Embed(title='Adventurer Creator', colour=ac.Colour.creationColour,
-                                  description='Welcome Adventurer!\nBefore you can start your adventurer, I am going to need some new info from you.')
-            embed.add_field(name='Needed Information',
-                            value='Name: {0}\nStrength: {1[0]}\nDexterity: {1[1]}\nConstitution: {1[2]}\nIntelligence: {1[3]}\nWisdom: {1[4]}\n~~Charisma: {1[5]}~~\n[WIP:Currently Unused But Required]'.format(name, attributes))
-            embed.add_field(name='Next on the list:',
-                            value='**ALL DONE!**\nTake a look at the information, is it all to your liking?')
-            embed.set_author(name=ctx.author.display_name,
-                             icon_url=ctx.author.avatar_url)
-            embed.set_footer(text='You have 3 minutes to react your response')
-            await controlMessage.edit(embed=embed)
-            await controlMessage.add_reaction('✅')
-            await asyncio.sleep(0.26)
-            await controlMessage.add_reaction('❌')
-
-            try:
-                logger.debug('Waiting for confirmation')
-                reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user == ctx.message.author and controlMessage.id == reaction.message.id)
-            except asyncio.TimeoutError:
-                await controlMessage.edit(embed=tout)
-                await asyncio.sleep(0.26)
-                await controlMessage.clear_reactions()
-                logger.warning('Adventure Creator Timed Out')
+        async def update_message(message):
+            creator_embed = discord.Embed(
+                title='Character Creator',
+                colour=ac.Colour.creationColour,
+                description=(
+                    'Welcome to the character creator. I will be walking you through '
+                    'a few steps to create a new character. At the end if you are not '
+                    'pleased with your character, you can scrap them and start over.'
+                )
+            )
+            creator_embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            creator_embed.set_footer(text=footer)
+            information = (
+                f'Name : {name if name else ""}\n'
+                f'Race : {race if race else ""}\n'
+                f'Class: {clss if clss else ""}'
+            )
+            creator_embed.add_field(
+                name='Current Information',
+                value=information
+            )
+            creator_embed.add_field(
+                name='Next Up',
+                value=next_up
+            )
+            if not message:
+                message = await ctx.send(embed=creator_embed)
             else:
-                if str(reaction) == '✅':
-                    # async with controlMessage.channel.typing():
-                    if adv.new(name, 'Adventurer', 'Human', attributes, ctx.guild.id):
-                        embed = discord.Embed(title='Adventurer Created!',
-                                              colour=ac.Colour.successColour, description='Welcome {}!'.format(name))
-                        embed.add_field(name='What to do next?', value='To start getting to work, run `{0}quest` to begin your first journey. Use `{0}talk` for various information.'.format(self.bot.CP))
-                    else:
-                        embed = discord.Embed(title='Adventurer Already Created!', colour=ac.Colour.errorColour,
-                                              description='You can not make two!')
+                await message.edit(embed=creator_embed)
+            return message
+        name = None
+        race = None
+        clss = None
+        timeout_embed = discord.Embed(
+            title='Timed Out',
+            colour=ac.Colour.errorColour
+        )
+        in_progress = True
+        embed_message = None
+        attributes = [0, 0, 0, 0, 0, 0]
+        next_up = 'Nothing'
+        footer = ''
+        while in_progress:
+            while not name:
+                next_up = (
+                    '__**Character Name**__\n'
+                    'To set your character name, send a message with your desired name.\n'
+                    'Name must only contain alphanumeric characters but spaces are allowed.'
+                )
+                embed_message = await update_message(embed_message)
+                footer = ''
+                response = await self.wait_for_message(
+                    check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id
+                )
+                if response:
+                    name = re.sub('[ ]{2,}', ' ', response)
+                    name = re.sub('[^A-Za-z ]+', '', name)
+                    name = name.strip()
+                    length = len(name)
+                    if length < 3 or length > 20:
+                        name = None
+                        footer = 'Name must be within 3 and 20 characters'
                 else:
-                    embed = discord.Embed(title='Adventurer Scrapped!', colour=ac.Colour.errorColour,
-                                          description='Rerun the command to try again')
-                await asyncio.sleep(0.26)
-                await controlMessage.clear_reactions()
-                await controlMessage.edit(embed=embed)
+                    in_progress = False
+                    footer = 'Timed Out'
+                    await embed_message.edit(embed=timeout_embed)
+
+            while not race:
+                next_up = (
+                            '__**Race Selection**__\n'
+                            'You will have to choose a race out of the '
+                            'following selection below.'
+                        )
+                embed_message = await update_message(embed_message)
+                available_races = ''
+                chosen_race = None
+                for key, r in ac.Race.race_dict.items():
+                    available_races += f'`{key}`: {r}\n'
+
+                race_embed = discord.Embed(
+                    title='Available Races',
+                    colour=ac.Colour.infoColour,
+                    description=available_races
+                )
+                race_embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+                race_embed.set_footer(text='Respond with the race you would like to inspect')
+                race_message = await ctx.send(embed=race_embed)
+
+                response = await self.wait_for_message(
+                    check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id
+                )
+                if response:
+                    response = response.lower()
+                    try:
+                        chosen_race = ac.Race.get_race(response)
+                    except ac.NotFound:
+                        await race_message.delete()
+                        continue
+                else:
+                    await race_message.delete()
+                    await embed_message.edit(embed=timeout_embed)
+                    return
+
+                race_embed.clear_fields()
+                race_embed.add_field(
+                    name=chosen_race.name,
+                    value=f'{chosen_race.description}\n\n__Passive Effect__\n{chosen_race.passive_effect}'
+                )
+                await race_message.edit(embed=race_embed)
+                await self.build_reaction_menu(race_message, ['✅', '❌'])
+                emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and race_message.id == reaction.message.id)
+                if emoji == '✅':
+                    race = chosen_race
+                await race_message.delete()
+
+            while not clss:
+                next_up = (
+                            '__**Class Selection**__\n'
+                            'You will have to choose a class out of the '
+                            'following selection below.'
+                        )
+                embed_message = await update_message(embed_message)
+                available_classes = ''
+                chosen_class = None
+                for key, c in ac.CharacterClass.class_dict.items():
+                    available_classes += f'`{key}`: {c}\n'
+
+                class_embed = discord.Embed(
+                    title='Available Classes',
+                    colour=ac.Colour.infoColour,
+                    description=available_classes
+                )
+
+                class_embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+                class_embed.set_footer(text='Respond with the race you would like to inspect')
+                class_message = await ctx.send(embed=class_embed)
+
+                response = await self.wait_for_message(
+                    check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id
+                )
+                if response:
+                    try:
+                        chosen_class = ac.CharacterClass.get_class(response)
+                    except ac.NotFound:
+                        await class_message.delete()
+                        continue
+                else:
+                    await class_message.delete()
+                    await embed_message.edit(embed=timeout_embed)
+                    return
+
+                modifiers_string = (
+                    f'Strength: {chosen_class.attribute_bonuses[0]:3.0%}\n'
+                    f'Dexterity: {chosen_class.attribute_bonuses[1]:3.0%}\n'
+                    f'Constitution: {chosen_class.attribute_bonuses[2]:3.0%}\n'
+                    f'Intelligence: {chosen_class.attribute_bonuses[3]:3.0%}\n'
+                    f'Wisdom: {chosen_class.attribute_bonuses[4]:3.0%}\n'
+                    f'Charisma: {chosen_class.attribute_bonuses[5]:3.0%}\n'
+                )
+
+                class_embed.clear_fields()
+                class_embed.add_field(
+                    name=chosen_class.name,
+                    value=f'{chosen_class.description}\n\n__Attribute Modifiers__\n{modifiers_string}'
+                )
+                await class_message.edit(embed=class_embed)
+                await self.build_reaction_menu(class_message, ['✅', '❌'])
+                emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and class_message.id == reaction.message.id)
+                if emoji == '✅':
+                    clss = chosen_class
+                await class_message.delete()
+
+            if name and race and clss:
+                in_progress = False
+
+        next_up = (
+            '__**Happy with what you see?**__\n'
+            'You will be able to apply 5 attribute points after this process '
+            f'by running `{self.bot.CP}profile`.'
+        )
+        embed_message = await update_message(embed_message)
+        await self.build_reaction_menu(embed_message, ['✅', '❌'])
+        emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and embed_message.id == reaction.message.id)
+        if emoji == '✅':
+            adv = ac.Player(ctx.author.id, load=False)
+            if adv.new(name, clss, race, attributes, ctx.guild.id):
+                result_embed = discord.Embed(
+                    title='Creation Succeeded!',
+                    colour=ac.Colour.successColour
+                )
+                result_embed.set_author(name=adv.name, icon_url=ctx.author.avatar_url)
+                result_embed.add_field(
+                    name='Where to start',
+                    value=(
+                        f'You can spend your attribute points by using `{self.bot.CP}profile`. '
+                        f'You should also check out `{self.bot.CP}inventory` and `{self.bot.CP}equip` '
+                        f'when you get some equipment. As for your first activity, run `{self.bot.CP}quest` '
+                        'to get started.'
+                    )
+                )
+            else:
+                result_embed = discord.Embed(
+                    title='You can not have more than one adventurer',
+                    colour=ac.Colour.errorColour,
+                    description=f'Run `{self.bot.CP}profile delete` to remove your existing character.'
+                )
+                result_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+            await embed_message.edit(embed=result_embed)
+        await asyncio.sleep(0.26)
+        await embed_message.clear_reactions()
 
     @commands.group(aliases=['character'])
     async def profile(self, ctx):

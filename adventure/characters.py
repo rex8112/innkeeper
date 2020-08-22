@@ -498,7 +498,7 @@ class Player(Character):
 
         self.inventory = []
         if save:
-            if db.addAdventurer(self.id, name, cls, race, ','.join(str(e) for e in rawAttributes), home_id):
+            if db.addAdventurer(self.id, name, cls.id, race.id, ','.join(str(e) for e in rawAttributes), home_id):
                 self.rest()
                 self.calculate()
                 self.rest()
