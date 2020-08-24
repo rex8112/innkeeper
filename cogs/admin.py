@@ -393,11 +393,11 @@ class Admin(commands.Cog):
     @commands.has_guild_permissions(manage_channels=True)
     @commands.guild_only()
     async def set_action_channels(self, ctx, count: int):
-        raw_server_data = list(ac.db.get_server(ctx.guild.id))
+        raw_server_data = ac.db.get_server(ctx.guild.id)
         guild = ctx.guild
         category = next(x for x in guild.categories if x.id == raw_server_data[4])
         action_channels = []
-        for x in raw_server_data[7].split('|'):
+        for x in raw_server_data['command'].split('|'):
             channel = guild.get_channel(int(x))
             if channel:
                 action_channels.append(channel)
@@ -413,15 +413,18 @@ class Admin(commands.Cog):
             for _ in range(change):
                 c = await category.create_text_channel(name='actions_{}'.format(len(action_channels) + 1))
                 action_channels.append(c)
-        raw_server_data[7] = '|'.join(str(x.id) for x in action_channels)
+        raw_server_data['command'] = '|'.join(str(x.id) for x in action_channels)
         ac.db.update_server(
-            raw_server_data[2],
-            raw_server_data[1],
-            raw_server_data[3],
-            raw_server_data[4],
-            raw_server_data[5],
-            raw_server_data[6],
-            raw_server_data[7]
+            raw_server_data['id'],
+            raw_server_data['name'],
+            raw_server_data['type'],
+            raw_server_data['ownerID'],
+            raw_server_data['category'],
+            raw_server_data['announcement'],
+            raw_server_data['general'],
+            raw_server_data['command'],
+            raw_server_data['adventureRole'],
+            raw_server_data['travelRole']
         )
         await ctx.message.add_reaction('✅')
 
@@ -492,6 +495,14 @@ class Admin(commands.Cog):
                             reason=reason,
                             topic='All commands for The Innkeeper goes here.')
                     )
+                adventure_role = await guild.create_role(
+                    name='Adventurer',
+                    reason=reason
+                )
+                travel_role = await guild.create_role(
+                    name='Traveler',
+                    reason=reason
+                )
             # elif str(reaction) == '2️⃣':
             #     embed.title = 'Setup Progress 2/4'
             #     embed.description = 'I am now going to need the appropriate IDs from you.'
@@ -502,7 +513,9 @@ class Admin(commands.Cog):
             announcementID = announcementChannel.id
             generalID = generalChannel.id
             commandID = '|'.join(str(x.id) for x in commandChannels)
-            ac.db.add_server(guildID, guild.name, author.id, categoryID, announcementID, generalID, commandID)
+            adventureID = adventure_role.id
+            travelID = travel_role.id
+            ac.db.add_server(guildID, guild.name, author.id, 'continent', categoryID, announcementID, generalID, commandID, adventureID, travelID)
             await ctx.message.add_reaction('✅')
 
             announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=ac.Colour.infoColour,

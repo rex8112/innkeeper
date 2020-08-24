@@ -24,7 +24,7 @@ class Database:
         cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
-        cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, category INTEGER NOT NULL, announcement INTEGER NOT NULL, general INTEGER NOT NULL, command TEXT NOT NULL)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, type TEXT NOT NULL, category INTEGER, announcement INTEGER, general INTEGER, command TEXT, adventureRole INTEGER, travelRole INTEGER)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS storage(indx INTEGER PRIMARY KEY UNIQUE, adv INTEGER NOT NULL UNIQUE, slots INTEGER DEFAULT 20, inventory TEXT)""")
@@ -359,29 +359,29 @@ class Database:
         cursor.close()
         self.db.commit()
 
-    def add_server(self, ID: int, name: str, ownerID: int, categoryID: int, announcementID: int, generalID: int, commandID: int):
+    def add_server(self, ID: int, name: str, ownerID: int, type_: str, categoryID: int, announcementID: int, generalID: int, commandID: str, adventureRole: int, travelRole: int):
         cursor = self.db.cursor()
         cursor.execute(
             """SELECT id FROM servers WHERE id = ?""",
             (ID,)
         )
         if cursor.fetchone():
-            return self.update_server(ID, name, ownerID, categoryID, announcementID, generalID, commandID)
+            return self.update_server(ID, name, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole)
         else:
             cursor.execute(
-                """INSERT INTO servers(name, id, ownerID, category, announcement, general, command) VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                (name, ID, ownerID, categoryID, announcementID, generalID, commandID)
+                """INSERT INTO servers(name, id, ownerID, type, category, announcement, general, command, adventureRole, travelRole) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (name, ID, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole)
             )
             self.db.commit()
         lastrowid = cursor.lastrowid
         cursor.close()
         return lastrowid
 
-    def update_server(self, ID: int, name: str, ownerID: int, categoryID: int, announcementID: int, generalID: int, commandID: int):
+    def update_server(self, ID: int, name: str, ownerID: int, type_: str, categoryID: int, announcementID: int, generalID: int, commandID: str, adventureRole: int, travelRole: int):
         cursor = self.db.cursor()
         cursor.execute(
-            """UPDATE servers SET name = ?, ownerID = ?, category = ?, announcement = ?, general = ?, command = ? WHERE id = ?""",
-            (name, ownerID, categoryID, announcementID, generalID, commandID, ID)
+            """UPDATE servers SET name = ?, ownerID = ?, type = ?, category = ?, announcement = ?, general = ?, command = ?, adventureRole = ?, travelRole = ? WHERE id = ?""",
+            (name, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole, ID)
         )
         cursor.close()
         self.db.commit()
