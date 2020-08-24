@@ -359,20 +359,13 @@ class Database:
         cursor.close()
         self.db.commit()
 
-    def add_server(self, ID: int, name: str, ownerID: int, type_: str, categoryID: int, announcementID: int, generalID: int, commandID: str, adventureRole: int, travelRole: int):
+    def add_server(self, ID: int, name: str, ownerID: int, type_: str):
         cursor = self.db.cursor()
         cursor.execute(
-            """SELECT id FROM servers WHERE id = ?""",
-            (ID,)
+            """INSERT INTO servers(name, id, ownerID, type) VALUES(?, ?, ?, ?)""",
+            (name, ID, ownerID, type_)
         )
-        if cursor.fetchone():
-            return self.update_server(ID, name, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole)
-        else:
-            cursor.execute(
-                """INSERT INTO servers(name, id, ownerID, type, category, announcement, general, command, adventureRole, travelRole) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (name, ID, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole)
-            )
-            self.db.commit()
+        self.db.commit()
         lastrowid = cursor.lastrowid
         cursor.close()
         return lastrowid
