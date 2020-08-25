@@ -2,7 +2,7 @@ import discord
 import logging
 import sys
 
-from adventure import Formatting
+from adventure import Formatting, Server
 
 from discord.ext import commands
 from tools.configLoader import settings
@@ -36,6 +36,7 @@ logger.addHandler(handler2)
 
 @bot.event
 async def on_ready():
+    Server.refresh_cache(bot)
     print('Logged in as')
     print('Name: {}'.format(bot.user.name))
     print('ID:   {}'.format(bot.user.id))
