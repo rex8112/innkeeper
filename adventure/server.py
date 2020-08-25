@@ -149,7 +149,7 @@ class Server:
             f'not begin your adventure without my help. {action_string}'
         )
         self.on_join_embed = discord.Embed(
-            title=f'Welcome to {self.guild.name} Citizen',
+            title=f'Welcome to {self.guild.name}, Citizen',
             colour=Colour.infoColour,
             description=description
         )
