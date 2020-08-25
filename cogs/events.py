@@ -1,7 +1,7 @@
 import discord
 import logging
 
-from adventure import db, Colour
+from adventure import db, Colour, Player, Server
 from discord.ext import commands
 
 logger = logging.getLogger('eventsCog')
@@ -50,6 +50,16 @@ class Events(commands.Cog):
                                   in any channel within **{0}**, we can get this process started.'.format(guild.name, self.bot.CP))
         embed.set_author(name=guild.name, icon_url=guild.icon_url)
         await owner.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        adv = Player(member.id)
+        guild = member.guild
+        server = Server.get_server(guild.id)
+        if adv.loaded and server.adventurer_role:
+            await member.add_roles(server.adventurer_role)
+        elif server.on_join and not adv.loaded:
+            await member.send(embed=server.on_join_embed)
 
 def setup(bot):
     bot.add_cog(Events(bot))
