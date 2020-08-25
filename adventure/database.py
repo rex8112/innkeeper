@@ -24,7 +24,7 @@ class Database:
         cursor.execute("""CREATE TABLE IF NOT EXISTS rngdungeons( indx INTEGER PRIMARY KEY, adv INTEGER, active INTEGER, stage INTEGER, stages INTEGER, enemies TEXT, loot TEXT, time TEXT, xp INTEGER DEFAULT 0, combatInfo TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS shop( indx INTEGER PRIMARY KEY, adv INTEGER, inventory TEXT, buyback TEXT, refresh TEXT )""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raid( indx INTEGER PRIMARY KEY, adventurers TEXT, boss INTEGER, loot TEXT, completed INTEGER)""")
-        cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, type TEXT NOT NULL, category INTEGER, announcement INTEGER, general INTEGER, command TEXT, adventureRole INTEGER, travelRole INTEGER)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS servers( indx INTEGER PRIMARY KEY, name TEXT, id INTEGER NOT NULL UNIQUE, ownerID INTEGER NOT NULL, type TEXT NOT NULL, category INTEGER, announcement INTEGER, general INTEGER, command TEXT, adventureRole INTEGER, travelRole INTEGER, onjoin INTEGER DEFAULT 0)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS equipment( indx INTEGER PRIMARY KEY, baseID INTEGER NOT NULL, level INTEGER NOT NULL, rarity INTEGER NOT NULL, startingMods TEXT NOT NULL, randomMods TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS raidChannels(indx INTEGER PRIMARY KEY, channelID INTEGER NOT NULL, guildID INTEGER NOT NULL, advIDs TEXT)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS storage(indx INTEGER PRIMARY KEY UNIQUE, adv INTEGER NOT NULL UNIQUE, slots INTEGER DEFAULT 20, inventory TEXT)""")
@@ -361,20 +361,25 @@ class Database:
 
     def add_server(self, ID: int, name: str, ownerID: int, type_: str):
         cursor = self.db.cursor()
-        cursor.execute(
-            """INSERT INTO servers(name, id, ownerID, type) VALUES(?, ?, ?, ?)""",
-            (name, ID, ownerID, type_)
-        )
-        self.db.commit()
+        try:
+            cursor.execute(
+                """INSERT INTO servers(name, id, ownerID, type) VALUES(?, ?, ?, ?)""",
+                (name, ID, ownerID, type_)
+            )
+        except sqlite3.IntegrityError as e:
+            self.db.rollback()
+            raise e
+        else:
+            self.db.commit()
         lastrowid = cursor.lastrowid
         cursor.close()
         return lastrowid
 
-    def update_server(self, ID: int, name: str, ownerID: int, type_: str, categoryID: int, announcementID: int, generalID: int, commandID: str, adventureRole: int, travelRole: int):
+    def update_server(self, ID: int, name: str, ownerID: int, type_: str, categoryID: int, announcementID: int, generalID: int, commandID: str, adventureRole: int, travelRole: int, onjoin: int):
         cursor = self.db.cursor()
         cursor.execute(
-            """UPDATE servers SET name = ?, ownerID = ?, type = ?, category = ?, announcement = ?, general = ?, command = ?, adventureRole = ?, travelRole = ? WHERE id = ?""",
-            (name, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole, ID)
+            """UPDATE servers SET name = ?, ownerID = ?, type = ?, category = ?, announcement = ?, general = ?, command = ?, adventureRole = ?, travelRole = ?, onjoin = ? WHERE id = ?""",
+            (name, ownerID, type_, categoryID, announcementID, generalID, commandID, adventureRole, travelRole, onjoin, ID)
         )
         cursor.close()
         self.db.commit()
