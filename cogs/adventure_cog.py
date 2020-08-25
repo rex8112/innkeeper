@@ -44,6 +44,7 @@ class Adventure(commands.Cog):
         try:
             v_message = await self.bot.wait_for('message', timeout=timeout, check=check)
             content = v_message.content
+            await asyncio.sleep(0.1)
             await v_message.delete()
         except asyncio.TimeoutError:
             pass
@@ -57,6 +58,7 @@ class Adventure(commands.Cog):
         try:
             reaction, user = await self.bot.wait_for('reaction_add', timeout=timeout, check=check)
             emoji = reaction.emoji
+            await asyncio.sleep(0.1)
             await reaction.remove(user)
         except asyncio.TimeoutError:
             pass
@@ -111,6 +113,7 @@ class Adventure(commands.Cog):
             else:
                 await message.edit(embed=creator_embed)
             return message
+        server = ac.Server.get_server(ctx.guild.id)
         name = None
         race = None
         clss = None
@@ -281,6 +284,7 @@ class Adventure(commands.Cog):
                         'to get started.'
                     )
                 )
+                await ctx.author.add_roles(server.adventurer_role, reason='Made an Adventurer')
             else:
                 result_embed = discord.Embed(
                     title='You can not have more than one adventurer',
@@ -446,6 +450,7 @@ class Adventure(commands.Cog):
     async def profile_delete(self, ctx):
         """IRREVERSIBLY delete your adventurer"""
         adv = ac.Player(ctx.author.id)
+        server = ac.Server.get_server(ctx.guild.id)
         embed = discord.Embed(title='ARE YOU SURE?', colour=ac.Colour.errorColour, description='Deleting your adventure is COMPLETELY irreversible, even for admins. To delete your adventurer, type `{}`'.format(adv.name.upper()))
         abort = discord.Embed(title='Deletion aborted', colour=ac.Colour.errorColour)
         d_message = await ctx.send(embed=embed)
@@ -457,6 +462,7 @@ class Adventure(commands.Cog):
             if value_message.content == adv.name.upper():
                 deleted = discord.Embed(title='{} Deleted'.format(adv.name), colour=ac.Colour.errorColour)
                 adv.delete()
+                await ctx.author.remove_roles(server.adventurer_role, reason='Adventurer Deleted')
                 await d_message.edit(embed=deleted)
             else:
                 await d_message.edit(embed=abort)
