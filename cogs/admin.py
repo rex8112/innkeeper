@@ -393,39 +393,18 @@ class Admin(commands.Cog):
     @commands.has_guild_permissions(manage_channels=True)
     @commands.guild_only()
     async def set_action_channels(self, ctx, count: int):
-        raw_server_data = ac.db.get_server(ctx.guild.id)
-        guild = ctx.guild
-        category = next(x for x in guild.categories if x.id == raw_server_data[4])
-        action_channels = []
-        for x in raw_server_data['command'].split('|'):
-            channel = guild.get_channel(int(x))
-            if channel:
-                action_channels.append(channel)
+        server = ac.Server(ctx.guild.id, self.bot)
         if count <= 0:
             return
-        change = count - len(action_channels)
+        change = count - len(server.action_channels)
         if change < 0:
             change *= -1
             for _ in range(change):
-                await action_channels[-1].delete(reason='{}|Deleted via command'.format(str(ctx.author)))
-                action_channels.pop()
+                await server.delete_action_channel(reason=f'{str(ctx.author)}|Deleted via command')
         elif change > 0:
             for _ in range(change):
-                c = await category.create_text_channel(name='actions_{}'.format(len(action_channels) + 1))
-                action_channels.append(c)
-        raw_server_data['command'] = '|'.join(str(x.id) for x in action_channels)
-        ac.db.update_server(
-            raw_server_data['id'],
-            raw_server_data['name'],
-            raw_server_data['type'],
-            raw_server_data['ownerID'],
-            raw_server_data['category'],
-            raw_server_data['announcement'],
-            raw_server_data['general'],
-            raw_server_data['command'],
-            raw_server_data['adventureRole'],
-            raw_server_data['travelRole']
-        )
+                await server.build_action_channel()
+        server.save()
         await ctx.message.add_reaction('✅')
 
     @commands.command()
@@ -436,13 +415,12 @@ class Admin(commands.Cog):
 
         author = ctx.author
         guild = ctx.guild
-        guildID = guild.id
         embed = discord.Embed(title='Setup Progress 1/?', colour=ac.Colour.infoColour, 
             description='For me to work as intended now and in the future I have to work out of a specific channel category. Would you like me to create my own or use a pre-existing one?')
         embed.set_author(name=guild.name, icon_url=guild.icon_url)
         embed.add_field(name='Options', value='1️⃣: Create your own.\n~~2️⃣: Use a pre-existing one.~~')
         try:
-            mainMessage = await author.send(embed=embed)
+            mainMessage = await ctx.send(embed=embed)
         except discord.Forbidden:
             mainMessage = await ctx.send(embed=embed)
         await mainMessage.add_reaction('1️⃣')
@@ -462,7 +440,7 @@ class Admin(commands.Cog):
                 embed.clear_fields()
                 await mainMessage.edit(embed=embed)
                 try:
-                    message_response = await self.bot.wait_for('message', timeout=180.0, check = lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.author.dm_channel.id)
+                    message_response = await self.bot.wait_for('message', timeout=30.0, check = lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
                     action_count = int(message_response.content)
                 except asyncio.TimeoutError:
                     await mainMessage.edit(embed=tout)
@@ -473,66 +451,36 @@ class Admin(commands.Cog):
                 embed.description = 'I will now create a new category and channels, you may edit the channels as you see fit but do not delete and recreate them.'
                 embed.clear_fields()
                 await mainMessage.edit(embed=embed)
-                await mainMessage.add_reaction('✅')
-                announcePerms = {
-                    guild.default_role: discord.PermissionOverwrite(send_messages=False),
-                    guild.me: discord.PermissionOverwrite(send_messages=True)
-                }
-                reason = 'Constructing The Inn'
-                category = await guild.create_category(name='The Inn', reason=reason)
-                announcementChannel = await category.create_text_channel(name='notice_board',
-                                                                         overwrites=announcePerms,
-                                                                         reason=reason,
-                                                                         topic='Announcement Channel for The Innkeeper.')
-                generalChannel = await category.create_text_channel(name='innkeepers_bar',
-                                                                    reason=reason,
-                                                                    topic='Discussion related to The Inn.')
-                commandChannels = []
-                for i in range(action_count):
-                    commandChannels.append(
-                        await category.create_text_channel(
-                            name='actions_{}'.format(i+1),
-                            reason=reason,
-                            topic='All commands for The Innkeeper goes here.')
-                    )
-                adventure_role = await guild.create_role(
-                    name='Adventurer',
-                    reason=reason
-                )
-                travel_role = await guild.create_role(
-                    name='Traveler',
-                    reason=reason
-                )
-            # elif str(reaction) == '2️⃣':
-            #     embed.title = 'Setup Progress 2/4'
-            #     embed.description = 'I am now going to need the appropriate IDs from you.'
-            #     embed.clear_fields()
-            #     embed.add_field(name='Information Needed', value='**Category ID**\nAnnouncement Channel ID\nGeneral')
 
-            categoryID = category.id
-            announcementID = announcementChannel.id
-            generalID = generalChannel.id
-            commandID = '|'.join(str(x.id) for x in commandChannels)
-            adventureID = adventure_role.id
-            travelID = travel_role.id
-            ac.db.add_server(guildID, guild.name, author.id, 'continent', categoryID, announcementID, generalID, commandID, adventureID, travelID)
-            await ctx.message.add_reaction('✅')
-
-            announceEmbed = discord.Embed(title='Hello Citizens of {}!'.format(guild.name), colour=ac.Colour.infoColour,
-                description=('I have arrived to bestow upon you great abilities and the power to grow stronger than you can imagine. '
-                                'If you come to me, I can turn you from a Citizen to an Adventurer!'))
-            announceEmbed.add_field(name='How to get started',
-                                    value='To begin your adventure, run the `{}begin` command in any of the action channels below. You will then be walked through a multi-step process to go from becoming a **citizen** to an **adventurer**.'.format(self.bot.CP))
-            announceEmbed.add_field(name='Current Alpha Limitations',
-                                    value='Max Level: `15`\nVery similar and unbalanced equipment.\nNo Raids Yet.')
-            await announcementChannel.send(embed=announceEmbed)
+                server = ac.Server(ctx.guild.id, self.bot, load=False)
+                server.new()
+                await server.build_category()
+                await server.build_announcement_channel()
+                await server.build_general_channel()
+                for _ in range(action_count):
+                    await server.build_action_channel()
+                await server.build_adventurer_role()
+                server.save()
+            announce_message = await server.announcement.send(embed=server.introduction_embed)
+            await announce_message.pin()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def leave_server(self, ctx):
+        server = ac.Server(ctx.guild.id, self.bot)
         embed = discord.Embed(title='Are you sure you want me to leave?', colour=ac.Colour.errorColour,
-                              description='Leaving will result in my deleting all my channels (Not including raid channels) and erasing server settings.')
+                              description='Leaving will result in my deleting all my channels (Not including current raid channels) and erasing server settings.')
+        pending_deletion = ''
+        pending_deletion += f'{server.category}\n'
+        pending_deletion += f'{server.announcement}\n'
+        pending_deletion += f'{server.general}\n'
+        for a in server.action_channels:
+            pending_deletion += f'{a}\n'
+        embed.add_field(
+            name='Pending Deletion',
+            value=pending_deletion
+        )
         confirm_message = await ctx.send(embed=embed)
         await confirm_message.add_reaction('✅')
         await asyncio.sleep(0.26)
@@ -543,16 +491,9 @@ class Admin(commands.Cog):
             await confirm_message.clear_reactions()
         else:
             if str(reaction) == '✅':
-                raw_server_data = ac.db.get_server(ctx.guild.id)
-                tmp = ctx.guild.get_channel(raw_server_data[5])
-                ID = ctx.guild.id
-                category = tmp.category
                 try:
-                    for channel in category.channels:
-                        await channel.delete(reason='Cleaning up my mess before I go')
-                    await category.delete(reason='Cleaning up my mess before I go')
+                    await server.delete()
                     await ctx.guild.leave()
-                    ac.db.del_server(ID)
                 except discord.Forbidden:
                     embed = discord.Embed(title='I do not have permission to clear up my channels.', colour=ac.Colour.errorColour)
                     await confirm_message.edit(embed=embed)
