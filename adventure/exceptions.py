@@ -29,3 +29,7 @@ class InvalidModString(Error):
 class NotFound(Error):
     """Raised when target not found"""
     pass
+
+class InvalidGuild(Error):
+    """Raised when attempting to do something in the wrong server"""
+    pass
