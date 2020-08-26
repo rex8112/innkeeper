@@ -60,8 +60,10 @@ class Admin(commands.Cog):
         
         Format: Embed Title|Embed Description|Field Title|Field Value
         Fields are repeatable but need both a title and a value."""
-        raw_guilds = ac.db.get_all_servers()
-        channels = [self.bot.get_channel(x[5]) for x in raw_guilds]
+        channels = []
+        for g in ac.Server.server_cache.values():
+            if g.announcement:
+                channels.append(g.announcement)
         message = content.split('|')
         embed = discord.Embed(title=message[0], colour=ac.Colour.infoColour, description=message[1])
         for i, x in enumerate(message[2:]):
