@@ -451,7 +451,7 @@ class Character:
 
 class Player(Character):
     baseXP = 100
-    xpRate = 0.1
+    xpRate = 0.15
     pc = True
 
     def __eq__(self, value):
