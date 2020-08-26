@@ -410,67 +410,63 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def setup_server(self, ctx):
+    async def settings(self, ctx):
         tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
-
         author = ctx.author
         guild = ctx.guild
-        embed = discord.Embed(title='Setup Progress 1/?', colour=ac.Colour.infoColour, 
-            description='For me to work as intended now and in the future I have to work out of a specific channel category. Would you like me to create my own or use a pre-existing one?')
-        embed.set_author(name=guild.name, icon_url=guild.icon_url)
-        embed.add_field(name='Options', value='1️⃣: Create your own.\n~~2️⃣: Use a pre-existing one.~~')
-        try:
-            mainMessage = await ctx.send(embed=embed)
-        except discord.Forbidden:
-            mainMessage = await ctx.send(embed=embed)
-        await mainMessage.add_reaction('1️⃣')
-        # await asyncio.sleep(0.26)
-        # await mainMessage.add_reaction('2️⃣')
-        try:
-            reaction, _ = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: reaction.message.id == mainMessage.id and author.id == user.id)
-        except asyncio.TimeoutError:
-            await mainMessage.edit(embed=tout)
+        server = ac.Server.get_server(guild.id)
+        settings_embed = discord.Embed(
+            title=f'{guild.name} Settings',
+            colour=ac.Colour.activeColour
+        )
+        settings_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
+        if server:
+            category_string = server.category.mention if server.category else 'None'
+            a_string = server.announcement.mention if server.announcement else 'None'
+            g_string = server.general.mention if server.general else 'None'
+            if server.action_channels:
+                act_string = ', '.join(a.mention for a in server.action_channels)
+            else:
+                act_string = 'None'
+            channels = (
+                f'Category: {category_string}\n'
+                f'Announcement Channel: {a_string}\n'
+                f'General Chat Channel: {g_string}\n'
+                f'Action Channels: {act_string}'
+            )
+            settings_embed.add_field(name='Linked Channels', value=channels)
+            settings_embed.add_field(name='Other Settings', value=f'On Join Message: {server.on_join}')
+            await ctx.send(embed=settings_embed)
         else:
-            if isinstance(mainMessage.channel, discord.TextChannel):
-                await mainMessage.clear_reactions()
-            if str(reaction) == '1️⃣':
-                embed.title = 'Setup Progress 1/2'
-                embed.description = 'How many channels should I make that are designated for bot-related commands? This can be changed later.'
-                embed.set_footer(text='Respond with the number')
-                embed.clear_fields()
-                await mainMessage.edit(embed=embed)
-                try:
-                    message_response = await self.bot.wait_for('message', timeout=30.0, check = lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id)
-                    action_count = int(message_response.content)
-                except asyncio.TimeoutError:
-                    await mainMessage.edit(embed=tout)
-                    return
-                except (ValueError, AttributeError):
-                    action_count = 1
-                embed.title = 'Setup Progress 2/2'
-                embed.description = 'I will now create a new category and channels, you may edit the channels as you see fit but do not delete and recreate them.'
-                embed.clear_fields()
-                await mainMessage.edit(embed=embed)
-
-                server = ac.Server(ctx.guild.id, self.bot, load=False)
-                server.new()
-                await server.build_category()
-                await server.build_announcement_channel()
-                await server.build_general_channel()
-                for _ in range(action_count):
-                    await server.build_action_channel()
-                await server.build_adventurer_role()
-                server.save()
-            announce_message = await server.announcement.send(embed=server.introduction_embed)
-            await announce_message.pin()
+            settings_embed.add_field(
+                name='Server Setup',
+                value=(
+                    'You have two options for setting up the server. I can either make '
+                    'the channels I need for you ~~or you can tell me what channels I am allowed '
+                    'to run out of.~~'
+                )
+            )
+            await ctx.send(embed=settings_embed)
+            server = ac.Server(guild.id, self.bot, load=False)
+            server.new()
+            await server.build_category()
+            await server.build_announcement_channel()
+            await server.build_general_channel()
+            await server.build_action_channel()
+            await server.build_adventurer_role()
+            server.on_join = True
+            server.save()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def leave_server(self, ctx):
         server = ac.Server(ctx.guild.id, self.bot)
-        embed = discord.Embed(title='Are you sure you want me to leave?', colour=ac.Colour.errorColour,
-                              description='Leaving will result in my deleting all my channels (Not including current raid channels) and erasing server settings.')
+        embed = discord.Embed(
+            title='Are you sure you want me to leave?',
+            colour=ac.Colour.errorColour,
+            description='Leaving will result in my deleting all my channels (Not including current raid channels) and erasing server settings.'
+        )
         pending_deletion = ''
         pending_deletion += f'{server.category}\n'
         pending_deletion += f'{server.announcement}\n'
