@@ -23,6 +23,13 @@ class CharacterClass:
         else:
             raise NotFound(f'{id} class does not exist')
 
+adventurer = CharacterClass()
+adventurer.id = 'adventurer'
+adventurer.name = 'Adventurer'
+adventurer.description = 'Description Coming Soon'
+adventurer.attribute_bonuses = [1.25, 1.25, 1.25, 1.25, 1.25, 1.25]
+CharacterClass.class_dict[adventurer.id] = adventurer
+
 fighter = CharacterClass()
 fighter.id = 'fighter'
 fighter.name = 'Fighter'
