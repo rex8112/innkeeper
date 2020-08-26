@@ -68,8 +68,6 @@ class Server:
         self.adventurer_role = self.guild.get_role(adventurer_id)
         self.traveler_role = self.guild.get_role(traveler_id)
 
-        
-
         Server.server_cache[self.id] = self
         self.loaded = True
 

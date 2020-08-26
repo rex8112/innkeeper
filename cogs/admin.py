@@ -413,7 +413,6 @@ class Admin(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def settings(self, ctx):
-        tout = discord.Embed(title='Timed Out', colour=ac.Colour.errorColour)
         author = ctx.author
         guild = ctx.guild
         server = ac.Server.get_server(guild.id)

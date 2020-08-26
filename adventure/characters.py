@@ -705,6 +705,17 @@ class Enemy(Character):
             self.raw_skills.append(skill)
 
     def calculate(self):
+        race = Race()
+        race.id = 'enemy'
+        race.name = 'Enemy'
+        race.description = 'You should not see this'
+        race.passive_effect = 'Nothing'
+        clss = CharacterClass()
+        clss.id = 'enemy'
+        clss.name = 'Enemy'
+        clss.description = 'You should not see this'
+        clss.attribute_bonuses = [1, 1, 1, 1, 1, 1]
+
         self.health = 0
         self.mainhand = Equipment('empty')
         self.offhand = Equipment('empty')
@@ -713,6 +724,8 @@ class Enemy(Character):
         self.gloves = Equipment('empty')
         self.boots = Equipment('empty')
         self.trinket = Equipment('empty')
+        self.race = race
+        self.cls = clss
         Character.calculate(self)
         self.rest()
 
