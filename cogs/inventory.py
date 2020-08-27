@@ -125,8 +125,7 @@ class Inventory(commands.Cog):
         """Equip a piece of equipment from your inventory
         Must give the number of the inventory slot the equipment resides in."""
         try:
-            adv = ac.Player(ctx.author.id, False)
-            adv.load(False)
+            adv = ac.Player(ctx.author.id)
             if not adv.loaded:
                 embed = discord.Embed(title='Failed to Load Adventurer. Do you have one?', colour=ac.Colour.errorColour,
                                     description='Please contact rex8112#1200 if this is not the case.')
