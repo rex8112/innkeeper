@@ -192,6 +192,7 @@ class Adventure(commands.Cog):
                     name=chosen_race.name,
                     value=f'{chosen_race.description}\n\n__Passive Effect__\n{chosen_race.passive_effect}'
                 )
+                race_embed.set_footer(text='Press the appropriate reaction if you want this race.')
                 await race_message.edit(embed=race_embed)
                 await self.build_reaction_menu(race_message, ['✅', '❌'])
                 emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and race_message.id == reaction.message.id)
@@ -249,6 +250,7 @@ class Adventure(commands.Cog):
                     name=chosen_class.name,
                     value=f'{chosen_class.description}\n\n__Attribute Modifiers__\n{modifiers_string}'
                 )
+                race_embed.set_footer(text='Press the appropriate reaction if you want this class.')
                 await class_message.edit(embed=class_embed)
                 await self.build_reaction_menu(class_message, ['✅', '❌'])
                 emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and class_message.id == reaction.message.id)
