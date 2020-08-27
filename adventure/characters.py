@@ -383,7 +383,7 @@ class Character:
             '{0.name} Crit Chance calculated to: {1}'.format(self, self.mods['critChance']))
 
         # Constitution related stats third
-        self.maxHealth += PerLevel.health * self.constitution + 100
+        self.maxHealth += PerLevel.health * (self.constitution - 10) + 100
         logger.debug(
             '{0.name} Max health calculated to: {0.maxHealth}'.format(self))
 
@@ -630,12 +630,12 @@ class Enemy(Character):
             base_value, per_level = tuple(a.split('+'))
             final_value = math.floor(float(base_value) + (float(per_level) * self.level))
             final_list.append(final_value)
-        self.rawStrength = -10
-        self.rawDexterity = -10
-        self.rawConstitution = -10
-        self.rawIntelligence = -10
-        self.rawWisdom = -10
-        self.rawCharisma = -10
+        self.rawStrength = 0
+        self.rawDexterity = 0
+        self.rawConstitution = 0
+        self.rawIntelligence = 0
+        self.rawWisdom = 0
+        self.rawCharisma = 0
         try:
             self.rawStrength = final_list[0]
             self.rawDexterity = final_list[1]
@@ -727,6 +727,7 @@ class Enemy(Character):
         self.race = race
         self.cls = clss
         Character.calculate(self)
+        self.maxHealth -= 100
         self.rest()
 
     def load(self, raw_data, calculate=True):
