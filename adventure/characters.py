@@ -630,12 +630,12 @@ class Enemy(Character):
             base_value, per_level = tuple(a.split('+'))
             final_value = math.floor(float(base_value) + (float(per_level) * self.level))
             final_list.append(final_value)
-        self.rawStrength = 0
-        self.rawDexterity = 0
-        self.rawConstitution = 0
-        self.rawIntelligence = 0
-        self.rawWisdom = 0
-        self.rawCharisma = 0
+        self.rawStrength = -10
+        self.rawDexterity = -10
+        self.rawConstitution = -10
+        self.rawIntelligence = -10
+        self.rawWisdom = -10
+        self.rawCharisma = -10
         try:
             self.rawStrength = final_list[0]
             self.rawDexterity = final_list[1]
