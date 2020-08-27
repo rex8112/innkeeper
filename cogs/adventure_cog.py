@@ -219,7 +219,7 @@ class Adventure(commands.Cog):
                 )
 
                 class_embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-                class_embed.set_footer(text='Respond with the race you would like to inspect')
+                class_embed.set_footer(text='Respond with the class you would like to inspect')
                 class_message = await ctx.send(embed=class_embed)
 
                 response = await self.wait_for_message(
@@ -250,7 +250,7 @@ class Adventure(commands.Cog):
                     name=chosen_class.name,
                     value=f'{chosen_class.description}\n\n__Attribute Modifiers__\n{modifiers_string}'
                 )
-                race_embed.set_footer(text='Press the appropriate reaction if you want this class.')
+                class_embed.set_footer(text='Press the appropriate reaction if you want this class.')
                 await class_message.edit(embed=class_embed)
                 await self.build_reaction_menu(class_message, ['✅', '❌'])
                 emoji = await self.wait_for_reaction(check=lambda reaction, user: user == ctx.message.author and class_message.id == reaction.message.id)
