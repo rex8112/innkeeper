@@ -742,9 +742,9 @@ class Adventure(commands.Cog):
                                     raise(InterruptedError)
                                 index = int(vMessage.content) - 1
                                 e = shop.inventory[index]
-                            except (ValueError, IndexError) as e:
+                            except IndexError as e:
                                 pass
-                            except InterruptedError:
+                            except (InterruptedError, ValueError):
                                 buyExit = True
                             else:
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name), 
@@ -799,9 +799,9 @@ class Adventure(commands.Cog):
                                     raise(InterruptedError)
                                 index = int(vMessage.content) - 1
                                 e = shop.buyback[index]
-                            except (ValueError, IndexError) as e:
+                            except IndexError as e:
                                 pass
-                            except InterruptedError:
+                            except (InterruptedError, ValueError):
                                 buyExit = True
                             else:
                                 embed = discord.Embed(title='{} {}'.format(e.getRarity(), e.name),
@@ -856,9 +856,9 @@ class Adventure(commands.Cog):
                                 if int(vMessage.content) < 1:
                                     raise(InterruptedError)
                                 num = int(vMessage.content) - 1
-                            except (ValueError, IndexError) as e:
+                            except IndexError as e:
                                 pass
-                            except InterruptedError:
+                            except (InterruptedError, ValueError):
                                 sellExit = True
                             else:
                                 # In case they type in a number that wasn't listed, which happens to be one of their equipments
