@@ -33,7 +33,7 @@ class Skill():
 
             self.log = ''
             self.user = adv
-            self.ac = int(adv.mods.get('ac', 0))
+            self.wc = int(adv.mods.get('wc', 0))
             self.penetration = int(adv.mods.get('penetration', 0))
             self.critical = False
 
@@ -83,8 +83,8 @@ class Skill():
             return target.deal_magical_damage(dmg, self.penetration)
     
     def get_hit_chance(self, target):
-        wc = int(target.mods.get('wc', 0))
-        chance_to_hit = float(1 + (wc - self.ac) / ((wc + self.ac) * 0.5)) - 0.2
+        ac = int(target.mods.get('ac', 0))
+        chance_to_hit = float(1 + (self.wc - ac) / ((self.wc + ac) * 0.5)) - 0.2
         return chance_to_hit
 
     def test_hit_chance(self, hit_chance):

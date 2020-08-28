@@ -416,16 +416,16 @@ class Character:
         # Charisma related stats sixth
         # self.discount = 0
 
-        # Fill in Skills
-        for skill in self.raw_skills:
-            s = Skill(self, skill)
-            self.skills.append(s)
-
         # Set values to their maximum
         self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
 
         self.mods['ac'] = Modifier('ac', sum(self.total_ac) / len(self.total_ac))
         self.mods['wc'] = Modifier('wc', sum(self.total_wc) / len(self.total_wc))
+
+        # Fill in Skills
+        for skill in self.raw_skills:
+            s = Skill(self, skill)
+            self.skills.append(s)
 
         try:
             if self.maxHealth < self.health:
@@ -797,6 +797,18 @@ class RaidBoss(Character):
             self.name = data[1]
             self.level = data[2]
             self.flavor = data[3]
+            race = Race()
+            race.id = 'enemy'
+            race.name = 'Enemy'
+            race.description = 'You should not see this'
+            race.passive_effect = 'Nothing'
+            clss = CharacterClass()
+            clss.id = 'enemy'
+            clss.name = 'Enemy'
+            clss.description = 'You should not see this'
+            clss.attribute_bonuses = [1, 1, 1, 1, 1, 1]
+            self.cls = clss
+            self.race = race
             
             raw_attributes = data[4].split('|')  # Get a list of the attributes
             self.rawStrength = int(raw_attributes[0])
@@ -807,8 +819,6 @@ class RaidBoss(Character):
             self.rawCharisma = int(raw_attributes[5])
 
             self.raw_skills = data[5].split(',')
-            self.maxHealth = int(data[6])
-            self.health = self.maxHealth
 
             self.inventory = []
             for L in data[7].split(','):
@@ -831,6 +841,8 @@ class RaidBoss(Character):
                 self.raw_mods[mod.id] = mod
 
             self.calculate()
+            self.maxHealth = int(data[6])
+            self.health = self.maxHealth
             self.loaded = True
             return True
         except Exception:
