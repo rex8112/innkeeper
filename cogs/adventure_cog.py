@@ -889,6 +889,7 @@ class Adventure(commands.Cog):
             name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
 
         raids = ac.db.get_raids()
+        server = ac.Server.get_server(ctx.guild.id)
         embed = discord.Embed(title='Available Raids', colour=ac.Colour.infoColour,
                               description='There are no restrictions, choose wisely or death is certain.')
         embed.set_footer(text='Send the *index* number of the raid you wish to do.')
@@ -959,10 +960,7 @@ class Adventure(commands.Cog):
         else:
             if str(reaction) == '✅':
                 try:
-                    raw_server_data = ac.db.get_server(ctx.guild.id)
-                    channel = ctx.guild.get_channel(next(int(e) for e in raw_server_data[7].split('|')))
-                    if channel:
-                        category = channel.category
+                    category = server.category if server else None
                     name = 'Raid_'
                     mentions = ''
                     ids = []
@@ -982,7 +980,7 @@ class Adventure(commands.Cog):
                     raid.build_encounter()
                     await asyncio.sleep(0.26)
                     await setup_message.clear_reactions()
-                    if channel:
+                    if category:
                         raid_channel = await category.create_text_channel(name, overwrites=overwrites, reason='For Raid')
                     else:
                         raid_channel = await ctx.guild.create_text_channel(name, overwrites=overwrites, reason='For Raid')
