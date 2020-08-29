@@ -767,6 +767,7 @@ class Adventure(commands.Cog):
                                     if str(reaction) == '✅':
                                         shop.buy(index)
                                         shop.save()
+                                        adv.save()
                                         buyExit = True
                             finally:
                                 await vMessage.delete()
@@ -823,6 +824,7 @@ class Adventure(commands.Cog):
                                     if str(reaction) == '✅':
                                         shop.buyB(index)
                                         shop.save()
+                                        adv.save()
                                         buyExit = True
                             finally:
                                 await vMessage.delete()
@@ -865,6 +867,8 @@ class Adventure(commands.Cog):
                                 if not e.requirements.get('unsellable', False):
                                     shop.sell(num)
                                     shop.save()
+                                    adv.save()
+                                    
                             finally:
                                 await vMessage.delete()
 
