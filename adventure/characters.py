@@ -181,7 +181,7 @@ class Character:
             return None
 
     def addXP(self, count: int):
-        self.xp += count
+        self.xp += count * self.mods['xp_rate'].get_total()
         return True
 
     def remXP(self, count: int, force=False):
@@ -424,6 +424,8 @@ class Character:
         self.mods['penetration'] = Modifier('penetration')
         self.mods['cooldown_rate'] = Modifier('cooldown_rate')
         self.mods['crit_chance'] = Modifier('crit_chance')
+        self.mods['xp_rate'] = Modifier('xp_rate')
+        self.mods['gold_rate'] = Modifier('gold_rate')
         
 
     def rest(self):  # Reset anything that needs to on rest
