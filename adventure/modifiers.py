@@ -148,9 +148,12 @@ class Modifier:
         return str(self.display_name)
 
 
-    def __init__(self, ID: str, value):
+    def __init__(self, ID: str, value = None):
         self.id = ID
-        if isinstance(value, (int, float)):
+        self.default_value = 0
+        if value == None:
+            pass
+        elif isinstance(value, (int, float)):
             self.value = math.floor(value)
         else:
             raise ValueError('Incorrect Value Type Passed')
@@ -171,10 +174,14 @@ class Modifier:
                 self.description = data['description']
             else:
                 self.description = None
+            if data['defaultValue']:
+                self.default_value = data['defaultValue']
         else:
             self.display_name = self.id
             self.title = None
             self.description = None
+        if self.value == None:
+            self.value = self.default_value
 
 
 class EliteModifier:
