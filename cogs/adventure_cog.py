@@ -437,7 +437,7 @@ class Adventure(commands.Cog):
                                     adv, adv.mods.get('evasion', ac.Modifier('evasion', 0)).value,
                                     adv.mods.get('critChance', ac.Modifier('critChance', 0)).value))
         embed.add_field(name='Constitution: {}'.format(adv.constitution),
-                        value='Base Constitution: {0.rawConstitution}\nMax Health: **{0.maxHealth}**'.format(adv))
+                        value='Base Constitution: {0.rawConstitution}\nMax Health: **{0.max_health}**'.format(adv))
         embed.add_field(name='Intelligence: {}'.format(adv.intelligence),
                         value='Base Intelligence: {0.rawIntelligence}\nSpell Amp: **{1:.1f}%**'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
         embed.add_field(name='Wisdom: {}'.format(adv.wisdom),

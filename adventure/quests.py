@@ -147,10 +147,10 @@ class Quest:
         return Encounter(bPlayers, bEnemies)
 
     def nextStage(self):
-        info = '**{0}**: {0.health}/{0.maxHealth}'.format(self.adv)
+        info = '**{0}**: {0.health}/{0.max_health}'.format(self.adv)
         info += '\n__*Enemies*__'
         for e in self.encounter.enemies:
-            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.maxHealth}'.format(e)
+            info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.max_health}'.format(e)
         info += '\n'
         self.combat_log.append(info)
         if self.encounter.winner == 1:
