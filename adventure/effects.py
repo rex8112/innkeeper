@@ -1,3 +1,5 @@
+from .modifiers import Modifier
+
 class Effect:
     def __init__(self, group: str , modifier_id: str, value: float, effect_type = 0):
         self.group = group
@@ -6,7 +8,7 @@ class Effect:
         self.value = value
 
     def get_modification(self):
-        return (self.modifier_id, self.value)
+        return Modifier(self.modifier_id, self.value)
 
 class StatusEffect:
     def __init__(self, id, potency: float):
