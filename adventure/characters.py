@@ -28,16 +28,17 @@ class Character:
     xpRate = 0.035
     pc = False
 
-    def __init__(self, ID, load = True):
+    def __init__(self, ID):
         self.id = ID
         self.name = 'Unloaded'
         self.mods = {}
         self.raw_mods = {}
         self.total_ac = []
         self.total_wc = []
+        self.effects = {}
+        self.status_effects = {}
+        self.passive_effects = {}
         self.loaded = False
-        if load:
-            self.load()
 
     def __str__(self):
         return self.name
@@ -465,6 +466,11 @@ class Player(Character):
     def __ne__(self, value):
         return not self.__eq__(value)
 
+    def __init__(self, id, load = True):
+        super().__init__(id)
+        if load:
+            self.load()
+
     def new(self, name, cls, race, rawAttributes, home_id, save = True):
         self.name = name
         self.cls = cls
@@ -613,13 +619,7 @@ class Player(Character):
 
 class Enemy(Character):
     def __init__(self, raw_data = ''):
-        self.name = 'Unloaded'
-        self.mods = {}
-        self.raw_mods = {}
-        self.total_ac = []
-        self.total_wc = []
-        self.loaded = False
-
+        super().__init__(0)
         if raw_data:
             self.load(raw_data)
 
@@ -782,12 +782,7 @@ class Enemy(Character):
 
 class RaidBoss(Character):
     def __init__(self, boss_id):
-        self.id = boss_id
-        self.raw_mods = {}
-        self.mods = {}
-        self.total_ac = []
-        self.total_wc = []
-        self.loaded = False
+        super().__init__(boss_id)
         if self.id > 0:
             self.load()
 
