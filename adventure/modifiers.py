@@ -2,6 +2,16 @@ import math
 
 from .database import db
 
+class Effect:
+    def __init__(self, group: str , modifier_id: str, value: float, effect_type = 0):
+        self.group = group
+        self.modifier_id = modifier_id
+        self.effect_type = effect_type # 0 = Additive, 1 = Multiplicative
+        self.value = value
+
+    def get_modification(self):
+        return Modifier(self.modifier_id, self.value)
+
 class Modifier:
     def __eq__(self, other):
         if isinstance(other, Modifier):
@@ -49,40 +59,40 @@ class Modifier:
     def __add__(self, other):
         if isinstance(other, Modifier):
             new_value = self.value + other.value
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         elif isinstance(other, (int, float)):
             new_value = self.value + other
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         else:
             return NotImplemented
 
     def __sub__(self, other):
         if isinstance(other, Modifier):
             new_value = self.value - other.value
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         elif isinstance(other, (int, float)):
             new_value = self.value - other
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         else:
             return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, Modifier):
             new_value = self.value * other.value
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         elif isinstance(other, (int, float)):
             new_value = self.value * other
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         else:
             return NotImplemented
 
     def __truediv__(self, other):
         if isinstance(other, Modifier):
             new_value = self.value / other.value
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         elif isinstance(other, (int, float)):
             new_value = self.value / other
-            return Modifier(self.id, new_value)
+            return Modifier(self.id, new_value, self.effects)
         else:
             return NotImplemented
 
@@ -139,26 +149,54 @@ class Modifier:
             NotImplemented
             
     def __int__(self):
-        return int(self.value)
+        return int(self.get_total())
 
     def __float__(self):
-        return float(self.value)
+        return float(self.get_total())
 
     def __str__(self):
         return str(self.display_name)
 
 
-    def __init__(self, ID: str, value = None):
+    def __init__(self, ID: str, value = None, effects = []):
         self.id = ID
         self.default_value = 0
+        self.effects = {}
+        for e in effects:
+            self.add_effect(e)
         if value == None:
-            pass
+            self.value = None
         elif isinstance(value, (int, float)):
-            self.value = math.floor(value)
+            self.value = int(value)
         else:
             raise ValueError('Incorrect Value Type Passed')
         self.load()
-    
+
+    def get_total(self):
+        additive = []
+        multiplicative = []
+        for e in self.effects:
+            if e.effect_type == 0:
+                additive.append(e.value)
+            elif e.effect_type == 1:
+                multiplicative.append(e.value)
+        return (self.value + sum(additive)) * (sum(multiplicative) + 1)
+
+    def add_effect(self, effect: Effect):
+        if not isinstance(effect, Effect):
+            raise ValueError('Must be an Effect')
+        if effect.id == self.id:
+            self.effects[effect.group] = effect
+
+    def del_effect(self, effect: Effect):
+        if not isinstance(effect, Effect):
+            raise ValueError('Must be an Effect')
+        if effect.id == self.id:
+            del self.effects[effect.group]
+
+    def clear_effects(self):
+        self.effects.clear()
+
     def load(self):
         data = db.get_modifier(self.id)
         if data:
@@ -182,7 +220,6 @@ class Modifier:
             self.description = None
         if self.value == None:
             self.value = self.default_value
-
 
 class EliteModifier:
     def __init__(self, ID = 0):
