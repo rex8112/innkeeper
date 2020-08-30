@@ -39,47 +39,42 @@ class Encounter:
         if active_player.pc:
             available_skills = 'Available Actions\n'
             for skill in active_player.skills:
-                available_skills += '`{}` **Cooldown: {}**\n'.format(
-                    skill.name, skill.cooldown if skill.cooldown > 0 else 'Ready')
+                available_skills += f'`{skill.name}` **Cooldown: {skill.cooldown if skill.cooldown > 0 else "Ready"}**\n'
         else:
             available_skills = 'Information Unknown'
-        embed.add_field(name='Current Turn: {}'.format(active_player.name),
+        embed.add_field(name=f'Current Turn: {active_player.name}',
                         value=available_skills)
 
         enemy_string = ''
         for enemy in self.enemies:
             if enemy not in self.deadEnemies:
-                enemy_string += '{}. Level **{}** {}\n'.format(
-                    self.enemies.index(enemy) + 1, enemy.level, enemy.name)
+                enemy_string += f'{self.enemies.index(enemy) + 1}. Level **{enemy.level}** {enemy.name}'
                 if enemy.pc:
-                    enemy_string += ' **HP: {:.1f}**\n'.format(enemy.health)
+                    enemy_string += f' **HP: {enemy.health:.1}**\n'
                 else:
                     enemy_string += '\n'
             else:
-                enemy_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.enemies.index(enemy) + 1, enemy.level, enemy.name)
+                enemy_string += f'~~{self.enemies.index(enemy) + 1}. Level **{enemy.level}** {enemy.name}~~\n'
 
         player_string = ''
         for player in self.players:
             if player not in self.deadPlayers:
-                player_string += '{}. Level **{}** {}'.format(
-                    self.players.index(player) + 1, player.level, player.name)
+                player_string += f'{self.players.index(player) + 1}. Level **{player.level}** {player.name}'
                 if player.pc:
-                    player_string += ' **HP: {:.1f}**\n'.format(player.health)
+                    player_string += f' **HP: {player.health:.1}**\n'
                 else:
                     player_string += '\n'
             else:
-                player_string += '~~{}. Level **{}** {}~~\n'.format(
-                    self.players.index(player) + 1, player.level, player.name)
+                player_string += f'~~{self.players.index(player) + 1}. Level **{player.level}** {player.name}~~\n'
 
         turn_order_string = ''
         for character in self.turn_order:
             if character not in self.deadPlayers and character not in self.deadEnemies:
-                turn_order_string += 'Level **{}** {}\n'.format(
-                    character.level, character.name)
+                if character == active_player:
+                    turn_order_string += f'__Level **{character.level}** {character.name}__\n'
+                turn_order_string += f'Level **{character.level}** {character.name}\n'
             else:
-                turn_order_string += '~~Level **{}** {}~~\n'.format(
-                    character.level, character.name)
+                turn_order_string += f'~~Level **{character.level}** {character.name}~~\n'
 
         embed.add_field(name='Player List', value=player_string)
         embed.add_field(name='Enemy List', value=enemy_string)
