@@ -268,9 +268,9 @@ class Character:
 
     def heal(self, value: float):
         self.health += value
-        if self.health > self.maxHealth:
-            value -= self.health - self.maxHealth
-            self.health = self.maxHealth
+        if self.health > self.max_health:
+            value -= self.health - self.max_health
+            self.health = self.max_health
         return value
 
     def addLevel(self, count=1, force=False):
@@ -292,7 +292,16 @@ class Character:
         else:
             self.level += count
             return True
-    
+
+    def add_status_effect(self, status_effect):
+        self.status_effects[status_effect.id] = status_effect
+        status_effect.apply_effects(self.mods)
+
+    def del_status_effect(self, status_effect):
+        if self.status_effects.get(status_effect.id):
+            status_effect.remove_effects(self.mods)
+            del self.status_effects[status_effect.id]
+
     def add_mod(self, mod: Modifier):
         if mod.id == 'ac':
             self.total_ac.append(mod.value)
@@ -301,7 +310,27 @@ class Character:
         elif self.mods.get(mod.id, False):
             self.mods.get(mod.id).value += mod.value
         else:
-            self.mods[mod.id] = mod
+            self.mods[mod.id] = Modifier(mod.id, mod.value)
+
+    def add_equipment_mod(self, mod: Modifier):
+        if mod.id == 'ac':
+            self.total_ac.append(mod.value)
+        elif mod.id == 'wc':
+            self.total_wc.append(mod.value)
+        elif self.equipment_mods.get(mod.id, False):
+            self.equipment_mods.get(mod.id).value += mod.value
+        else:
+            self.mods[mod.id] = Modifier(mod.id, mod.value)
+
+    def add_base_mod(self, mod: Modifier):
+        if mod.id == 'ac':
+            self.total_ac.append(mod.value)
+        elif mod.id == 'wc':
+            self.total_wc.append(mod.value)
+        elif self.base_mods.get(mod.id, False):
+            self.base_mods.get(mod.id).value += mod.value
+        else:
+            self.mods[mod.id] = Modifier(mod.id, mod.value)
 
     def calculate(self):
         # Checks Race/Class for attribute changes
@@ -311,19 +340,13 @@ class Character:
         self.intelligence = int((self.rawIntelligence + 10) * self.cls.attribute_bonuses[3])
         self.wisdom = int((self.rawWisdom + 10) * self.cls.attribute_bonuses[4])
         self.charisma = int((self.rawCharisma + 10) * self.cls.attribute_bonuses[5])
-        self.maxHealth = 0
+        self.max_health = 0
         self.total_ac.clear()
         self.total_wc.clear()
-        self.mods.clear()
+        self.refresh_all_modifiers()
+        self.equipment_mods = {}
+        self.base_mods = {}
         self.skills = []
-        self.mods['wc'] = Modifier('wc', 1)
-        self.mods['ac'] = Modifier('ac', 1)
-        self.mods['dmg'] = Modifier('dmg', 0)
-        self.mods['strdmg'] = Modifier('strdmg', 0)
-        self.mods['dexdmg'] = Modifier('dexdmg', 0)
-
-        for mod in self.raw_mods.values():
-            self.add_mod(mod)
 
         # TIME FOR EQUIPMENT CALCULATIONS
         for equip in [self.mainhand, self.offhand, self.helmet, self.armor, self.gloves, self.boots, self.trinket]:
@@ -331,94 +354,49 @@ class Character:
                 equip = Equipment('empty')
 
             for _, mod in equip.starting_mods.items():
-                self.add_mod(mod)
+                self.add_equipment_mod(mod)
             for _, mod in equip.random_mods.items():
-                self.add_mod(mod)
+                self.add_equipment_mod(mod)
             for skill in equip.skills:
                 self.skills.append(Skill(self, skill))
-        self.maxHealth += int(self.mods.get('health', 0))
 
-        self.strength += int(self.mods.get('strength', 0))
-        self.dexterity += int(self.mods.get('dexterity', 0))
-        self.constitution += int(self.mods.get('constitution', 0))
-        self.intelligence += int(self.mods.get('intelligence', 0))
-        self.wisdom += int(self.mods.get('wisdom', 0))
-        self.charisma += int(self.mods.get('charisma', 0))
+        self.max_health = int(self.mods.get('max_health', 0))
 
         # Strength Related Stats First
-        self.mods['unarmDamage'] = Modifier('unarmDamage', float(self.strength) * PerLevel.unarm_damage)
-        logger.debug(
-            '{0.name} Unarmed Damage calculated to: {1}'.format(self, self.mods['unarmDamage']))
-
-        self.inventoryCapacity = (self.rawStrength // PerLevel.inventory_cap + 
+        self.inventoryCapacity = (self.strength // PerLevel.inventory_cap + 
             (10 - (10 // PerLevel.inventory_cap)))
-        logger.debug(
-            '{0.name} Inventory Capacity calculated to: {0.inventoryCapacity}'.format(self))
 
         # Dexterity related stats second
         dex = self.dexterity - 10
         if dex <= 40:  # Dexterity below 40
             evasion = Modifier('evasion', float(dex) * PerLevel.evasion)
-            crit = Modifier('critChance', float(dex) * PerLevel.evasion)
-
         elif dex > 40 and dex <= 100:  # Dexterity between 40 and 100
             evasion = Modifier('evasion', (PerLevel.softcap_evasion * (float(dex) - 40.0) + 40.0 * PerLevel.evasion))
-            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (float(dex) - 40.0) + 40.0 * PerLevel.crit_chance))
-
         else:  # Dexterity above 100
             evasion = Modifier('evasion', (PerLevel.softcap_evasion * (100.0 - 40.0) + 40.0 * PerLevel.evasion))
-            crit = Modifier('critChance', (PerLevel.softcap_crit_chance * (100.0 - 40.0) + 40.0 * PerLevel.crit_chance))
-        
-        if self.mods.get(evasion.id, False):
-            self.mods[evasion.id].value += evasion.value
-        else:
-            self.mods[evasion.id] = evasion
-        if self.mods.get(crit.id, False):
-            self.mods[crit.id].value += crit.value
-        else:
-            self.mods[crit.id] = crit
-
-        logger.debug(
-            '{0.name} Evasion calculated to: {1}'.format(self, self.mods['evasion']))
-        logger.debug(
-            '{0.name} Crit Chance calculated to: {1}'.format(self, self.mods['critChance']))
+        self.add_base_mod(evasion)
 
         # Constitution related stats third
-        self.maxHealth += PerLevel.health * (self.constitution - 10) + 100
-        logger.debug(
-            '{0.name} Max health calculated to: {0.maxHealth}'.format(self))
+        self.max_health += PerLevel.health * (self.constitution - 10) + 100
 
         # Intelligence related stats fourth
         spellAmp = Modifier('spellAmp', (PerLevel.spell_amp * float(self.intelligence - 10)))
-        if self.mods.get(spellAmp.id, False):
-            self.mods[spellAmp.id].value += spellAmp.value
-        else:
-            self.mods[spellAmp.id] = spellAmp
-        logger.debug(
-            '{0.name} Spell Amp calculated to: {1}'.format(self, self.mods['spellAmp']))
-        spell_damage = Modifier('spellDamage', (PerLevel.spell_damage * float(self.intelligence - 10)))
-        if self.mods.get(spell_damage.id, False):
-            self.mods[spell_damage.id].value += spell_damage.value
-        else:
-            self.mods[spell_damage.id] = spell_damage
+        self.add_base_mod(spellAmp)
 
         # Wisdom related stats fifth
         out_heal_amp = Modifier('healAmp', (PerLevel.out_heal_amp * float(self.wisdom - 10)))
-        if self.mods.get(out_heal_amp.id, False):
-            self.mods[out_heal_amp.id].value += out_heal_amp.value
-        else:
-            self.mods[out_heal_amp.id] = out_heal_amp
-        spell_heal = Modifier('spellHeal', (PerLevel.spell_heal * float(self.wisdom - 10)))
-        if self.mods.get(spell_heal.id, False):
-            self.mods[spell_heal.id].value += spell_heal.value
-        else:
-            self.mods[spell_heal.id] = spell_heal
+        self.add_base_mod(out_heal_amp)
 
         # Charisma related stats sixth
         # self.discount = 0
 
-        # Set values to their maximum
-        self.mods['dmg'].value += self.mods['strdmg'].value * self.strength + self.mods['dexdmg'].value * self.dexterity
+        # Set final values
+        for mod in self.raw_mods.values():
+            self.add_base_mod(mod)
+        for mod in self.base_mods.values():
+            self.add_mod(mod)
+        for mod in self.equipment_mods.values():
+            self.add_mod(mod)
 
         self.mods['ac'] = Modifier('ac', sum(self.total_ac) / len(self.total_ac))
         self.mods['wc'] = Modifier('wc', sum(self.total_wc) / len(self.total_wc))
@@ -429,15 +407,27 @@ class Character:
             self.skills.append(s)
 
         try:
-            if self.maxHealth < self.health:
-                self.health = self.maxHealth
+            if self.max_health < self.health:
+                self.health = self.max_health
         except AttributeError:
-            self.health = self.maxHealth
+            self.health = self.max_health
 
         logger.debug('{0.name} Calculation complete'.format(self))
 
+    def refresh_all_modifiers(self):
+        self.mods.clear()
+        self.mods['wc'] = Modifier('wc')
+        self.mods['ac'] = Modifier('ac')
+        self.mods['max_health'] = Modifier('max_health')
+        self.mods['dmg'] = Modifier('dmg')
+        self.mods['evasion'] = Modifier('evasion')
+        self.mods['penetration'] = Modifier('penetration')
+        self.mods['cooldown_rate'] = Modifier('cooldown_rate')
+        self.mods['crit_chance'] = Modifier('crit_chance')
+        
+
     def rest(self):  # Reset anything that needs to on rest
-        self.health = self.maxHealth
+        self.health = self.max_health
         try:
             for skill in self.skills:
                 skill.__init__(self, skill.name)
@@ -726,8 +716,8 @@ class Enemy(Character):
         self.trinket = Equipment('empty')
         self.race = race
         self.cls = clss
-        Character.calculate(self)
-        self.maxHealth -= 100
+        super().calculate()
+        self.max_health -= 100
         self.rest()
 
     def load(self, raw_data, calculate=True):

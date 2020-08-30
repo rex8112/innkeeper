@@ -396,7 +396,7 @@ class Adventure(commands.Cog):
             embed.add_field(
                 name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
             embed.add_field(
-                name='Stats', value='Max Health: **{0.maxHealth}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**\nUse `{4}profile stats` for more info.'\
+                name='Stats', value='Max Health: **{0.max_health}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**\nUse `{4}profile stats` for more info.'\
                     .format(adv, adv.mods.get('wc'),
                             adv.mods.get('ac'),
                             adv.mods.get('dmg'),
