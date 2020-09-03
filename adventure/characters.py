@@ -243,7 +243,7 @@ class Character:
         return random.randint(1, 20) + self.level
 
     def deal_physical_damage(self, value: float, penetration = 0):
-        parmor = self.mods.get('parmor', Modifier('parmor', 0)) - float(penetration)
+        parmor = self.mods.get('parmor', Modifier('parmor')) - float(penetration)
         if parmor > 100:
             parmor = 100
         elif parmor < 0:
@@ -255,7 +255,7 @@ class Character:
         return damage
 
     def deal_magical_damage(self, value: float, penetration = 0):
-        marmor = self.mods.get('marmor', Modifier('marmor', 0)) - float(penetration)
+        marmor = self.mods.get('marmor', Modifier('marmor')) - float(penetration)
         if marmor > 100:
             marmor = 100
         elif marmor < 0:
@@ -265,6 +265,10 @@ class Character:
             raise ValueError('Dealt Damage returned NaN. This is not supposed to happen.')
         self.health -= damage
         return damage
+
+    def deal_status_damage(self, value: float, penetration = 0):
+        self.health -= value
+        return value
 
     def heal(self, value: float):
         self.health += value
@@ -292,6 +296,11 @@ class Character:
         else:
             self.level += count
             return True
+
+    def process_per_round(self, round_count=1):
+        for _ in range(round_count):
+            for s in self.status_effects:
+                s.process_life_span()
 
     def add_status_effect(self, status_effect):
         self.status_effects[status_effect.id] = status_effect
