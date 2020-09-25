@@ -242,8 +242,10 @@ class Character:
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
 
-    def deal_physical_damage(self, value: float, penetration = 0):
+    def deal_physical_damage(self, value: float, penetration = 0, multiplicative = False):
         parmor = self.mods.get('parmor', Modifier('parmor')) - float(penetration)
+        if multiplicative:
+            value = self.health * value
         if parmor > 100:
             parmor = 100
         elif parmor < 0:
@@ -254,8 +256,10 @@ class Character:
         self.health -= damage
         return damage
 
-    def deal_magical_damage(self, value: float, penetration = 0):
+    def deal_magical_damage(self, value: float, penetration = 0, multiplicative = False):
         marmor = self.mods.get('marmor', Modifier('marmor')) - float(penetration)
+        if multiplicative:
+            value = self.health * value
         if marmor > 100:
             marmor = 100
         elif marmor < 0:
@@ -266,11 +270,15 @@ class Character:
         self.health -= damage
         return damage
 
-    def deal_status_damage(self, value: float, penetration = 0):
+    def deal_status_damage(self, value: float, penetration = 0, multiplicative = False):
+        if multiplicative:
+            value = self.health * value
         self.health -= value
         return value
 
-    def heal(self, value: float):
+    def heal(self, value: float, multiplicative = False):
+        if multiplicative:
+            value = self.health * value
         self.health += value
         if self.health > self.max_health:
             value -= self.health - self.max_health
@@ -299,12 +307,31 @@ class Character:
 
     def process_per_round(self, round_count=1):
         for _ in range(round_count):
-            for s in self.status_effects:
-                s.process_life_span()
+            effect_list = [x for x in self.status_effects.values()]
+            for s in effect_list:
+                if s.full_effect:
+                    for e in s.round_effects:
+                        self.process_round_effect(e)
+                if s.process_lifespan():
+                    self.del_status_effect(s)
+
+    def process_round_effect(self, effect):
+        multiplicative = True if effect.effect_type == 1 else False
+        if effect.modifier_id == 'health':
+            if effect.value > 0:
+                self.heal(effect.value, multiplicative)
+            else:
+                self.deal_status_damage(value=effect.value * -1, multiplicative=multiplicative)
 
     def add_status_effect(self, status_effect):
-        self.status_effects[status_effect.id] = status_effect
-        status_effect.apply_effects(self.mods)
+        s = self.status_effects.get(status_effect.id)
+        if s:
+            if s.add_potency(status_effect):
+                status_effect.apply_effects(self.mods)
+        else:
+            self.status_effects[status_effect.id] = status_effect
+            if status_effect.full_effect:
+                status_effect.apply_effects(self.mods)
 
     def del_status_effect(self, status_effect):
         if self.status_effects.get(status_effect.id):
@@ -329,7 +356,7 @@ class Character:
         elif self.equipment_mods.get(mod.id, False):
             self.equipment_mods.get(mod.id).value += mod.value
         else:
-            self.mods[mod.id] = Modifier(mod.id, mod.value)
+            self.equipment_mods[mod.id] = Modifier(mod.id, mod.value)
 
     def add_base_mod(self, mod: Modifier):
         if mod.id == 'ac':
@@ -339,7 +366,7 @@ class Character:
         elif self.base_mods.get(mod.id, False):
             self.base_mods.get(mod.id).value += mod.value
         else:
-            self.mods[mod.id] = Modifier(mod.id, mod.value)
+            self.base_mods[mod.id] = Modifier(mod.id, mod.value)
 
     def calculate(self):
         # Checks Race/Class for attribute changes

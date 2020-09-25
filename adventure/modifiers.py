@@ -175,7 +175,7 @@ class Modifier:
     def get_total(self):
         additive = []
         multiplicative = []
-        for e in self.effects:
+        for e in self.effects.values():
             if e.effect_type == 0:
                 additive.append(e.value)
             elif e.effect_type == 1:
@@ -185,13 +185,13 @@ class Modifier:
     def add_effect(self, effect: Effect):
         if not isinstance(effect, Effect):
             raise ValueError('Must be an Effect')
-        if effect.id == self.id:
+        if effect.modifier_id == self.id:
             self.effects[effect.group] = effect
 
     def del_effect(self, effect: Effect):
         if not isinstance(effect, Effect):
             raise ValueError('Must be an Effect')
-        if effect.id == self.id:
+        if effect.modifier_id == self.id:
             del self.effects[effect.group]
 
     def clear_effects(self):

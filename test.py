@@ -1,43 +1,42 @@
-import adventureController as ac
-import tools.database as db
-import logging
+import adventure
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('test')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='test.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-handler2 = logging.FileHandler(filename='latest.log', encoding='utf-8', mode='w')
-handler2.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+def print_status_effects(adv: adventure.Player):
+    info = f'{adv.name}: HP: {adv.health}\nParmor: {float(adv.mods.get("parmor", 0))}\n'
+    for status in adv.status_effects.values():
+        effects = ''
+        for e in status.effects:
+            effects += f'{e.modifier_id}: {e.value} | {"%" if e.effect_type == 1 else "0"}\n'
+        round_effects = ''
+        for e in status.round_effects:
+            round_effects += f'{e.modifier_id}: {e.value} | {"%" if e.effect_type == 1 else "0"}\n'
+        info += (
+            f'{status.name} | {status.potency} | {status.lifespan}\n'
+            f'Effects:\n{effects}\n'
+            f'Round Effects:\n{round_effects}\n'
+        )
+    info += '----------\n'
+    print(info)
 
-db.initDB()
-
-def output(x):
-  print('----------')
-  print('{}: Level {} {} {} with {} XP'.format(x.name,x.level,x.race,x.cls, x.xp))
-  print('{} STR, {} DEX, {} CON, {} INT, {} WIS, {} CHA'.format(x.rawStrength,x.rawDexterity,x.rawConstitution,x.rawIntelligence,x.rawWisdom,x.rawCharisma))
-  print('{} MH, {} OH, {} HELM, {} ARM, {} GLV, {} BTS'.format(x.mainhand.name,x.offhand.name,x.helmet.name,x.armor.name,x.gloves.name,x.boots.name))
-  print('Inventory: {}'.format(x.inventory))
-  print('Skills: {}'.format(x.skills))
-  print('----------')
-
-def equipout(z: ac.Equipment):
-  print('----------')
-  print('{}: {} {}'.format(z.id, z.rarity, z.name))
-  print(z.flavor)
-  print('Mods: {}'.format(z.mods))
-  print('Slot: {}. Price: {}'.format(z.slot, z.price))
-  print('----------')
-
-logger.info('Beginning Test')
-e = ac.Enemy()
-e.generate_new_elite(3)
-e.calculate()
-save = e.save()
-print(save)
-b = ac.Equipment(0)
-b.generate_new(5, 2)
-e_save = b.save()
-print(e_save)
-ac.Equipment(e_save)
+a = adventure.Player(180067685986467840)
+s = adventure.StatusEffect('poison', 0.5)
+s1 = adventure.StatusEffect('poison', 0.5)
+s2 = adventure.StatusEffect('poison', 0.5)
+s3 = adventure.StatusEffect('poison', 0.5)
+a.process_per_round()
+a.add_status_effect(s)
+print_status_effects(a)
+a.process_per_round()
+a.add_status_effect(s1)
+print_status_effects(a)
+a.process_per_round()
+a.add_status_effect(s2)
+print_status_effects(a)
+a.process_per_round()
+a.add_status_effect(s3)
+print_status_effects(a)
+a.process_per_round()
+print_status_effects(a)
+a.process_per_round()
+print_status_effects(a)
+a.process_per_round()
+print_status_effects(a)

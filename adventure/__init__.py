@@ -25,6 +25,7 @@ from .raid import Raid
 from .server import Server
 from .shop import Shop
 from .skills import Skill
+from .statusEffects import StatusEffect
 from .storage import Storage
 from .trade import Trade
 
