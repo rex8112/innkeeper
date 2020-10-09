@@ -64,8 +64,17 @@ class StatusEffect:
     def load(self):
         if self.id == 'poison':
             self.name = 'Poison'
-            self.add_round_effect('health', -0.05, 1)
+            self.add_round_effect('health', -5)
             self.add_effect('parmor', -5)
+        elif self.id == 'bleed':
+            self.name = 'Bleed'
+            self.add_round_effect('health', -0.08, 1)
+        elif self.id == 'burn':
+            self.name = 'Burn'
+            self.add_round_effect('health', -0.05, 1)
+        elif self.id == 'chilled':
+            self.name = 'Chilled'
+            self.add_effect('cooldown_rate', -0.5)
 
 class PassiveEffect:
     pass

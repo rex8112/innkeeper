@@ -3,6 +3,7 @@ import logging
 
 from .modifiers import Modifier
 from .exceptions import NotFound
+from .statusEffects import StatusEffect
 
 logger = logging.getLogger('skills')
 logger.setLevel(logging.INFO)
@@ -28,6 +29,7 @@ class Skill():
             self.hit_chance_additive = 1.0
             self.damage_modifier = 1.0
             self.secondary_damage_modifier = 0.3 # For attacks that do not hit the main target i.e. Cleave
+            self.status_effects = {}
             self.requirements = {}
             self.flags = []
 
@@ -64,7 +66,8 @@ class Skill():
             return [target]
 
     def apply_status_effects(self, target):
-        pass
+        for s, p in self.status_effects.items():
+            target.add_status_effect(StatusEffect(s, p))
 
     def get_damage(self, dmg: float):
         damage = round(random.uniform((dmg * 0.9), (dmg * 1.1)), 2)
@@ -106,11 +109,11 @@ class Skill():
             for _ in range(self.hit_count):
                 if self.test_hit_chance(self.get_hit_chance(targets[0])):
                     damage_values[0].append(self.deal_damage(targets[0], self.get_damage(float(self.user.mods.get('dmg', 0)))))
+                    self.apply_status_effects(targets[0])
                     
-                    if 'cleave' in self.flags:
-                        if len(targets) > 1:
-                            for index, t in enumerate(targets[1:], start=1):
-                                damage_values[index].append(self.deal_damage(t, self.get_secondary_damage(float(self.user.mods.get('dmg', 0)))))
+                    if len(targets) > 1:
+                        for index, t in enumerate(targets[1:], start=1):
+                            damage_values[index].append(self.deal_damage(t, self.get_secondary_damage(float(self.user.mods.get('dmg', 0)))))
                 else:
                     for l in damage_values:
                         l.append('X')
