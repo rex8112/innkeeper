@@ -8,12 +8,12 @@ class StatusEffect:
         self._max_lifespan = 3
         self.effects = []
         self.round_effects = []
+        self.load()
+        self.lifespan = self._max_lifespan
         if self.potency >= 1:
             self.full_effect = True
         else:
             self.full_effect = False
-        self.load()
-        self.lifespan = self._max_lifespan
 
     def add_potency(self, potency):
         if isinstance(potency, (int, float)):
@@ -76,5 +76,18 @@ class StatusEffect:
             self.name = 'Chilled'
             self.add_effect('cooldown_rate', -0.5)
 
-class PassiveEffect:
-    pass
+class PassiveEffect(StatusEffect):
+    def load(self):
+        if self.id == 'goblin':
+            self.name = 'Greed'
+            self.add_effect('xp_rate', 0.05)
+            self.add_effect('gold_rate', 0.05)
+        elif self.id == 'dwarf':
+            self.name = 'Hearty Metabolism'
+            self.add_round_effect('health', 3)
+        elif self.id == 'elf':
+            self.name = 'Keen Eye'
+            self.add_effect('crit_chance', 10)
+        elif self.id == 'human':
+            self.name = 'Status Resistance'
+            self.add_effect('status_resistance', 10)

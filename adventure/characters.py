@@ -4,6 +4,7 @@ import random
 
 from .data import PerLevel, TestData
 from .skills import Skill
+from .statusEffects import PassiveEffect
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
 from .modifiers import Modifier, EliteModifier
@@ -181,8 +182,9 @@ class Character:
             return None
 
     def addXP(self, count: int):
-        self.xp += count * self.mods['xp_rate'].get_total()
-        return True
+        amount_to_add = count * self.mods['xp_rate'].get_total()
+        self.xp += amount_to_add
+        return amount_to_add
 
     def remXP(self, count: int, force=False):
         if self.xp - count >= 0:
@@ -441,6 +443,9 @@ class Character:
         for skill in self.raw_skills:
             s = Skill(self, skill)
             self.skills.append(s)
+
+        if isinstance(self.race.passive_effect, PassiveEffect):
+            self.race.passive_effect.apply_effects(self.mods) #Apply Race Effect
 
         try:
             if self.max_health < self.health:

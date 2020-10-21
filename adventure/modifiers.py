@@ -167,7 +167,7 @@ class Modifier:
         if value == None:
             self.value = None
         elif isinstance(value, (int, float)):
-            self.value = int(value)
+            self.value = value
         else:
             raise ValueError('Incorrect Value Type Passed')
         self.load()
