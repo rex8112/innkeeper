@@ -4,6 +4,7 @@ import asyncio
 import random
 import math
 import re
+import os
 
 import adventure as ac
 
@@ -604,6 +605,23 @@ class Adventure(commands.Cog):
             await quest_message.clear_reactions()
 
     @commands.command()
+    async def questlog(self, ctx, id: int):
+        rng = ac.Quest(id)
+        to_add = ''
+        count = 1
+        if rng.adv.id != ctx.author.id:
+            return
+        while '' in rng.combat_log: rng.combat_log.remove('')
+        for info in rng.combat_log:
+            to_add += f'Stage {count}\n{info}\n----------\n'
+            count += 1
+        with open(f'./logs/quests/{rng.adv.id}.txt', 'w+') as log:
+            log.write(to_add)
+        quest_file = discord.File(f'./logs/quests/{rng.adv.id}.txt', 'QuestLog.txt')
+        await ctx.send(file=quest_file)
+        os.remove(f'./logs/quests/{rng.adv.id}.txt')
+
+    @commands.command()
     @commands.guild_only()
     @is_available()
     async def shop(self, ctx):
@@ -1165,12 +1183,8 @@ class Adventure(commands.Cog):
                     else:
                         embed = discord.Embed(title='Quest Failed', colour=ac.Colour.errorColour,
                                               description='{} died on stage {}'.format(rng.adv.name, rng.stage))
-                    count = 1
-                    while '' in rng.combat_log: rng.combat_log.remove('')
-                    for info in rng.combat_log:
-                        embed.add_field(name='Stage {}'.format(count), value=info)
-                        count += 1
-                    embed.set_footer(text='DEBUG: Current Characters: {}'.format(len(embed)))
+
+                    embed.set_footer(text=f'Run `-questlog {rng.id}` to get the combat log.')
                     await mem.send(embed=embed)
 
     @quest_check.before_loop

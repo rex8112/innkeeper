@@ -25,6 +25,8 @@ class Quest:
     def __init__(self, dID=0):
         self.id = dID
         self.combat_log = []
+        if self.id != 0:
+            self.load()
 
     def new(self, aID: int, difficulty: int):
         self.adv = Player(aID)
@@ -90,16 +92,20 @@ class Quest:
         self.id = db.saveRNG(save)
 
     def loadActive(self, aID):
+        save = db.getActiveRNG(aID)
+        return self.load(save=save)
+
+    def load(self, save = None):
         try:
-            save = db.getActiveRNG(aID)
+            if not save:
+                save = db.getRNG(self.id)
             self.loot = []
             if save[6]:
                 loot_tmp = save[6].split('/')
             else:
                 loot_tmp = []
             for l in loot_tmp:
-                loot = Equipment(0)
-                loot.load(l)
+                loot = Equipment(l)
                 self.loot.append(loot)
 
             self.enemies = []
@@ -151,7 +157,8 @@ class Quest:
         info += '\n__*Enemies*__'
         for e in self.encounter.enemies:
             info += '\n*Lv {0.level}* **{0.name}**: {0.health}/{0.max_health}'.format(e)
-        info += '\n'
+        info += '\n\n'
+        info += self.encounter.log
         self.combat_log.append(info)
         if self.encounter.winner == 1:
             self.stage += 1
