@@ -44,7 +44,7 @@ class BaseEquipment:
         self.max_level = int(data[5])
         self.starting_rarity = int(data[6])
         self.max_rarity = int(data[7])
-        self.starting_mod_string = str(data[8])
+        self.starting_mod_string = str(data[8]) + f'|{self.get_class()}'
         self.random_mod_string = str(data[9])
         if data[10]:
             self.requirement_string = str(data[10])
@@ -62,10 +62,25 @@ class BaseEquipment:
             raise InvalidBaseEquipment
         chosen_data = random.choice(data)
         self.load(chosen_data)
+
+    def get_class(self):
+        base_min = 9
+        min_increase = 12
+        base_max = 36
+        max_increase = 14
+        current_min = base_min + min_increase * (self.min_level)
+        current_max = base_max + max_increase * (self.min_level)
+        value_string = f'{current_min}+{min_increase}/{current_max}+{max_increase}'
+        if self.slot == 'mainhand' or self.slot == 'offhand':
+            class_string = 'wc'
+        else:
+            class_string = 'ac'
+        return f'{class_string}:{value_string}'
+
         
 
 class Equipment:
-    def __init__(self, ID):
+    def __init__(self, ID=0):
         self.loaded = False
         try:
             self.id = int(ID)
