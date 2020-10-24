@@ -456,18 +456,31 @@ class Character:
         logger.debug('{0.name} Calculation complete'.format(self))
 
     def refresh_all_modifiers(self):
+        mod_names = [
+            'wc',
+            'ac',
+            'max_health',
+            'dmg',
+            'spell_dmg',
+            'miracle_dmg',
+            'music_dmg',
+            'evasion',
+            'penetration',
+            'cooldown_rate',
+            'crit_chance',
+            'xp_rate',
+            'gold_rate',
+            'status_resistance',
+            'str_scale',
+            'dex_scale',
+            'con_scale',
+            'int_scale',
+            'wis_scale',
+            'cha_scale'
+        ]
         self.mods.clear()
-        self.mods['wc'] = Modifier('wc')
-        self.mods['ac'] = Modifier('ac')
-        self.mods['max_health'] = Modifier('max_health')
-        self.mods['dmg'] = Modifier('dmg')
-        self.mods['evasion'] = Modifier('evasion')
-        self.mods['penetration'] = Modifier('penetration')
-        self.mods['cooldown_rate'] = Modifier('cooldown_rate')
-        self.mods['crit_chance'] = Modifier('crit_chance')
-        self.mods['xp_rate'] = Modifier('xp_rate')
-        self.mods['gold_rate'] = Modifier('gold_rate')
-        
+        for name in mod_names:
+            self.mods[name] = Modifier(name)
 
     def rest(self):  # Reset anything that needs to on rest
         self.health = self.max_health
