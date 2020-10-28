@@ -370,6 +370,9 @@ class Character:
         else:
             self.base_mods[mod.id] = Modifier(mod.id, mod.value)
 
+    def get_damage(self, type='dmg'):
+        return self.mainhand.damage.get(type, Modifier(type)).get_total()
+
     def calculate(self):
         # Checks Race/Class for attribute changes
         self.strength = int((self.rawStrength + 10) * self.cls.attribute_bonuses[0])
@@ -397,6 +400,7 @@ class Character:
                 self.add_equipment_mod(mod)
             for skill in equip.skills:
                 self.skills.append(Skill(self, skill))
+            equip.generate_damage(self)
 
         self.max_health = int(self.mods.get('max_health', 0))
 

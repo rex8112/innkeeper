@@ -2,7 +2,7 @@ import random
 import logging
 import math
 
-from .modifiers import Modifier
+from .modifiers import Modifier, Effect
 from .skills import Skill
 from .database import db
 from .exceptions import InvalidBaseEquipment, InvalidModString
@@ -27,7 +27,25 @@ class BaseEquipment:
         except ValueError:
             self.id = ID
         if self.id == 'empty':
-            self.load(['empty', 'Empty', 'Nothing is equipped', 'all', 1, 1000, 0, 0, '', '', 'empty:1+0|unsellable:1+0', None, 0])
+            self.load(
+                {
+                    'indx': 'empty',
+                    'name': 'Empty',
+                    'flavor': 'Nothing is equipped',
+                    'slot': 'all',
+                    'minLevel': 1,
+                    'maxLevel': 1000,
+                    'startingRarity': 0,
+                    'maxRarity': 0,
+                    'startingModString': '',
+                    'randomModString': '',
+                    'requirementString': None,
+                    'flags': 'empty|unsellable',
+                    'damageString': None,
+                    'skills': None,
+                    'rng': 0
+                }
+            )
         elif self.id != 0:
             self.load(self.id)
 
@@ -36,25 +54,27 @@ class BaseEquipment:
             data = db.get_base_equipment(ID)
         else:
             data = ID
-        self.id = str(data[0])
-        self.name = str(data[1])
-        self.flavor = str(data[2])
-        self.slot = str(data[3])
-        self.min_level = int(data[4])
-        self.max_level = int(data[5])
-        self.starting_rarity = int(data[6])
-        self.max_rarity = int(data[7])
-        self.starting_mod_string = str(data[8]) + f'|{self.get_class()}'
-        self.random_mod_string = str(data[9])
-        if data[10]:
-            self.requirement_string = str(data[10])
+        self.id = str(data['indx'])
+        self.name = str(data['name'])
+        self.flavor = str(data['flavor'])
+        self.slot = str(data['slot'])
+        self.min_level = int(data['minLevel'])
+        self.max_level = int(data['maxLevel'])
+        self.starting_rarity = int(data['startingRarity'])
+        self.max_rarity = int(data['maxRarity'])
+        self.starting_mod_string = str(data['startingModString']) + f'|{self.get_class()}'
+        self.random_mod_string = str(data['randomModString'])
+        self.damage_string = str(data['damageString'])
+        self.flags = str(data['flags'])
+        if data['requirementString']:
+            self.requirement_string = str(data['requirementString'])
         else:
             self.requirement_string = None
-        if data[11]:
-            self.skills_string = str(data[11])
+        if data['skills']:
+            self.skills_string = str(data['skills'])
         else:
             self.skills_string = None
-        self.rng = bool(data[12])
+        self.rng = bool(data['rng'])
 
     def new(self, lvl: int, rarity: int, RNG = True):
         data = db.get_base_equipment(lvl=lvl, rarity=rarity, rng=RNG)
@@ -224,6 +244,48 @@ class Equipment:
         skills = skills_string.split('|')
         return skills
 
+    def process_damage_string(self, damage_string: str):
+        # 'dmg:20+5,str_scale.1,dex_scale.1|...'
+        damage = {}
+        if not damage_string or damage_string == 'None':
+            return damage
+        damage_list = damage_string.split('|')
+        for d in damage_list:
+            scalars = {}
+            damage_type, values = tuple(d.split(':'))
+            values_list = values.split(',')
+            base, per_level = values_list[0].split('+')
+            base_damage = int(base) + (self.level - self.base_equipment.min_level) * int(per_level)
+            if len(values_list) > 1:
+                scales = values_list[1:]
+                for s in scales:
+                    attribute, amount = tuple(s.split('.'))
+                    scalars[attribute] = int(amount)
+            damage[damage_type] = (Modifier(damage_type, value=base_damage), scalars)
+        return damage
+
+    def generate_damage(self, adv):
+        self.damage = {}
+        for key, value in self.raw_damage.items():
+            mod, scalars = value
+            for attribute, amount in scalars.items():
+                if attribute == 'str_scale':
+                    a = adv.strength
+                elif attribute == 'dex_scale':
+                    a = adv.dexterity
+                elif attribute == 'con_scale':
+                    a = adv.constitution
+                elif attribute == 'int_scale':
+                    a = adv.intelligence
+                elif attribute == 'wis_scale':
+                    a = adv.wisdom
+                elif attribute == 'cha_scale':
+                    a = adv.charisma
+                amount_to_add = ((a * amount) / 200) * mod.value
+                e = Effect(attribute, key, amount_to_add)
+                mod.add_effect(e)
+            self.damage[key] = mod
+
     def calculate_price(self):
         base_price = 10
         price_per_mod = 100
@@ -248,6 +310,9 @@ class Equipment:
         else:
             self.rarity = rarity
         self.slot = self.base_equipment.slot
+        self.raw_damage = self.process_damage_string(self.base_equipment.damage_string)
+        self.damage = {}
+        self.flags = self.base_equipment.flags.split('|')
         self.starting_mods = self.process_mod_string(self.base_equipment.starting_mod_string)
         self.random_mods = {}
         if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
@@ -311,6 +376,8 @@ class Equipment:
 
             self.name = self.base_equipment.name
             self.flavor = self.base_equipment.flavor
+            self.raw_damage = self.process_damage_string(self.base_equipment.damage_string)
+            self.damage = {}
             self.slot = self.base_equipment.slot
             if self.base_equipment.requirement_string:
                 self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
