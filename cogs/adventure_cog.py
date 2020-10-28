@@ -400,7 +400,7 @@ class Adventure(commands.Cog):
                 name='Stats', value='Max Health: **{0.max_health}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**\nUse `{4}profile stats` for more info.'\
                     .format(adv, adv.mods.get('wc'),
                             adv.mods.get('ac'),
-                            adv.mods.get('dmg'),
+                            adv.get_damage(),
                             self.bot.CP))
             embed.add_field(name='Skills', value=skill_string)
             embed.add_field(
