@@ -1,5 +1,6 @@
 class Dungeon:
-    pass
+    def __init__(self):
+        pass
 
 
 class Room:
@@ -14,6 +15,24 @@ class Room:
         new_coordinates = Coordinates(self.coordinates.x, self.coordinates.y+1)
         self.north = room
         room.south = self
+        room.coordinates = new_coordinates
+
+    def build_east(self, room: Room):
+        new_coordinates = Coordinates(self.coordinates.x+1, self.coordinates.y)
+        self.east = room
+        room.west = self
+        room.coordinates = new_coordinates
+
+    def build_south(self, room: Room):
+        new_coordinates = Coordinates(self.coordinates.x, self.coordinates.y-1)
+        self.south = room
+        room.north = self
+        room.coordinates = new_coordinates
+
+    def build_west(self, room: Room):
+        new_coordinates = Coordinates(self.coordinates.x-1, self.coordinates.y)
+        self.west = room
+        room.east = self
         room.coordinates = new_coordinates
 
 
