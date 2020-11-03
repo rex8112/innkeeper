@@ -3,7 +3,7 @@ import math
 import random
 
 from .data import PerLevel, TestData
-from .skills import Skill
+from .skills import get_skill
 from .statusEffects import PassiveEffect
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
@@ -445,7 +445,7 @@ class Character:
 
         # Fill in Skills
         for skill in self.raw_skills:
-            s = Skill(self, skill)
+            s = get_skill(self, skill)
             self.skills.append(s)
 
         if isinstance(self.race.passive_effect, PassiveEffect):

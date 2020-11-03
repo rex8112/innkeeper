@@ -397,7 +397,7 @@ class Adventure(commands.Cog):
             embed.add_field(
                 name='Attributes', value='STR: **{0.strength}**\nDEX: **{0.dexterity}**\nCON: **{0.constitution}**\nINT: **{0.intelligence}**\nWIS: **{0.wisdom}**\nCHA: **{0.charisma}**'.format(adv))
             embed.add_field(
-                name='Stats', value='Max Health: **{0.max_health}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3.value:.0f}**\nUse `{4}profile stats` for more info.'\
+                name='Stats', value='Max Health: **{0.max_health}**\nWeapon Class: **{1.value}**\nArmor Class: **{2.value}**\nDamage: **{3:.0f}**\nUse `{4}profile stats` for more info.'\
                     .format(adv, adv.mods.get('wc'),
                             adv.mods.get('ac'),
                             adv.get_damage(),
@@ -429,24 +429,11 @@ class Adventure(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = discord.Embed(title=str(
-            adv.name), colour=ac.Colour.infoColour, description='Detailed Attributes and Stats')
-        embed.add_field(name='Strength: {}'.format(
-            adv.strength), value='Base Strength: **{0.rawStrength}**\nInventory Slots: **{0.inventoryCapacity}**'.format(adv))
-        embed.add_field(name='Dexterity: {}'.format(
-            adv.dexterity), value='Base Dexterity: **{0.rawDexterity}**\nEvasion: **{1:.1f}%**\nCrit Chance: **{2:.1f}%**'.format(
-                                    adv, adv.mods.get('evasion', ac.Modifier('evasion', 0)).value,
-                                    adv.mods.get('critChance', ac.Modifier('critChance', 0)).value))
-        embed.add_field(name='Constitution: {}'.format(adv.constitution),
-                        value='Base Constitution: {0.rawConstitution}\nMax Health: **{0.max_health}**'.format(adv))
-        embed.add_field(name='Intelligence: {}'.format(adv.intelligence),
-                        value='Base Intelligence: {0.rawIntelligence}\nSpell Amp: **{1:.1f}%**'.format(adv, adv.mods.get('spellAmp', ac.Modifier('spellAmp', 0)).value))
-        embed.add_field(name='Wisdom: {}'.format(adv.wisdom),
-                        value='Base Wisdom: {0.rawWisdom}\nOutgoing Heal Amp: **{1:.1f}%**'.format(adv, adv.mods.get('healAmp', ac.Modifier('healAmp', 0)).value))
-        embed.add_field(name='Charisma: {}'.format(adv.charisma),
-                        value='Base Charisma: {0.rawCharisma}'.format(adv))
-        embed.set_author(name=ctx.author.display_name,
-                         icon_url=ctx.author.avatar_url)
+        embed = discord.Embed(
+            title=str(adv.name),
+            colour=ac.Colour.infoColour,
+            description='Detailed Attributes and Stats'
+        )
         await ctx.send(embed=embed)
 
     @profile.command(name='delete')
@@ -512,7 +499,7 @@ class Adventure(commands.Cog):
             else:
                 t = 'Enemies'
 
-            d = '`Targets: {}`\n{}'.format(t, s.__doc__)
+            d = '`Targets: {}`\n{}'.format(t, s.get_description())
             if r:
                 d += '\n**Requirements**\n{}'.format(r)
             embed.add_field(name='__**{}**__'.format(s.name), value=d)
