@@ -24,13 +24,13 @@ class Coordinates:
         return self.y
 
     def north(self, amount = 1):
-        return Coordinates(self.x, self.y+amount)
+        return Coordinates(self.x, self.y-amount)
 
     def east(self, amount = 1):
         return Coordinates(self.x+amount, self.y)
 
     def south(self, amount = 1):
-        return Coordinates(self.x, self.y-amount)
+        return Coordinates(self.x, self.y+amount)
 
     def west(self, amount = 1):
         return Coordinates(self.x-amount, self.y)
@@ -44,6 +44,10 @@ class Room:
         self.east = None
         self.south = None
         self.west = None
+        self.description = 'A non-descript room.'
+
+    def set_description(self, description):
+        self.description = description
 
     def build_north(self, room: Room):
         new_coordinates = self.coordinates.north()
@@ -104,5 +108,15 @@ class Dungeon:
             self.room_list.append(room)
 
     def build_dungeon(self):
-        pass
-    
+        SIZE = 20
+        CONNECT_CHANCE = 0.5
+
+        starting_room = self.new_room()
+        self.place_room(starting_room)
+        first_room = self.new_room()
+        starting_room.build_north(first_room)
+        self.place_room(first_room)
+        current_room = first_room
+
+        
+
