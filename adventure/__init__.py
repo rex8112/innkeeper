@@ -14,6 +14,7 @@ from .characters import Enemy, Player, RaidBoss, test_players
 from .colour import Colour
 from .data import TestData
 from .database import db
+from .dungeons import Dungeon
 from .encounter import Encounter
 from .equipment import BaseEquipment, Equipment
 from .exceptions import *
