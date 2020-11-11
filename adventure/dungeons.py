@@ -56,10 +56,40 @@ class Room:
         self.east = None
         self.south = None
         self.west = None
+        self.visited = False
+        self.event = False
         self.description = 'A non-descript room.'
+        self.north_description = 'A passage to the North is open./There is a wall to the North.'
+        self.east_description = 'A passage to the East is open./There is a wall to the East.'
+        self.south_description = 'A passage to the South is open./There is a wall to the South.'
+        self.west_description = 'A passage to the West is open./There is a wall to the West.'
 
     def set_description(self, description):
         self.description = description
+
+    def get_description(self):
+        description = f'{self.description}\n\n'
+        north = self.north_description.split('/')
+        if self.north:
+            description += f'{north[0]}\n'
+        else:
+            description += f'{north[1]}\n'
+        east = self.east_description.split('/')
+        if self.east:
+            description += f'{east[0]}\n'
+        else:
+            description += f'{east[1]}\n'
+        south = self.south_description.split('/')
+        if self.south:
+            description += f'{south[0]}\n'
+        else:
+            description += f'{south[1]}\n'
+        west = self.west_description.split('/')
+        if self.west:
+            description += f'{west[0]}\n'
+        else:
+            description += f'{west[1]}\n'
+        return description
 
     def get_direction(self, direction: str):
         if direction == 'north':
@@ -115,6 +145,13 @@ class Room:
         room.east = self
         room.coordinates = new_coordinates
 
+    def enter(self):
+        if self.visited:
+            return None
+        else:
+            self.visited = True
+            return self.event
+
 
 class Dungeon:
     def __init__(self):
@@ -123,6 +160,7 @@ class Dungeon:
         self.adventurers = []
         self.current_room = None
         self.starting_room = None
+        self.rest_ambush_chance = 0.0
         self.room_id_incrementer = 0
 
     def build_matrix(self, columns = 21, rows = 21):
@@ -150,8 +188,7 @@ class Dungeon:
             self.matrix[row][column] = room
             self.room_list.append(room)
 
-    def run_room_gen(self, room: Room):
-        SIZE = 15
+    def run_room_gen(self, room: Room, size = 15):
         CONNECT_CHANCE = 0.125
         FIRST_DOOR_CHANCE = 1.0
         SECOND_DOOR_CHANCE = 0.5
@@ -171,18 +208,18 @@ class Dungeon:
                     if random.uniform(0.0, 1.0) < CONNECT_CHANCE:
                         room.build_direction(d, self.matrix[x][y])
 
-                elif new_count == 0 and len(self.room_list) < SIZE:
+                elif new_count == 0 and len(self.room_list) < size:
                     new_count += 1
                     new_room = self.new_room()
                     room.build_direction(d, new_room)
                     self.place_room(new_room)
-                    self.run_room_gen(new_room)
+                    self.run_room_gen(new_room, size=size)
                 elif new_count >= 1 and random.uniform(0.0, 1.0) < chances[new_count] and room != self.starting_room:
                     new_count += 1
                     new_room = self.new_room()
                     room.build_direction(d, new_room)
                     self.place_room(new_room)
-                    self.run_room_gen(new_room)
+                    self.run_room_gen(new_room, size=size)
 
     def build_map(self):
         text = ''
@@ -204,7 +241,16 @@ class Dungeon:
         with open(f'maps/dungeonmap.txt', 'w') as f:
             f.write(text)
 
-    def build_dungeon(self):
+    def build_dungeon(self, size: int):
         self.starting_room = self.new_room()
         self.place_room(self.starting_room)
         self.run_room_gen(self.starting_room)
+
+    def move(self, room: Room):
+        self.current_room = room
+        event = self.current_room.enter()
+
+    def rest(self):
+        if random.uniform(0.0, 1.0) < self.rest_ambush_chance:
+            for a in self.adventurers:
+                a.rest()
