@@ -12,7 +12,8 @@ startup_extensions = ['cogs.adventure_cog',
                         'cogs.inventory',
                         'cogs.trade',
                         'cogs.admin',
-                        'cogs.events']
+                        'cogs.events',
+                        'cogs.dungeons']
 logging.basicConfig(level=logging.INFO)
 
 game = discord.Activity(
