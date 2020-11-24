@@ -1,4 +1,7 @@
+import discord
 import random
+
+from .colour import Colour
 
 class Coordinates:
     def __init__(self, x: int, y: int):
@@ -154,10 +157,12 @@ class Room:
 
 
 class Dungeon:
-    def __init__(self):
+    def __init__(self, players: list):
+        self.name = 'Dungeon'
         self.matrix = self.build_matrix()
         self.room_list = []
-        self.adventurers = []
+        self.players = players
+        self.actions = {}
         self.current_room = None
         self.starting_room = None
         self.rest_ambush_chance = 0.0
@@ -241,16 +246,126 @@ class Dungeon:
         with open(f'maps/dungeonmap.txt', 'w') as f:
             f.write(text)
 
-    def build_dungeon(self, size: int):
+    def build_dungeon(self, size = 15):
         self.starting_room = self.new_room()
         self.place_room(self.starting_room)
-        self.run_room_gen(self.starting_room)
+        self.run_room_gen(self.starting_room, size=size)
+        self.current_room = self.starting_room
 
     def move(self, room: Room):
         self.current_room = room
         event = self.current_room.enter()
+        return event
 
     def rest(self):
         if random.uniform(0.0, 1.0) < self.rest_ambush_chance:
-            for a in self.adventurers:
+            for a in self.players:
                 a.rest()
+
+    def build_status(self, embed: discord.Embed):
+        available_skills = (
+            '`north`\n`east`\n`south`\n`west`\n'
+            '`rest`\n'
+            '`inventory`\n'
+            '`inspect <#>`\n'
+            '`refresh`'
+        )
+
+        player_string = ''
+        for i, player in enumerate(self.players, 1):
+            act = self.actions.get(player.id, "")
+            if act:
+                player_string += f'{i}. {player.name} - **{act}**\n'
+            else:
+                player_string += f'{i}. {player.name} - \n'
+
+        embed.add_field(name='Available Actions', value=available_skills)
+        embed.add_field(name='Player List', value=player_string)
+
+    async def run_turn(self, bot, message: discord.Message):
+        channel = message.channel
+        update_message = True
+        while len(self.actions) < len(self.players):
+            if update_message:
+                menu_embed = discord.Embed(
+                    title=self.name,
+                    description=self.current_room.get_description(),
+                    colour=Colour.activeColour
+                )
+                self.build_status(menu_embed)
+                await message.edit(embed=menu_embed)
+                update_message = False
+            v_message = await bot.wait_for(
+                'message',
+                timeout=300.0,
+                check=lambda m: m.author.id in (x.id for x in self.players) and m.channel == message.channel
+            )
+            action = v_message.content.lower()
+            player = next(filter(lambda x: x == v_message.author, self.players))
+            if action in ('north', 'east', 'south', 'west', 'rest'): # Action Voting
+                self.actions[player.id] = action
+                update_message = True
+            elif action == 'inventory': # Inventory
+                i_embed = discord.Embed(
+                    title=f'{player.name}\'s Inventory',
+                    colour=Colour.infoColour
+                )
+                player.fill_inventory_embed(i_embed)
+                await channel.send(embed=i_embed)
+            elif action.startswith('inspect'): # Inspection
+                try:
+                    index = int(action.split(' ')[1]) - 1
+                except (ValueError, IndexError):
+                    continue
+                if index < 0 or index >= len(self.players):
+                    continue
+                target_player = self.players[index]
+                embed = message.embeds[0]
+                last_inspect = None
+                for i, f in enumerate(embed.fields):
+                    if f.name == 'Inspection':
+                        last_inspect = i
+                if last_inspect != None:
+                    embed.remove_field(last_inspect)
+                status_effects = "\n".join(x.name for x in target_player.status_effects)
+                embed.add_field(
+                    name='Inspection',
+                    value=(
+                        f'{target_player.name}\n'
+                        f'HP: {target_player.health:4}\n'
+                        'Status Effects\n'
+                        f'{status_effects}'
+                    )
+                )
+                await message.edit(embed=embed)
+            elif action == 'refresh': # Refresh message
+                embed = discord.Embed(
+                    title='Building Embed',
+                    colour=Colour.creationColour
+                )
+                message = await channel.send(embed=embed)
+                update_message = True
+
+        # END OF WHILE LOOP ----------------------------------------------
+        action_count = { 
+            'north': 0,
+            'east': 0,
+            'south': 0,
+            'west': 0,
+            'rest': 0
+        }
+        for a in self.actions.values():
+            action_count[a] += 1
+        sorted_actions = sorted(action_count.items(), reverse=True, key=lambda value: value[1])
+        action = sorted_actions[0][0]
+        if action == 'rest':
+            self.rest()
+        else:
+            new_room = self.current_room.get_direction(action)
+            if new_room:
+                self.move(new_room)
+            else:
+                action = ''
+        self.actions.clear()
+        return action, message
+
