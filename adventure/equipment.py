@@ -62,7 +62,11 @@ class BaseEquipment:
         self.max_level = int(data['maxLevel'])
         self.starting_rarity = int(data['startingRarity'])
         self.max_rarity = int(data['maxRarity'])
-        self.starting_mod_string = str(data['startingModString']) + f'|{self.get_class()}'
+
+        if data['startingModString']:
+            self.starting_mod_string = str(data['startingModString']) + f'|{self.get_class()}'
+        else:
+            self.starting_mod_string = self.get_class()
         self.random_mod_string = str(data['randomModString'])
         self.damage_string = str(data['damageString'])
         self.flags = str(data['flags'])
