@@ -191,7 +191,7 @@ class Adventure(commands.Cog):
                 race_embed.clear_fields()
                 race_embed.add_field(
                     name=chosen_race.name,
-                    value=f'{chosen_race.description}\n\n__Passive Effect__\n{chosen_race.passive_effect}'
+                    value=f'{chosen_race.description}\n\n__Passive Effect__\n{chosen_race.passive_effect.name}'
                 )
                 race_embed.set_footer(text='Press the appropriate reaction if you want this race.')
                 await race_message.edit(embed=race_embed)
@@ -227,6 +227,7 @@ class Adventure(commands.Cog):
                     check=lambda message: message.author.id == ctx.author.id and message.channel.id == ctx.channel.id
                 )
                 if response:
+                    response = response.lower()
                     try:
                         chosen_class = ac.CharacterClass.get_class(response)
                     except ac.NotFound:
