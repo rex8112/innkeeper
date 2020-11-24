@@ -2,6 +2,7 @@ import logging
 import math
 import random
 
+from discord import Member, User, Embed
 from .data import PerLevel, TestData
 from .skills import get_skill
 from .statusEffects import PassiveEffect
@@ -241,6 +242,10 @@ class Character:
         else:
             raise ValueError('Incorrect Slot Passed')
 
+    def fill_inventory_embed(self, embed: Embed):
+        for count, e in enumerate(self.inventory, start=1):
+            embed.add_field(name=f'------- Slot {count:02} -------', value=e.getInfo(compare_equipment=self.get_equipment_from_slot(e.slot)))
+
     def roll_initiative(self):
         return random.randint(1, 20) + self.level
 
@@ -399,7 +404,7 @@ class Character:
             for _, mod in equip.random_mods.items():
                 self.add_equipment_mod(mod)
             for skill in equip.skills:
-                self.skills.append(Skill(self, skill))
+                self.skills.append(get_skill(self, skill))
             equip.generate_damage(self)
 
         self.max_health = int(self.mods.get('max_health', 0))
@@ -506,7 +511,7 @@ class Player(Character):
     pc = True
 
     def __eq__(self, value):
-        if isinstance(value, Player):
+        if isinstance(value, (Player, Member, User)):
             return self.id == value.id
         elif isinstance(value, int):
             return self.id == value
