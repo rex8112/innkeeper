@@ -37,7 +37,7 @@ class BaseEquipment:
                     'maxLevel': 1000,
                     'startingRarity': 0,
                     'maxRarity': 0,
-                    'startingModString': '',
+                    'startingModString': None,
                     'randomModString': '',
                     'requirementString': None,
                     'flags': 'empty|unsellable',

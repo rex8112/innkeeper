@@ -495,7 +495,7 @@ class Character:
         self.health = self.max_health
         try:
             for skill in self.skills:
-                skill.__init__(self, skill.name)
+                skill.cooldown = skill.start_cooldown
         except AttributeError:
             pass
 
@@ -560,7 +560,6 @@ class Player(Character):
         self.inventory = []
         if save:
             if db.addAdventurer(self.id, name, cls.id, race.id, ','.join(str(e) for e in rawAttributes), home_id):
-                self.rest()
                 self.calculate()
                 self.rest()
                 self.save()
@@ -570,7 +569,6 @@ class Player(Character):
             else:
                 return False
         else:
-            self.rest()
             self.calculate()
             self.rest()
             return False
