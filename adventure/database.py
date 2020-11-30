@@ -224,14 +224,18 @@ class Database:
         return fetch
 
 
-    def get_base_enemy(self, lvl: int, rng = True):
+    def get_base_enemy(self, lvl: int, combat_rank = 1, rng = True):
         cursor = self.db2.cursor()
         if rng:
             cursor.execute(
-                """SELECT * FROM baseEnemies WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ?""", (lvl, lvl))
+                """SELECT * FROM baseEnemies WHERE rng = 1 AND minLevel <= ? AND maxLevel >= ? AND combatRank <= ?""",
+                (lvl, lvl, combat_rank)
+            )
         else:
             cursor.execute(
-                """SELECT * FROM baseEnemies WHERE minLevel <= ? AND maxLevel >= ?""", (lvl, lvl))
+                """SELECT * FROM baseEnemies WHERE minLevel <= ? AND maxLevel >= ? AND combatRank <= ?""",
+                (lvl, lvl, combat_rank)
+            )
         fetch = cursor.fetchall()
         cursor.close()
         return fetch

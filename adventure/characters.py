@@ -711,9 +711,9 @@ class Enemy(Character):
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
-    def generate_new(self, lvl: int, rng = True, index = 0):
+    def generate_new(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
         if index == 0:
-            data_pool = db.get_base_enemy(lvl, rng=rng)
+            data_pool = db.get_base_enemy(lvl, rng=rng, combat_rank=max_combat_rank)
             data = random.choice(data_pool)
         else:
             data = db.get_base_enemy_indx(index)
@@ -726,12 +726,15 @@ class Enemy(Character):
         attributes_string = data[5]
         modifiers_string = data[6]
         self.raw_skills = data[7].split('|')
+        self.combat_rank = data['combatRank']
         self.level = lvl
         self.process_attributes_string(attributes_string)
         self.raw_mods = self.process_mod_string(modifiers_string)
+        if calculate:
+            self.calculate()
 
-    def generate_new_elite(self, lvl: int, rng = True, index = 0):
-        self.generate_new(lvl, rng=rng, index=index)
+    def generate_new_elite(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
+        self.generate_new(lvl, rng=rng, index=index, max_combat_rank=max_combat_rank, calculate=False)
         elite = random.choice(self.potential_elites)
         try:
             elite = int(elite)
@@ -756,6 +759,8 @@ class Enemy(Character):
 
         for skill in self.elite.skills:
             self.raw_skills.append(skill)
+        if calculate:
+            self.calculate()
 
     def calculate(self):
         race = Race()
