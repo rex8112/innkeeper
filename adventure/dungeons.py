@@ -55,6 +55,7 @@ class Room:
     def __init__(self, id: int, coords = Coordinates(0, 0)):
         self.id = id
         self.coordinates = coords
+        self.dungeon = None
         self.north = None
         self.east = None
         self.south = None
@@ -184,6 +185,7 @@ class Dungeon:
 
     def new_room(self):
         room = Room(self.room_id_incrementer)
+        room.dungeon = self
         self.room_id_incrementer += 1
         return room
 

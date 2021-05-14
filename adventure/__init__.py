@@ -18,6 +18,7 @@ from .dungeons import Dungeon
 from .encounter import Encounter
 from .equipment import BaseEquipment, Equipment
 from .exceptions import *
+from .events import EnemyEvent
 from .formatting import Formatting
 from .modifiers import EliteModifier, Modifier
 from .quests import Quest

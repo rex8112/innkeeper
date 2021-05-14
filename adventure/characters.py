@@ -122,6 +122,8 @@ class Character:
             elif eq.slot == 'trinket':
                 uneq = self.trinket
                 self.trinket = eq
+            else:
+                return
 
             if not uneq.requirements.get('empty', False):
                 self.inventory.append(uneq)
@@ -153,6 +155,8 @@ class Character:
         elif slot == 'trinket':
             uneq = self.trinket
             self.trinket = eq
+        else:
+            return
 
         if not uneq.mods.get('empty', False):
             self.inventory.append(uneq)
