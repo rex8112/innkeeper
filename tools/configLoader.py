@@ -2,10 +2,10 @@ import logging
 import semantic_version
 import sys
 
-from configobj import ConfigObj
+from ConfigObject import ConfigObject
 
 logger = logging.getLogger('configLoader')
-config = ConfigObj(infile = 'config.ini', write_empty_values = True)
+config = ConfigObject(filename = 'config.ini')
 
 try: ##Check if config.ini exist, if not, create a new file and kill the program
   f = open('config.ini')
@@ -14,11 +14,11 @@ except IOError as e:
   f = open('config.ini', 'w+')
   f.close()
   logger.critical('config.ini not found, generating one now. Please fill it in.')
-  config['token'] = ''
-  config['ownerID'] = '180067685986467840'
+  config['settings']['token'] = ''
+  config['settings']['ownerID'] = '180067685986467840'
   config.write()
   sys.exit()
 
 class settings:
-  token = config['token']
-  owner = config['ownerID']
+  token = config['settings']['token']
+  owner = config['settings']['ownerID'].as_int()
