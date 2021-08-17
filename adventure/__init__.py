@@ -4,7 +4,7 @@ Adventure Wrapper
 
 __title__ = 'adventure'
 __author__ = 'rex8112'
-__copyright__ = 'Copyright 2019-2020 rex8112'
+__copyright__ = 'Copyright 2019-2021 rex8112'
 __version__ = '0.2.0'
 
 import logging
