@@ -38,7 +38,7 @@ class settings:
   dbuser = config['db']['user']
   dbpass = config['db']['pass']
   blueprinthost = config['blueprint']['host']
-  blueprintport = config['blueprint']['port']
+  blueprintport = config['blueprint']['port'].as_int()
   blueprintname = config['blueprint']['dbname']
   blueprintuser = config['blueprint']['user']
   blueprintpass = config['blueprint']['pass']
