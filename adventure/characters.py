@@ -1,6 +1,8 @@
+import json
 import logging
 import math
 import random
+from typing import List
 
 from discord import Member, User, Embed
 from .data import PerLevel, TestData
@@ -9,7 +11,7 @@ from .statusEffects import PassiveEffect
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
 from .modifiers import Modifier, EliteModifier
-from .database import db
+from .database import Database
 from .character_class import CharacterClass
 from .race import Race
 
@@ -530,7 +532,7 @@ class Player(Character):
         if load:
             self.load()
 
-    def new(self, name, cls, race, rawAttributes, home_id, save = True):
+    def new(self, name: str, cls: CharacterClass, race: Race, rawAttributes: List[int], home_id: int, save: bool = True) -> bool:
         self.name = name
         self.cls = cls
         self.race = race
@@ -563,15 +565,16 @@ class Player(Character):
 
         self.inventory = []
         if save:
-            if db.addAdventurer(self.id, name, cls.id, race.id, ','.join(str(e) for e in rawAttributes), home_id):
-                self.calculate()
-                self.rest()
-                self.save()
-                logger.info('{}:{} Created Successfully'.format(
-                    self.id, self.name))
-                return True
-            else:
-                return False
+            with Database() as db:
+                if db.insert_adventurer(self.id, name, cls.id, race.id, json.dumps(rawAttributes), home_id):
+                    self.calculate()
+                    self.rest()
+                    self.save()
+                    logger.info('{}:{} Created Successfully'.format(
+                        self.id, self.name))
+                    return True
+                else:
+                    return False
         else:
             self.calculate()
             self.rest()

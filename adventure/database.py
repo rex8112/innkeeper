@@ -36,8 +36,14 @@ class Database:
             except mariadb.Error as e:
                 print(f'Attempt: {i}. Error connecting to MariaDB Platform: {e}')
 
-        self.cur = self.conn.cursor()
-        self.blueprint_cur = self.blueprint_conn.cursor()
+        self.cur = self.conn.cursor(dictionary=True)
+        self.blueprint_cur = self.blueprint_conn.cursor(dictionary=True)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     #Close all connections
     def close(self):
@@ -51,11 +57,18 @@ class Database:
             self.cur.execute(sql, data)
             if commit:
                 self.conn.commit()
-            else:
-                self.conn.rollback()
         except mariadb.Error as e:
-            print(f'Error executing SQL: {e}')
+            print(f'Error executing SQL: {type(e)}: {e}')
             self.conn.rollback()
+
+    def _execute_static_sql(self, sql, data: Tuple = None, commit: bool = True):
+        try:
+            self.blueprint_cur.execute(sql, data)
+            if commit:
+                self.blueprint_conn.commit()
+        except mariadb.Error as e:
+            print(f'Error executing SQL: {type(e)}: {e}')
+            self.blueprint_conn.rollback()
 
     #Insert a new adventurer into the database
     def insert_adventurer(self, id, name, cls, race, attributes, home):
@@ -74,7 +87,7 @@ class Database:
             sql += f'{key}=? AND '
         sql = sql[:-4]
         data = tuple(kwargs.values())
-        self.cur.execute(sql, data, False)
+        self._execute_sql(sql, data, False)
         return self.cur.fetchall()
 
     def update_adventurer(self, id, **kwargs):
@@ -87,3 +100,42 @@ class Database:
         sql += ' WHERE userID=?'
         data = tuple(data + [id])
         self._execute_sql(sql, data)
+
+    def get_base_equipment(self, **kwargs):
+        sql = 'SELECT * FROM baseequipment WHERE '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()
+
+    def get_base_equipment_lvl(self, lvl: int, rarity: int, rng: bool):
+        sql = 'SELECT * FROM baseequipment WHERE minLevel <= ? AND maxLevel >= ? AND maxRarity >= ? AND startingRarity <= ? AND rng = ?'
+        data = (lvl, lvl, rarity, rarity, rng)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()
+
+    def get_equipment(self, **kwargs):
+        sql = 'SELECT * FROM equipment WHERE '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
+        self._execute_sql(sql, data, False)
+        return self.cur.fetchall()
+
+    def get_modifier(self, **kwargs):
+        sql = 'SELECT * FROM modifiers WHERE '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()

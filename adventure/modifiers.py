@@ -1,6 +1,6 @@
 import math
 
-from .database import db
+from .database import Database
 
 class Effect:
     def __init__(self, group: str , modifier_id: str, value: float, effect_type = 0):
@@ -8,6 +8,23 @@ class Effect:
         self.modifier_id = modifier_id
         self.effect_type = effect_type # 0 = Additive, 1 = Multiplicative
         self.value = value
+
+    @classmethod
+    def from_json(cls, json_data):
+        return cls(
+            json_data['group'],
+            json_data['modifier_id'],
+            json_data['value'],
+            json_data['effect_type']
+        )
+
+    def serialize(self):
+        return {
+            'group': self.group,
+            'modifier_id': self.modifier_id,
+            'effect_type': self.effect_type,
+            'value': self.value
+        }
 
     def get_modification(self):
         return Modifier(self.modifier_id, self.value)
@@ -172,6 +189,23 @@ class Modifier:
             raise ValueError('Incorrect Value Type Passed')
         self.load()
 
+    @classmethod
+    def from_json(cls, json_data):
+        id = json_data['id']
+        value = json_data['value']
+        raw_effects = json_data['effects']
+        effects = []
+        for e in raw_effects:
+            effects.append(Effect.from_json(e))
+        return cls(id, value, effects)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'value': self.value,
+            'effects': self.effects
+        }
+
     def get_total(self):
         additive = []
         multiplicative = []
@@ -198,7 +232,10 @@ class Modifier:
         self.effects.clear()
 
     def load(self):
-        data = db.get_modifier(self.id)
+        with Database() as db:
+            data = db.get_modifier(id=self.id)
+            if data:
+                data = data[0]
         if data:
             if data['displayName']:
                 self.display_name = data['displayName']

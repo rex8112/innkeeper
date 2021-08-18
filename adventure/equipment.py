@@ -1,10 +1,11 @@
+import json
 import random
 import logging
 import math
 
 from .modifiers import Modifier, Effect
 from .skills import Skill
-from .database import db
+from .database import Database
 from .exceptions import InvalidBaseEquipment, InvalidModString
 from .formatting import Formatting
 
@@ -51,7 +52,10 @@ class BaseEquipment:
 
     def load(self, ID):
         if isinstance(ID, int):
-            data = db.get_base_equipment(ID)
+            with Database() as db:
+                data = db.get_base_equipment(indx=ID)
+                if data:
+                    data = data[0]
         else:
             data = ID
         self.id = str(data['indx'])
@@ -81,7 +85,8 @@ class BaseEquipment:
         self.rng = bool(data['rng'])
 
     def new(self, lvl: int, rarity: int, RNG = True):
-        data = db.get_base_equipment(lvl=lvl, rarity=rarity, rng=RNG)
+        with Database() as db:
+            data = db.get_base_equipment_lvl(lvl=lvl, rarity=rarity, rng=RNG)
         if not data:
             raise InvalidBaseEquipment
         chosen_data = random.choice(data)
@@ -365,7 +370,10 @@ class Equipment:
                 elif isinstance(data_list, str):
                     data = data_list.split(',')
             else:
-                data = db.get_equipment(self.id)
+                with Database() as db:
+                    data = db.get_equipment(indx=self.id)
+                    if data:
+                        data = data[0]
             if data[0] == 'None':
                 self.id = None
             else:
@@ -374,10 +382,13 @@ class Equipment:
             self.level = int(data[2])
             self.rarity = int(data[3])
             self.starting_mods = {}
-            starting_mods = str(data[4]).split('|')
             self.random_mods = {}
-            random_mods = str(data[5]).split('|')
-
+            try:
+                starting_mods = json.loads(data[4])
+                random_mods = json.loads(data[5])
+            except TypeError:
+                starting_mods = data[4]
+                random_mods = data[5]
             self.name = self.base_equipment.name
             self.flavor = self.base_equipment.flavor
             self.raw_damage = self.process_damage_string(self.base_equipment.damage_string)
@@ -425,15 +436,11 @@ class Equipment:
             return False
 
     def save(self, database = False):
-        starting_mods = []
-        random_mods = []
-        for mod in self.starting_mods.values():
-            starting_mods.append('{}:{}'.format(mod.id, mod.value))
-        for mod in self.random_mods.values():
-            random_mods.append('{}:{}'.format(mod.id, mod.value))
+        starting_mods = json.dumps(self.starting_mods)
+        random_mods = json.dumps(self.random_mods)
 
         save = [self.id, self.base_equipment.id, self.level, self.rarity,
-                '|'.join(starting_mods), '|'.join(random_mods)]
+                starting_mods, random_mods]
         if database and self.id != 'empty':
             self.id = db.save_equipment(save)
             save[0] = self.id
@@ -441,7 +448,7 @@ class Equipment:
         elif self.id:
             return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return ','.join(str(x) for x in save)
+        return json.dumps(save)
 
     def balance_check(self):
         changed = False
