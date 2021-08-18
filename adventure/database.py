@@ -129,6 +129,23 @@ class Database:
         self._execute_sql(sql, data, False)
         return self.cur.fetchall()
 
+    def insert_equipment(self, blueprint, level, startingMods, randomMods):
+        sql = 'INSERT INTO equipment(blueprint, level, startingMods, randomMods) VALUES(?, ?, ?, ?)'
+        data = (blueprint, level, startingMods, randomMods)
+        self._execute_sql(sql, data)
+        return self.cur.lastrowid
+
+    def update_equipment(self, id, **kwargs):
+        sql = 'UPDATE equipment SET '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=?, '
+            data.append(value)
+        sql = sql[:-2]
+        sql += ' WHERE id=?'
+        data = tuple(data + [id])
+        self._execute_sql(sql, data)
+
     def get_modifier(self, **kwargs):
         sql = 'SELECT * FROM modifiers WHERE '
         data = []
