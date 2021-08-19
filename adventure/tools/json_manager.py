@@ -2,6 +2,9 @@ import datetime
 import discord
 import json
 
+def dumps(obj):
+    return json.dumps(obj, default=serialize)
+
 def serialize(obj):
     try:
         return obj.serialize()
