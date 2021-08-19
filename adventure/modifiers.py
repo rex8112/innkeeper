@@ -10,7 +10,7 @@ class Effect:
         self.value = value
 
     @classmethod
-    def from_json(cls, json_data):
+    def from_dict(cls, json_data):
         return cls(
             json_data['group'],
             json_data['modifier_id'],
@@ -190,13 +190,13 @@ class Modifier:
         self.load()
 
     @classmethod
-    def from_json(cls, json_data):
+    def from_dict(cls, json_data):
         id = json_data['id']
         value = json_data['value']
         raw_effects = json_data['effects']
         effects = []
         for e in raw_effects:
-            effects.append(Effect.from_json(e))
+            effects.append(Effect.from_dict(e))
         return cls(id, value, effects)
 
     def serialize(self):
