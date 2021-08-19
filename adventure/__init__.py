@@ -9,8 +9,8 @@ __version__ = '0.2.0'
 
 import logging
 
-# from .character_class import CharacterClass
-# from .characters import Enemy, Player, RaidBoss, test_players
+from .character_class import CharacterClass
+from .characters import Enemy, Player, RaidBoss, test_players
 # from .colour import Colour
 # from .data import TestData
 from .database import Database
@@ -22,7 +22,7 @@ from .equipment import BaseEquipment, Equipment
 # from .formatting import Formatting
 # from .modifiers import EliteModifier, Modifier
 # from .quests import Quest
-# from .race import Race
+from .race import Race
 # from .raid import Raid
 # from .server import Server
 # from .shop import Shop

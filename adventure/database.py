@@ -70,7 +70,7 @@ class Database:
             print(f'Error executing SQL: {type(e)}: {e}')
             self.blueprint_conn.rollback()
 
-    #Insert a new adventurer into the database
+    #DATABASE FUNCTIONS
     def insert_adventurer(self, id, name, cls, race, attributes, home):
         sql = 'INSERT INTO adventurers(userID, name, class, race, attributes, home) VALUES(?, ?, ?, ?, ?, ?)'
         data = (id, name, cls, race, attributes, home)
@@ -101,23 +101,6 @@ class Database:
         data = tuple(data + [id])
         self._execute_sql(sql, data)
 
-    def get_base_equipment(self, **kwargs):
-        sql = 'SELECT * FROM baseequipment WHERE '
-        data = []
-        for key, value in kwargs.items():
-            sql += f'{key}=? AND '
-            data.append(value)
-        sql = sql[:-4]
-        data = tuple(data)
-        self._execute_static_sql(sql, data, False)
-        return self.blueprint_cur.fetchall()
-
-    def get_base_equipment_lvl(self, lvl: int, rarity: int, rng: bool):
-        sql = 'SELECT * FROM baseequipment WHERE minLevel <= ? AND maxLevel >= ? AND maxRarity >= ? AND startingRarity <= ? AND rng = ?'
-        data = (lvl, lvl, rarity, rarity, rng)
-        self._execute_static_sql(sql, data, False)
-        return self.blueprint_cur.fetchall()
-
     def get_equipment(self, **kwargs):
         sql = 'SELECT * FROM equipment WHERE '
         data = []
@@ -146,6 +129,12 @@ class Database:
         data = tuple(data + [id])
         self._execute_sql(sql, data)
 
+    def delete_equipment(self, id):
+        sql = 'DELETE FROM equipment WHERE id=?'
+        data = (id,)
+        self._execute_sql(sql, data)
+
+    # BLUEPRINT FUNCTIONS
     def get_modifier(self, **kwargs):
         sql = 'SELECT * FROM modifiers WHERE '
         data = []
@@ -154,5 +143,22 @@ class Database:
             data.append(value)
         sql = sql[:-4]
         data = tuple(data)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()
+
+    def get_base_equipment(self, **kwargs):
+        sql = 'SELECT * FROM baseequipment WHERE '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()
+
+    def get_base_equipment_lvl(self, lvl: int, rarity: int, rng: bool):
+        sql = 'SELECT * FROM baseequipment WHERE minLevel <= ? AND maxLevel >= ? AND maxRarity >= ? AND startingRarity <= ? AND rng = ?'
+        data = (lvl, lvl, rarity, rarity, rng)
         self._execute_static_sql(sql, data, False)
         return self.blueprint_cur.fetchall()

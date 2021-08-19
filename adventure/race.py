@@ -14,6 +14,9 @@ class Race:
     def __str__(self):
         return self.name
 
+    def serialize(self):
+        return self.id
+
     @staticmethod
     def get_race(id: str):
         r = Race.race_dict.get(id, None)

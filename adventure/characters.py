@@ -1,3 +1,4 @@
+from adventure.tools.json_manager import dumps
 import json
 import logging
 import math
@@ -532,9 +533,9 @@ class Player(Character):
         if load:
             self.load()
 
-    def new(self, name: str, cls: CharacterClass, race: Race, rawAttributes: List[int], home_id: int, save: bool = True) -> bool:
+    def new(self, name: str, clss: CharacterClass, race: Race, rawAttributes: List[int], home_id: int, save: bool = True) -> bool:
         self.name = name
-        self.cls = cls
+        self.cls = clss
         self.race = race
         self.level = 1
         self.xp = 0
@@ -566,11 +567,11 @@ class Player(Character):
         self.inventory = []
         if save:
             with Database() as db:
-                if db.insert_adventurer(self.id, name, cls.id, race.id, json.dumps(rawAttributes), home_id):
+                if db.insert_adventurer(self.id, name, clss.id, race.id, json.dumps(rawAttributes), home_id):
                     self.calculate()
                     self.rest()
                     self.save()
-                    logger.info('{}:{} Created Successfully'.format(
+                    logger.debug('{}:{} Created Successfully'.format(
                         self.id, self.name))
                     return True
                 else:
@@ -636,25 +637,32 @@ class Player(Character):
 
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence,
-                         self.rawWisdom, self.rawCharisma]  # Bundles Attributes into a string to be stored
-        rawAttributes = ','.join(str(e) for e in rawAttributes)
-        # Does the same for skills, though skills aren't currently used
-        skills = ','.join(self.raw_skills)
-        equipment = '/'.join(str(e) for e in [self.mainhand.save(), self.offhand.save(),
-                                              self.helmet.save(), self.armor.save(),
-                                              self.gloves.save(), self.boots.save(),
-                                              self.trinket.save()])
+                         self.rawWisdom, self.rawCharisma]
+        equipment = [self.mainhand.save(), self.offhand.save(),
+                        self.helmet.save(), self.armor.save(),
+                        self.gloves.save(), self.boots.save(),
+                        self.trinket.save()]
         temp_inventory = []
         for e in self.inventory:
             temp_inventory.append(e.save(database=True))
-        inventory = '/'.join(str(e) for e in temp_inventory)
 
-        save = [self.id, self.name, self.cls.id, self.level, int(
-            self.xp), self.race.id, rawAttributes, skills, equipment, inventory, int(self.available), self.health]
+        save = {
+            'name': self.name,
+            'class': self.cls.id,
+            'level': self.level,
+            'xp': int(self.xp),
+            'race': self.race.id,
+            'attributes': dumps(rawAttributes),
+            'skills': dumps(self.raw_skills),
+            'equipment': equipment,
+            'inventory': dumps(temp_inventory),
+            'available': bool(self.available),
+            'health': self.health}
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return db.saveAdventurer(save)
+        with Database() as db:
+            db.update_adventurer(self.id, save)
 
-    def delete(self):
+    def delete(self) -> None:
         """IRREVERSIBLE deletion of an adventurer"""
         for e in [self.mainhand, self.offhand,
                   self.helmet, self.armor,
@@ -665,7 +673,8 @@ class Player(Character):
         for e in self.inventory:
             e.delete()
 
-        db.deleteAdventurer(self.id)
+        with Database() as db:
+            db.delete_adventurer(self.id)
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
     def get_trades(self, active=True):

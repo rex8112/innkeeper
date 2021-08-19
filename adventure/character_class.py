@@ -15,6 +15,9 @@ class CharacterClass:
     def __str__(self):
         return self.name
 
+    def serialize(self):
+        return self.id
+
     @staticmethod
     def get_class(id: str):
         c = CharacterClass.class_dict.get(id, None)

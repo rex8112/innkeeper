@@ -535,6 +535,7 @@ class Equipment:
 
     def delete(self):
         if isinstance(self.id, int):
-            db.delete_equipment(self.id)
+            with Database() as db:
+                db.delete_equipment(self.id)
         logger.debug('{}:{} Deleted'.format(self.id, self.name))
         self.id = None
