@@ -129,9 +129,9 @@ class Database:
         self._execute_sql(sql, data, False)
         return self.cur.fetchall()
 
-    def insert_equipment(self, blueprint, level, startingMods, randomMods):
-        sql = 'INSERT INTO equipment(blueprint, level, startingMods, randomMods) VALUES(?, ?, ?, ?)'
-        data = (blueprint, level, startingMods, randomMods)
+    def insert_equipment(self, blueprint, level, rarity, startingMods, randomMods):
+        sql = 'INSERT INTO equipment(blueprint, level, rarity, startingMods, randomMods) VALUES(?, ?, ?, ?, ?)'
+        data = (blueprint, level, rarity, startingMods, randomMods)
         self._execute_sql(sql, data)
         return self.cur.lastrowid
 

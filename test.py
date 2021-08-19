@@ -5,4 +5,7 @@ with adventure.Database() as db:
     db.delete_adventurer(123)
 
 e = adventure.Equipment()
-e.generate_new(1, 2)
+e.generate_new(5, 3)
+print(e.save())
+e = adventure.Equipment(3)
+print(e.name)

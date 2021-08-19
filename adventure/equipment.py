@@ -8,6 +8,7 @@ from .skills import Skill
 from .database import Database
 from .exceptions import InvalidBaseEquipment, InvalidModString
 from .formatting import Formatting
+from .tools.json_manager import dumps
 
 logger = logging.getLogger('characters')
 logger.setLevel(logging.INFO)
@@ -374,21 +375,21 @@ class Equipment:
                     data = db.get_equipment(indx=self.id)
                     if data:
                         data = data[0]
-            if data[0] == 'None':
+            if data['indx'] == 'None':
                 self.id = None
             else:
-                self.id = data[0]
-            self.base_equipment = BaseEquipment(data[1])
-            self.level = int(data[2])
-            self.rarity = int(data[3])
+                self.id = data['indx']
+            self.base_equipment = BaseEquipment(data['blueprint'])
+            self.level = int(data['level'])
+            self.rarity = int(data['rarity'])
             self.starting_mods = {}
             self.random_mods = {}
             try:
-                starting_mods = json.loads(data[4])
-                random_mods = json.loads(data[5])
+                starting_mods = json.loads(data['startingMods'])
+                random_mods = json.loads(data['randomMods'])
             except TypeError:
-                starting_mods = data[4]
-                random_mods = data[5]
+                starting_mods = data['startingMods']
+                random_mods = data['randomMods']
             self.name = self.base_equipment.name
             self.flavor = self.base_equipment.flavor
             self.raw_damage = self.process_damage_string(self.base_equipment.damage_string)
@@ -403,20 +404,17 @@ class Equipment:
             else:
                 self.skills = []
 
-            for mod_data in starting_mods:
-                if mod_data:
-                    tmp = mod_data.split(':')
-                    mod = Modifier(tmp[0], float(tmp[1]))
-                    self.starting_mods[mod.id] = mod
+            for mod_data in starting_mods.values():
+                mod = Modifier.from_dict(mod_data)
+                self.starting_mods[mod.id] = mod
 
-            for mod_data in random_mods:
-                if mod_data:
-                    tmp = mod_data.split(':')
-                    mod = Modifier(tmp[0], float(tmp[1]))
-                    if self.random_mods.get(mod.id, False):
-                        self.random_mods[mod.id].value += mod.value
-                    else:
-                        self.random_mods[mod.id] = mod
+            for mod_data in random_mods.value():
+                mod = Modifier.from_dict(mod_data)
+                if self.random_mods.get(mod.id, False):
+                    self.random_mods[mod.id].value += mod.value
+                else:
+                    self.random_mods[mod.id] = mod
+                    
             if len(self.random_mods) > 0:
                 highest_mod = max(self.random_mods.values()) # Set title
                 if highest_mod.title:
@@ -436,19 +434,22 @@ class Equipment:
             return False
 
     def save(self, database = False):
-        starting_mods = json.dumps(self.starting_mods)
-        random_mods = json.dumps(self.random_mods)
+        starting_mods = dumps(self.starting_mods)
+        random_mods = dumps(self.random_mods)
 
-        save = [self.id, self.base_equipment.id, self.level, self.rarity,
-                starting_mods, random_mods]
-        if database and self.id != 'empty':
-            self.id = db.save_equipment(save)
-            save[0] = self.id
+        save = {'blueprint': self.base_equipment.id, 'level': self.level, 'rarity': self.rarity, 'startingMods': starting_mods, 'randomMods': random_mods}
+        if database and self.id is None:
+            with Database() as db:
+                self.id = db.insert_equipment(self.base_equipment.id, self.level, self.rarity, starting_mods, random_mods)
+                save[0] = self.id
             return str(self.id)
         elif self.id:
+            with Database() as db:
+                db.update_equipment(self.id, save)
             return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
-        return json.dumps(save)
+        save['indx'] = self.id
+        return dumps(save)
 
     def balance_check(self):
         changed = False
