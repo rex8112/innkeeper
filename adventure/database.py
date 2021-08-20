@@ -6,39 +6,52 @@ import sys
 from tools.configLoader import settings
 
 class Database:
+    conn = None
+    blueprint_conn = None
+    connections = 0
+
     #Initialize database connections
     def __init__(self):
         self.connected = False
         self.blueprint_connected = False
-        for i in range(1, 5):
-            try:
-                self.conn = mariadb.connect(
-                    user=settings.dbuser,
-                    password=settings.dbpass,
-                    host=settings.dbhost,
-                    port=settings.dbport,
-                    database=settings.dbname
-                )
-                self.connected = True
-                break
-            except mariadb.Error as e:
-                print(f'Attempt: {i}. Error connecting to MariaDB Platform: {e}\nTry running the included .sql if the database is not found.')
-        for i in range(1, 5):
-            try:
-                self.blueprint_conn = mariadb.connect(
-                    user=settings.blueprintuser,
-                    password=settings.blueprintpass,
-                    host=settings.blueprinthost,
-                    port=settings.blueprintport,
-                    database=settings.blueprintname
-                )
-                self.blueprint_connected = True
-                break
-            except mariadb.Error as e:
-                print(f'Attempt: {i}. Error connecting to MariaDB Platform: {e}')
+        if Database.conn:
+            self.conn = Database.conn
+        else:
+            for i in range(1, 5):
+                try:
+                    self.conn = mariadb.connect(
+                        user=settings.dbuser,
+                        password=settings.dbpass,
+                        host=settings.dbhost,
+                        port=settings.dbport,
+                        database=settings.dbname
+                    )
+                    self.connected = True
+                    Database.conn = self.conn
+                    break
+                except mariadb.Error as e:
+                    print(f'Attempt: {i}. Error connecting to MariaDB Platform: {e}\nTry running the included .sql if the database is not found.')
+        if Database.blueprint_conn:
+            self.blueprint_conn = Database.blueprint_conn
+        else:
+            for i in range(1, 5):
+                try:
+                    self.blueprint_conn = mariadb.connect(
+                        user=settings.blueprintuser,
+                        password=settings.blueprintpass,
+                        host=settings.blueprinthost,
+                        port=settings.blueprintport,
+                        database=settings.blueprintname
+                    )
+                    self.blueprint_connected = True
+                    Database.blueprint_conn = self.blueprint_conn
+                    break
+                except mariadb.Error as e:
+                    print(f'Attempt: {i}. Error connecting to MariaDB Platform: {e}')
 
         self.cur = self.conn.cursor(dictionary=True)
         self.blueprint_cur = self.blueprint_conn.cursor(dictionary=True)
+        Database.connections += 1
 
     def __enter__(self):
         return self
@@ -50,8 +63,12 @@ class Database:
     def close(self):
         self.cur.close()
         self.blueprint_cur.close()
-        self.conn.close()
-        self.blueprint_conn.close()
+        Database.connections -= 1
+        if Database.connections == 0:
+            self.conn.close()
+            self.blueprint_conn.close()
+            Database.conn = None
+            Database.blueprint_conn = None
 
     #Execute SQL
     def _execute_sql(self, sql, data: Tuple = None, commit: bool = True):
