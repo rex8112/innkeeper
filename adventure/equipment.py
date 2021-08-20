@@ -117,14 +117,23 @@ class Equipment:
         except (ValueError, TypeError):
             self.id = ID
         if self.id == 'empty' or self.id == 'None':
-            data_list = ['empty', 'empty', 1, 0, '', '']
+            data_list = {
+                'indx': 'empty',
+                'blueprint': 'empty',
+                'level': 1,
+                'rarity': 0,
+                'startingMods': '{}',
+                'randomMods': '{}'}
             self.load(data_list=data_list)
         elif isinstance(self.id, (list, tuple)):
             self.load(data_list=self.id)
         elif isinstance(self.id, str):
-            self.load(data_list=self.id.split(','))
+            self.load(data_list=json.loads(self.id))
         elif self.id != 0:
             self.load()
+
+    def serialize(self):
+        return self.save()
 
     @staticmethod
     def calculate_drop_rarity():
@@ -366,7 +375,7 @@ class Equipment:
     def load(self, data_list = None):
         try:
             if data_list:
-                if isinstance(data_list, (list, tuple)):
+                if isinstance(data_list, (list, tuple, dict)):
                     data = data_list
                 elif isinstance(data_list, str):
                     data = data_list.split(',')
@@ -408,7 +417,7 @@ class Equipment:
                 mod = Modifier.from_dict(mod_data)
                 self.starting_mods[mod.id] = mod
 
-            for mod_data in random_mods.value():
+            for mod_data in random_mods.values():
                 mod = Modifier.from_dict(mod_data)
                 if self.random_mods.get(mod.id, False):
                     self.random_mods[mod.id].value += mod.value
@@ -445,7 +454,7 @@ class Equipment:
             return str(self.id)
         elif self.id:
             with Database() as db:
-                db.update_equipment(self.id, save)
+                db.update_equipment(self.id, **save)
             return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         save['indx'] = self.id

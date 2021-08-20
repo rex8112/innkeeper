@@ -1,3 +1,4 @@
+from adventure.tools.json_manager import dumps
 import datetime
 import random
 import logging
@@ -79,16 +80,19 @@ class Quest:
         self.save()
 
     def save(self):
-        loot_tmp = []
-        for l in self.loot:
-            loot_tmp.append(l.save())
-        loot = '/'.join(loot_tmp)
-        tmp = []
-        for stage in self.enemies:
-            tmp.append('/'.join(str(e) for e in stage))
-        enemies = ','.join(tmp)
-        save = [self.id, self.adv.id, int(self.active), self.stage, self.stages,
-                enemies, loot, self.time.strftime('%Y-%m-%d %H:%M:%S'), self.xp, '|'.join(self.combat_log)]
+        loot = dumps(self.loot)
+        enemies = dumps(self.enemies)
+        save = {
+            'indx': self.id,
+            'adventurer': self.adv.id,
+            'active': self.active,
+            'stage': self.stage,
+            'stages': self.stages,
+            'enemies': enemies,
+            'loot': loot,
+            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'xp': self.xp,
+            'combatInfo': '|'.join(self.combat_log)}
         self.id = db.saveRNG(save)
 
     def loadActive(self, aID):

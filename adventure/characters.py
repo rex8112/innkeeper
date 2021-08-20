@@ -567,15 +567,13 @@ class Player(Character):
         self.inventory = []
         if save:
             with Database() as db:
-                if db.insert_adventurer(self.id, name, clss.id, race.id, json.dumps(rawAttributes), home_id):
-                    self.calculate()
-                    self.rest()
-                    self.save()
-                    logger.debug('{}:{} Created Successfully'.format(
-                        self.id, self.name))
-                    return True
-                else:
-                    return False
+                db.insert_adventurer(self.id, name, clss.id, race.id, json.dumps(rawAttributes), home_id)
+                self.calculate()
+                self.rest()
+                self.save()
+                logger.debug('{}:{} Created Successfully'.format(
+                    self.id, self.name))
+                return True
         else:
             self.calculate()
             self.rest()
@@ -585,13 +583,14 @@ class Player(Character):
         try:
             if self.id in TestData.active_test_players:
                 self.id = TestData.active_test_players[self.id]
-            raw = db.getAdventurer(self.id)
+            with Database() as db:
+                raw = db.fetchone(db.get_adventurer(userID=self.id))
             self.name = raw['name']
             self.cls = CharacterClass.get_class(raw['class'])
             self.level = raw['level']
             self.xp = raw['xp']
             self.race = Race.get_race(raw['race'])
-            rawAttributes = raw['attributes'].split(',')  # Get a list of the attributes
+            rawAttributes = json.loads(raw['attributes'])  # Get a list of the attributes
             self.rawStrength = int(rawAttributes[0])
             self.rawDexterity = int(rawAttributes[1])
             self.rawConstitution = int(rawAttributes[2])
@@ -600,11 +599,11 @@ class Player(Character):
             self.rawCharisma = int(rawAttributes[5])
 
             try:
-                self.raw_skills = raw['skills'].split(',')  # Get a list of skills
-            except AttributeError:
+                self.raw_skills = json.loads(raw['skills'])  # Get a list of skills
+            except (AttributeError, TypeError):
                 self.raw_skills = []
 
-            equipment = raw['equipment'].split('/')  # Get a list of equipped items
+            equipment = json.loads(raw['equipment'])  # Get a list of equipped items
             self.mainhand = Equipment(equipment[0])
             self.offhand = Equipment(equipment[1])
             self.helmet = Equipment(equipment[2])
@@ -614,7 +613,7 @@ class Player(Character):
             self.trinket = Equipment(equipment[6])
 
             self.inventory = []
-            temp_inventory = raw['inventory'].split('/')
+            temp_inventory = json.loads(raw['inventory'])
             try:
                 temp_inventory.remove('')
             except:
@@ -638,10 +637,10 @@ class Player(Character):
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence,
                          self.rawWisdom, self.rawCharisma]
-        equipment = [self.mainhand.save(), self.offhand.save(),
-                        self.helmet.save(), self.armor.save(),
-                        self.gloves.save(), self.boots.save(),
-                        self.trinket.save()]
+        equipment = [self.mainhand, self.offhand,
+                        self.helmet, self.armor,
+                        self.gloves, self.boots,
+                        self.trinket]
         temp_inventory = []
         for e in self.inventory:
             temp_inventory.append(e.save(database=True))
@@ -654,13 +653,13 @@ class Player(Character):
             'race': self.race.id,
             'attributes': dumps(rawAttributes),
             'skills': dumps(self.raw_skills),
-            'equipment': equipment,
+            'equipment': dumps(equipment),
             'inventory': dumps(temp_inventory),
             'available': bool(self.available),
             'health': self.health}
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         with Database() as db:
-            db.update_adventurer(self.id, save)
+            db.update_adventurer(self.id, **save)
 
     def delete(self) -> None:
         """IRREVERSIBLE deletion of an adventurer"""
@@ -728,12 +727,15 @@ class Enemy(Character):
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def generate_new(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
-        if index == 0:
-            data_pool = db.get_base_enemy(lvl, rng=rng, combat_rank=max_combat_rank)
-            data = random.choice(data_pool)
-        else:
-            data = db.get_base_enemy_indx(index)
-        
+        with Database() as db:
+            if index == 0:
+                data_pool = db.get_base_enemy_lvl(lvl, rng=rng, combat_rank=max_combat_rank)
+                data_pool = db.fetchone(data_pool)
+                data = random.choice(data_pool)
+            else:
+                data = db.get_base_enemy(indx = index)
+                data = db.fetchone(data)
+
         self.id = int(data[0])
         self.name = str(data[1])
         # minLevel = int(data[2])
@@ -838,6 +840,9 @@ class Enemy(Character):
                 self.id), exc_info=True)
         finally:
             return self.loaded
+
+    def serialize(self):
+        return self.save()
 
     def save(self):
         rawAttributes = [self.rawStrength, self.rawDexterity, self.rawConstitution,

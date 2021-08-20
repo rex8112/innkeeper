@@ -1,3 +1,4 @@
+from adventure.exceptions import NotFound
 from typing import Tuple
 import mariadb
 import sys
@@ -52,6 +53,7 @@ class Database:
         self.conn.close()
         self.blueprint_conn.close()
 
+    #Execute SQL
     def _execute_sql(self, sql, data: Tuple = None, commit: bool = True):
         try:
             self.cur.execute(sql, data)
@@ -61,14 +63,21 @@ class Database:
             print(f'Error executing SQL: {type(e)}: {e}')
             self.conn.rollback()
 
+    #Execute SQL for blueprint database
     def _execute_static_sql(self, sql, data: Tuple = None, commit: bool = True):
         try:
             self.blueprint_cur.execute(sql, data)
             if commit:
                 self.blueprint_conn.commit()
         except mariadb.Error as e:
-            print(f'Error executing SQL: {type(e)}: {e}')
+            print(f'Error executing static SQL: {type(e)}: {e}')
             self.blueprint_conn.rollback()
+
+    def fetchone(self, iterable):
+        if not iterable:
+            raise NotFound(f'No results found')
+        one = iterable[0]
+        return one
 
     #DATABASE FUNCTIONS
     def insert_adventurer(self, id, name, cls, race, attributes, home):
@@ -125,7 +134,7 @@ class Database:
             sql += f'{key}=?, '
             data.append(value)
         sql = sql[:-2]
-        sql += ' WHERE id=?'
+        sql += ' WHERE indx=?'
         data = tuple(data + [id])
         self._execute_sql(sql, data)
 
@@ -157,8 +166,36 @@ class Database:
         self._execute_static_sql(sql, data, False)
         return self.blueprint_cur.fetchall()
 
-    def get_base_equipment_lvl(self, lvl: int, rarity: int, rng: bool):
-        sql = 'SELECT * FROM baseequipment WHERE minLevel <= ? AND maxLevel >= ? AND maxRarity >= ? AND startingRarity <= ? AND rng = ?'
-        data = (lvl, lvl, rarity, rarity, rng)
+    def get_base_equipment_lvl(self, lvl: int, rarity: int, **kwargs):
+        sql = 'SELECT * FROM baseequipment WHERE minLevel <= ? AND maxLevel >= ? AND maxRarity >= ? AND startingRarity <= ? AND '
+        data = [lvl, lvl, rarity, rarity]
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
         self._execute_static_sql(sql, data, False)
         return self.blueprint_cur.fetchall()
+
+    def get_base_enemy(self, **kwargs):
+        sql = 'SELECT * FROM baseenemy WHERE '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
+        self._execute_static_sql(sql, data, False)
+        return self.blueprint_cur.fetchall()
+
+    def get_base_enemy_lvl(self, lvl: int, **kwargs):
+        sql = 'SELECT * FROM baseenemy WHERE minLevel <= ? AND maxLevel >= ? AND '
+        data = [lvl, lvl]
+        for key, value in kwargs.items():
+            if key == 'combatRank':
+                sql += f'{key}<? AND '
+            else:
+                sql += f'{key}=? AND '
+            data.append(value)
+        sql = sql[:-4]
+        data = tuple(data)
