@@ -199,7 +199,7 @@ class Modifier:
             effects.append(Effect.from_dict(e))
         return cls(id, value, effects)
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {
             'id': self.id,
             'value': self.value,

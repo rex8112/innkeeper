@@ -1,3 +1,4 @@
+from adventure.tools.json_manager import dumps
 from adventure.characters import Player
 from adventure.race import Race
 from adventure.character_class import CharacterClass
@@ -10,6 +11,4 @@ a.delete()
 
 e = adventure.Equipment()
 e.generate_new(5, 3)
-print(e.save())
-#e = adventure.Equipment(3)
-#print(e.name)
+print(dumps(e.save()))

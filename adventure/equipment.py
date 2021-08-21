@@ -125,14 +125,14 @@ class Equipment:
                 'startingMods': '{}',
                 'randomMods': '{}'}
             self.load(data_list=data_list)
-        elif isinstance(self.id, (list, tuple)):
+        elif isinstance(self.id, (list, tuple, dict)):
             self.load(data_list=self.id)
         elif isinstance(self.id, str):
             self.load(data_list=json.loads(self.id))
         elif self.id != 0:
             self.load()
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return self.save()
 
     @staticmethod
@@ -375,10 +375,12 @@ class Equipment:
     def load(self, data_list = None):
         try:
             if data_list:
-                if isinstance(data_list, (list, tuple, dict)):
+                if isinstance(data_list, dict):
                     data = data_list
                 elif isinstance(data_list, str):
-                    data = data_list.split(',')
+                    data = json.loads(data_list)
+                else:
+                    raise TypeError('Invalid data type')
             else:
                 with Database() as db:
                     data = db.get_equipment(indx=self.id)
@@ -442,23 +444,25 @@ class Equipment:
             self.loaded = False
             return False
 
-    def save(self, database = False):
-        starting_mods = dumps(self.starting_mods)
-        random_mods = dumps(self.random_mods)
+    def save(self, database = False) -> dict:
+        starting_mods = self.starting_mods
+        random_mods = self.random_mods
 
         save = {'blueprint': self.base_equipment.id, 'level': self.level, 'rarity': self.rarity, 'startingMods': starting_mods, 'randomMods': random_mods}
         if database and self.id is None:
             with Database() as db:
-                self.id = db.insert_equipment(self.base_equipment.id, self.level, self.rarity, starting_mods, random_mods)
+                self.id = db.insert_equipment(self.base_equipment.id, self.level, self.rarity, dumps(starting_mods), dumps(random_mods))
                 save[0] = self.id
             return str(self.id)
         elif self.id:
             with Database() as db:
+                save['startingMods'] = dumps(starting_mods)
+                save['randomMods'] = dumps(random_mods)
                 db.update_equipment(self.id, **save)
             return str(self.id)
         logger.debug('{}:{} Saved Successfully'.format(self.id, self.name))
         save['indx'] = self.id
-        return dumps(save)
+        return save
 
     def balance_check(self):
         changed = False
