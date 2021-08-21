@@ -925,9 +925,9 @@ class RaidBoss(Character):
             return False
 
 
-test_players = []
-for i in range(1, 11):
-    adv = Player(i)
-    if not adv.loaded:
-        adv = None
-    test_players.append(adv)
+# test_players = []
+# for i in range(1, 11):
+#     adv = Player(i)
+#     if not adv.loaded:
+#         adv = None
+#     test_players.append(adv)

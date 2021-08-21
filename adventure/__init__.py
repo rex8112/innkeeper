@@ -10,7 +10,7 @@ __version__ = '0.2.0'
 import logging
 
 from .character_class import CharacterClass
-from .characters import Enemy, Player, RaidBoss, test_players
+from .characters import Enemy, Player, RaidBoss
 # from .colour import Colour
 # from .data import TestData
 from .database import Database
