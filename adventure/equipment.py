@@ -415,11 +415,11 @@ class Equipment:
             else:
                 self.skills = []
 
-            for mod_data in starting_mods.values():
+            for mod_data in starting_mods:
                 mod = Modifier.from_dict(mod_data)
                 self.starting_mods[mod.id] = mod
 
-            for mod_data in random_mods.values():
+            for mod_data in random_mods:
                 mod = Modifier.from_dict(mod_data)
                 if self.random_mods.get(mod.id, False):
                     self.random_mods[mod.id].value += mod.value
@@ -445,8 +445,8 @@ class Equipment:
             return False
 
     def save(self, database = False) -> dict:
-        starting_mods = self.starting_mods
-        random_mods = self.random_mods
+        starting_mods = list(self.starting_mods.values())
+        random_mods = list(self.random_mods.values())
 
         save = {'blueprint': self.base_equipment.id, 'level': self.level, 'rarity': self.rarity, 'startingMods': starting_mods, 'randomMods': random_mods}
         if database and self.id is None:
