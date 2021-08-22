@@ -676,14 +676,6 @@ class Player(Character):
             db.delete_adventurer(self.id)
         logger.warning('{}:{} Deleted'.format(self.id, self.name))
 
-    def get_trades(self, active=True):
-        """Get all trades -> Returns list of trade ids"""
-        data = db.get_trade(self.id, active=active)
-        id_list = []
-        for d in data:
-            id_list.append(d['indx'])
-        return id_list
-
 
 class Enemy(Character):
     def __init__(self, raw_data = ''):
@@ -858,70 +850,70 @@ class Enemy(Character):
         return save
 
 
-class RaidBoss(Character):
-    def __init__(self, boss_id):
-        super().__init__(boss_id)
-        if self.id > 0:
-            self.load()
+# class RaidBoss(Character):
+#     def __init__(self, boss_id):
+#         super().__init__(boss_id)
+#         if self.id > 0:
+#             self.load()
 
-    def load(self):
-        try:
-            data = db.get_raid_boss(self.id)
-            self.name = data[1]
-            self.level = data[2]
-            self.flavor = data[3]
-            race = Race()
-            race.id = 'enemy'
-            race.name = 'Enemy'
-            race.description = 'You should not see this'
-            race.passive_effect = 'Nothing'
-            clss = CharacterClass()
-            clss.id = 'enemy'
-            clss.name = 'Enemy'
-            clss.description = 'You should not see this'
-            clss.attribute_bonuses = [1, 1, 1, 1, 1, 1]
-            self.cls = clss
-            self.race = race
+#     def load(self):
+#         try:
+#             data = db.get_raid_boss(self.id)
+#             self.name = data[1]
+#             self.level = data[2]
+#             self.flavor = data[3]
+#             race = Race()
+#             race.id = 'enemy'
+#             race.name = 'Enemy'
+#             race.description = 'You should not see this'
+#             race.passive_effect = 'Nothing'
+#             clss = CharacterClass()
+#             clss.id = 'enemy'
+#             clss.name = 'Enemy'
+#             clss.description = 'You should not see this'
+#             clss.attribute_bonuses = [1, 1, 1, 1, 1, 1]
+#             self.cls = clss
+#             self.race = race
             
-            raw_attributes = data[4].split('|')  # Get a list of the attributes
-            self.rawStrength = int(raw_attributes[0])
-            self.rawDexterity = int(raw_attributes[1])
-            self.rawConstitution = int(raw_attributes[2])
-            self.rawIntelligence = int(raw_attributes[3])
-            self.rawWisdom = int(raw_attributes[4])
-            self.rawCharisma = int(raw_attributes[5])
+#             raw_attributes = data[4].split('|')  # Get a list of the attributes
+#             self.rawStrength = int(raw_attributes[0])
+#             self.rawDexterity = int(raw_attributes[1])
+#             self.rawConstitution = int(raw_attributes[2])
+#             self.rawIntelligence = int(raw_attributes[3])
+#             self.rawWisdom = int(raw_attributes[4])
+#             self.rawCharisma = int(raw_attributes[5])
 
-            self.raw_skills = data[5].split(',')
+#             self.raw_skills = data[5].split(',')
 
-            self.inventory = []
-            for L in data[7].split(','):
-                try:
-                    self.inventory.append(int(L))
-                except (AttributeError, ValueError):
-                    logger.error('{} can not be converted to int in {} RaidBoss generation'.format(L, self.id), exc_info=True)
+#             self.inventory = []
+#             for L in data[7].split(','):
+#                 try:
+#                     self.inventory.append(int(L))
+#                 except (AttributeError, ValueError):
+#                     logger.error('{} can not be converted to int in {} RaidBoss generation'.format(L, self.id), exc_info=True)
 
-            self.mainhand = None
-            self.offhand = None
-            self.helmet = None
-            self.armor = None
-            self.gloves = None
-            self.boots = None
-            self.trinket = None
+#             self.mainhand = None
+#             self.offhand = None
+#             self.helmet = None
+#             self.armor = None
+#             self.gloves = None
+#             self.boots = None
+#             self.trinket = None
 
-            for mod_string in data[8].split('|'):
-                mod_tmp = mod_string.split(':')
-                mod = Modifier(mod_tmp[0], int(mod_tmp[1]))
-                self.raw_mods[mod.id] = mod
+#             for mod_string in data[8].split('|'):
+#                 mod_tmp = mod_string.split(':')
+#                 mod = Modifier(mod_tmp[0], int(mod_tmp[1]))
+#                 self.raw_mods[mod.id] = mod
 
-            self.calculate()
-            self.maxHealth = int(data[6])
-            self.health = self.maxHealth
-            self.loaded = True
-            return True
-        except Exception:
-            logger.error('{} Failed to Load Raid Boss'.format(
-                self.id), exc_info=True)
-            return False
+#             self.calculate()
+#             self.maxHealth = int(data[6])
+#             self.health = self.maxHealth
+#             self.loaded = True
+#             return True
+#         except Exception:
+#             logger.error('{} Failed to Load Raid Boss'.format(
+#                 self.id), exc_info=True)
+#             return False
 
 
 # test_players = []
