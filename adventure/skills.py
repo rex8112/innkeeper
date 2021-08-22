@@ -45,8 +45,8 @@ class Skill():
         self.log = ''
         self.user = adv
         self.crit_chance_additive = 0.0
-        self.wc = int(adv.mods.get('wc', 0))
-        self.penetration = int(adv.mods.get('penetration', 0))
+        self.wc = int(adv.mods.get('wc'))
+        self.penetration = int(adv.mods.get('penetration'))
         self.critical = False
         self.cooldown = self.start_cooldown
 

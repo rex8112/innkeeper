@@ -11,7 +11,7 @@ from .skills import get_skill
 from .statusEffects import PassiveEffect
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
-from .modifiers import Modifier, EliteModifier
+from .modifiers import Modifier, EliteModifier, ModifierDict
 from .database import Database
 from .character_class import CharacterClass
 from .race import Race
@@ -36,8 +36,8 @@ class Character:
     def __init__(self, ID):
         self.id = ID
         self.name = 'Unloaded'
-        self.mods = {}
-        self.raw_mods = {}
+        self.mods = ModifierDict()
+        self.raw_mods = ModifierDict()
         self.total_ac = []
         self.total_wc = []
         self.effects = {}
@@ -257,7 +257,7 @@ class Character:
         return random.randint(1, 20) + self.level
 
     def deal_physical_damage(self, value: float, penetration = 0, multiplicative = False):
-        parmor = self.mods.get('parmor', Modifier('parmor')) - float(penetration)
+        parmor = self.mods.get('parmor') - float(penetration)
         if multiplicative:
             value = self.health * value
         if parmor > 100:
@@ -271,7 +271,7 @@ class Character:
         return damage
 
     def deal_magical_damage(self, value: float, penetration = 0, multiplicative = False):
-        marmor = self.mods.get('marmor', Modifier('marmor')) - float(penetration)
+        marmor = self.mods.get('marmor') - float(penetration)
         if multiplicative:
             value = self.health * value
         if marmor > 100:
@@ -357,33 +357,27 @@ class Character:
             self.total_ac.append(mod.value)
         elif mod.id == 'wc':
             self.total_wc.append(mod.value)
-        elif self.mods.get(mod.id, False):
-            self.mods.get(mod.id).value += mod.value
         else:
-            self.mods[mod.id] = Modifier(mod.id, mod.value)
+            self.mods.add(mod)
 
     def add_equipment_mod(self, mod: Modifier):
         if mod.id == 'ac':
             self.total_ac.append(mod.value)
         elif mod.id == 'wc':
             self.total_wc.append(mod.value)
-        elif self.equipment_mods.get(mod.id, False):
-            self.equipment_mods.get(mod.id).value += mod.value
         else:
-            self.equipment_mods[mod.id] = Modifier(mod.id, mod.value)
+            self.equipment_mods.add(mod)
 
     def add_base_mod(self, mod: Modifier):
         if mod.id == 'ac':
             self.total_ac.append(mod.value)
         elif mod.id == 'wc':
             self.total_wc.append(mod.value)
-        elif self.base_mods.get(mod.id, False):
-            self.base_mods.get(mod.id).value += mod.value
         else:
-            self.base_mods[mod.id] = Modifier(mod.id, mod.value)
+            self.base_mods.add(mod)
 
     def get_damage(self, type='dmg'):
-        return self.mainhand.damage.get(type, Modifier(type)).get_total()
+        return self.mainhand.damage.get(type).get_total()
 
     def calculate(self):
         # Checks Race/Class for attribute changes
@@ -396,9 +390,9 @@ class Character:
         self.max_health = 0
         self.total_ac.clear()
         self.total_wc.clear()
-        self.refresh_all_modifiers()
-        self.equipment_mods = {}
-        self.base_mods = {}
+        self.mods.clear()
+        self.equipment_mods = ModifierDict()
+        self.base_mods = ModifierDict()
         self.skills = []
 
         # TIME FOR EQUIPMENT CALCULATIONS
@@ -414,7 +408,7 @@ class Character:
                 self.skills.append(get_skill(self, skill))
             equip.generate_damage(self)
 
-        self.max_health = int(self.mods.get('max_health', 0))
+        self.max_health = int(self.mods.get('max_health'))
 
         # Strength Related Stats First
         self.inventoryCapacity = (self.strength // PerLevel.inventory_cap + 
@@ -452,8 +446,8 @@ class Character:
         for mod in self.equipment_mods.values():
             self.add_mod(mod)
 
-        self.mods['ac'] = Modifier('ac', sum(self.total_ac) / len(self.total_ac))
-        self.mods['wc'] = Modifier('wc', sum(self.total_wc) / len(self.total_wc))
+        self.mods.set(Modifier('ac', sum(self.total_ac) / len(self.total_ac)))
+        self.mods.set(Modifier('wc', sum(self.total_wc) / len(self.total_wc)))
 
         # Fill in Skills
         for skill in self.raw_skills:
@@ -470,33 +464,6 @@ class Character:
             self.health = self.max_health
 
         logger.debug('{0.name} Calculation complete'.format(self))
-
-    def refresh_all_modifiers(self):
-        mod_names = [
-            'wc',
-            'ac',
-            'max_health',
-            'dmg',
-            'spell_dmg',
-            'miracle_dmg',
-            'music_dmg',
-            'evasion',
-            'penetration',
-            'cooldown_rate',
-            'crit_chance',
-            'xp_rate',
-            'gold_rate',
-            'status_resistance',
-            'str_scale',
-            'dex_scale',
-            'con_scale',
-            'int_scale',
-            'wis_scale',
-            'cha_scale'
-        ]
-        self.mods.clear()
-        for name in mod_names:
-            self.mods[name] = Modifier(name)
 
     def rest(self):  # Reset anything that needs to on rest
         self.health = self.max_health

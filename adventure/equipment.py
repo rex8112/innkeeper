@@ -3,7 +3,7 @@ import random
 import logging
 import math
 
-from .modifiers import Modifier, Effect
+from .modifiers import Modifier, Effect, ModifierDict
 from .skills import Skill
 from .database import Database
 from .exceptions import InvalidBaseEquipment, InvalidModString
@@ -228,7 +228,7 @@ class Equipment:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
-        mods = {}
+        mods = ModifierDict()
         level = self.level - self.base_equipment.min_level
         mod_string_list = mod_string.split('|')
         try:
@@ -240,9 +240,8 @@ class Equipment:
                 final_min_volume = float(min_value) + (float(min_per_level) * level)
                 final_max_volume = float(max_value) + (float(max_per_level) * level)
                 final_mod = Modifier(key, round(random.uniform(final_min_volume, final_max_volume), 1))
-                if mods.get(key, False): # Determine if this modifier is already in the dictionary
-                    final_mod.value += mods.get(key).value
-                mods[key] = final_mod
+                
+                mods.set(final_mod)
             return mods
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
@@ -333,15 +332,12 @@ class Equipment:
         self.damage = {}
         self.flags = self.base_equipment.flags.split('|')
         self.starting_mods = self.process_mod_string(self.base_equipment.starting_mod_string)
-        self.random_mods = {}
+        self.random_mods = ModifierDict()
         if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
             potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
             new_mods = random.sample(list(potential_mods.values()), self.rarity) # Grab an amount based on rarity
             for mod in new_mods: # Add new mods
-                if self.random_mods.get(mod.id, False):
-                    self.random_mods[mod.id].value += mod.value
-                else:
-                    self.random_mods[mod.id] = mod
+                self.random_mods.add(mod)
 
             highest_mod = max(new_mods) # Set title
             if highest_mod.title:
@@ -393,8 +389,8 @@ class Equipment:
             self.base_equipment = BaseEquipment(data['blueprint'])
             self.level = int(data['level'])
             self.rarity = int(data['rarity'])
-            self.starting_mods = {}
-            self.random_mods = {}
+            self.starting_mods = ModifierDict()
+            self.random_mods = ModifierDict()
             try:
                 starting_mods = json.loads(data['startingMods'])
                 random_mods = json.loads(data['randomMods'])
@@ -417,14 +413,11 @@ class Equipment:
 
             for mod_data in starting_mods:
                 mod = Modifier.from_dict(mod_data)
-                self.starting_mods[mod.id] = mod
+                self.starting_mods.add(mod)
 
             for mod_data in random_mods:
                 mod = Modifier.from_dict(mod_data)
-                if self.random_mods.get(mod.id, False):
-                    self.random_mods[mod.id].value += mod.value
-                else:
-                    self.random_mods[mod.id] = mod
+                self.starting_mods.add(mod)
                     
             if len(self.random_mods) > 0:
                 highest_mod = max(self.random_mods.values()) # Set title
