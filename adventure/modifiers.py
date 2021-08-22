@@ -1,5 +1,3 @@
-import math
-
 from .database import Database
 
 class Effect:
@@ -257,6 +255,62 @@ class Modifier:
             self.description = None
         if self.value == None:
             self.value = self.default_value
+
+class ModifierDict:
+    def __init__(self):
+        self.modifiers = {}
+
+    def __contains__(self, key):
+        return key in self.modifiers
+
+    def __iter__(self):
+        return iter(self.modifiers)
+
+    def __len__(self):
+        return len(self.modifiers)
+
+    def get(self, key):
+        try:
+            return self.modifiers[key]
+        except KeyError:
+            mod = Modifier(key)
+            self.modifiers[key] = mod
+            return mod
+
+    def set(self, modifier: Modifier):
+        if isinstance(modifier, Modifier):
+            self.modifiers[modifier.id] = modifier
+        else:
+            raise TypeError('Must be a Modifier')
+
+    def add(self, modifier: Modifier):
+        if isinstance(modifier, Modifier):
+            current = self.modifiers.get(modifier.id, None)
+            if current:
+                current.value += modifier.value
+            else:
+                self.modifiers[modifier.id] = modifier
+        else:
+            raise TypeError('Must be a Modifier')
+
+    def delete(self, key):
+        del self.modifiers[key]
+
+    def serialize(self) -> list:
+        return [m.serialize() for m in self.modifiers.values()]
+
+    def values(self):
+        return self.modifiers.values()
+    
+    def keys(self):
+        return self.modifiers.keys()
+    
+    def items(self):
+        return self.modifiers.items()
+
+    def clear(self):
+        self.modifiers.clear()
+
 
 class EliteModifier:
     def __init__(self, ID = 0):
