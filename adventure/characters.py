@@ -43,32 +43,22 @@ class Character:
         self.effects = {}
         self.status_effects = {}
         self.passive_effects = {}
-        self.loaded = False
-
-    def __str__(self):
-        return self.name
-
-    def __index__(self):
-        return self.id
-
-    def __int__(self):
-        return self.id
-
-    def new(self, name, cls, race, rawAttributes, skills, rng): # This should be overridden
-        self.name = name
-        self.cls = cls
-        self.race = race
+        self.cls = None
+        self.race = None
         self.level = 1
         self.xp = 0
+
         # Attributes
-        self.rawStrength = rawAttributes[0]
-        self.rawDexterity = rawAttributes[1]
-        self.rawConstitution = rawAttributes[2]
-        self.rawIntelligence = rawAttributes[3]
-        self.rawWisdom = rawAttributes[4]
-        self.rawCharisma = rawAttributes[5]
+        self.rawStrength = 0
+        self.rawDexterity = 0
+        self.rawConstitution = 0
+        self.rawIntelligence = 0
+        self.rawWisdom = 0
+        self.rawCharisma = 0
+
         # Skills
-        self.raw_skills = ['attack'] + skills
+        self.raw_skills = ['attack']
+
         # Equipment
         self.mainhand = Equipment('empty')
         self.offhand = Equipment('empty')
@@ -79,7 +69,16 @@ class Character:
         self.trinket = Equipment('empty')
 
         self.inventory = []
-        self.loaded = True
+        self.loaded = False
+
+    def __str__(self):
+        return self.name
+
+    def __index__(self):
+        return self.id
+
+    def __int__(self):
+        return self.id
 
     def load(self):
         pass
@@ -500,51 +499,52 @@ class Player(Character):
         if load:
             self.load()
 
-    def new(self, name: str, clss: CharacterClass, race: Race, rawAttributes: List[int], home_id: int, save: bool = True) -> bool:
-        self.name = name
-        self.cls = clss
-        self.race = race
-        self.level = 1
-        self.xp = 0
-        self.maxHealth = 100
-        self.available = True
+    @classmethod
+    def new(cls, id: int, name: str, clss: CharacterClass, race: Race, rawAttributes: List[int], home_id: int, save: bool = True):
+        adv = Player(id, False)
+        adv.name = name
+        adv.cls = clss
+        adv.race = race
+        adv.level = 1
+        adv.xp = 0
+        adv.maxHealth = 100
+        adv.available = True
         # Attributes
-        self.rawStrength = rawAttributes[0]
-        self.rawDexterity = rawAttributes[1]
-        self.rawConstitution = rawAttributes[2]
-        self.rawIntelligence = rawAttributes[3]
-        self.rawWisdom = rawAttributes[4]
-        self.rawCharisma = rawAttributes[5]
+        adv.rawStrength = rawAttributes[0]
+        adv.rawDexterity = rawAttributes[1]
+        adv.rawConstitution = rawAttributes[2]
+        adv.rawIntelligence = rawAttributes[3]
+        adv.rawWisdom = rawAttributes[4]
+        adv.rawCharisma = rawAttributes[5]
         # Skills
-        self.raw_skills = ['attack']
+        adv.raw_skills = ['attack']
         # Equipment
-        self.mainhand = Equipment(0)
-        self.mainhand.generate_new(1, 0, index=5)
-        self.offhand = Equipment('empty')
-        self.helmet = Equipment(0)
-        self.helmet.generate_new(1, 0, index=1)
-        self.armor = Equipment(0)
-        self.armor.generate_new(1, 0, index=2)
-        self.gloves = Equipment(0)
-        self.gloves.generate_new(1, 0, index=3)
-        self.boots = Equipment(0)
-        self.boots.generate_new(1, 0, index=4)
-        self.trinket = Equipment('empty')
+        adv.mainhand = Equipment(0)
+        adv.mainhand.generate_new(1, 0, index=5)
+        adv.offhand = Equipment('empty')
+        adv.helmet = Equipment(0)
+        adv.helmet.generate_new(1, 0, index=1)
+        adv.armor = Equipment(0)
+        adv.armor.generate_new(1, 0, index=2)
+        adv.gloves = Equipment(0)
+        adv.gloves.generate_new(1, 0, index=3)
+        adv.boots = Equipment(0)
+        adv.boots.generate_new(1, 0, index=4)
+        adv.trinket = Equipment('empty')
 
-        self.inventory = []
+        adv.inventory = []
         if save:
             with Database() as db:
-                db.insert_adventurer(self.id, name, clss.id, race.id, json.dumps(rawAttributes), home_id)
-                self.calculate()
-                self.rest()
-                self.save()
+                db.insert_adventurer(adv.id, name, clss.id, race.id, json.dumps(rawAttributes), home_id)
+                adv.calculate()
+                adv.rest()
+                adv.save()
                 logger.debug('{}:{} Created Successfully'.format(
-                    self.id, self.name))
-                return True
+                    adv.id, adv.name))
         else:
-            self.calculate()
-            self.rest()
-            return False
+            adv.calculate()
+            adv.rest()
+        return adv
 
     def load(self, calculate=True):
         try:
