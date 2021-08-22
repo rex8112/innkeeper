@@ -96,7 +96,7 @@ class Trade:
     def add_item(self, adv: Player, index: int):
         if adv == self.player_1:
             if len(self.inventory_1) < 10:
-                item = self.player_1.remInv(index)
+                item = self.player_1.rem_item(index)
                 if item:
                     self.inventory_1.append(item)
                 return True
@@ -104,7 +104,7 @@ class Trade:
                 return False
         elif adv == self.player_2:
             if len(self.inventory_2) < 10:
-                item = self.player_2.remInv(index)
+                item = self.player_2.rem_item(index)
                 if item:
                     self.inventory_2.append(item)
                 return True
@@ -117,12 +117,12 @@ class Trade:
         try:
             if adv == self.player_1:
                 item = self.inventory_1.pop(index)
-                if not self.player_1.addInv(item):
+                if not self.player_1.add_item(item):
                     storage = Storage(self.player_1)
                     storage.add_item(item, True)
             elif adv == self.player_2:
                 item = self.inventory_2.pop(index)
-                if not self.player_2.addInv(item):
+                if not self.player_2.add_item(item):
                     storage = Storage(self.player_2)
                     storage.add_item(item, True)
             else:

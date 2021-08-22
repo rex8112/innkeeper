@@ -238,7 +238,7 @@ class Admin(commands.Cog):
         try:
             reaction, _ = await self.bot.wait_for('reaction_add', timeout=180.0, check=lambda reaction, user: user.id == ctx.author.id and reaction.message.id == message.id)
             if str(reaction) == '✅':
-                adv.addInv(e)
+                adv.add_item(e)
                 adv.save()
                 await message.edit(embed=discord.Embed(title='Equipment Given', colour=ac.Colour.successColour))
         except asyncio.TimeoutError:

@@ -91,7 +91,7 @@ class Inventory(commands.Cog):
                     storage = ac.Storage(adv)
                     slot = int(content[1])
                     if len(storage.inventory) < storage.slots:
-                        item = adv.remInv(slot-1)
+                        item = adv.rem_item(slot-1)
                         storage.add_item(item)
                         embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item stored.')
                         await main_message.edit(embed=embed)
@@ -199,7 +199,7 @@ class Inventory(commands.Cog):
                     slot = int(content[1])
                     if len(adv.inventory) < adv.inventoryCapacity:
                         item = storage.remove_item(slot-1)
-                        adv.addInv(item)
+                        adv.add_item(item)
                         embed = discord.Embed(title='Success', colour=ac.Colour.successColour, description='Item retrieved.')
                         await main_message.edit(embed=embed)
                         adv.save()

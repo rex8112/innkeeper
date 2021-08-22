@@ -189,7 +189,7 @@ class Trade(commands.Cog):
                         footer = 'Error: NaN'
                         continue
                     item = trade.del_item(adv, index-1)
-                    if not adv.addInv(item):
+                    if not adv.add_item(item):
                         trade.add_item(adv, item)
                         footer = 'Error: Inventory full'
                         continue

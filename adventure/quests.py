@@ -200,9 +200,9 @@ class Quest:
         if result == True:
             self.adv.available = True
             self.adv.rest()
-            self.adv.addXP(self.xp)
+            self.adv.add_xp(self.xp)
             for l in self.loot:
-                self.adv.addInv(l)
+                self.adv.add_item(l)
         else:
             self.adv.available = True  # TEMPORARY UNTIL RECOVERY IS CODED
             self.adv.rest()

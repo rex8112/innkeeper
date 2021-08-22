@@ -671,7 +671,7 @@ class Adventure(commands.Cog):
 
             else:
                 if str(reaction) == '1️⃣':  # Looking at a Potion of Peritia
-                    xp_to_level = adv.getXPToLevel()
+                    xp_to_level = adv.get_xp_to_level()
                     embed = discord.Embed(title='Potion of Peritia', colour=ac.Colour.infoColour,
                                           description='Interested in more power, {}? It will come with a cost.'.format(adv.name))
                     embed.set_author(name=ctx.author.display_name,
@@ -702,7 +702,7 @@ class Adventure(commands.Cog):
                         await shopMessage.clear_reactions()
                     else:
                         if str(reaction) == '✅':  # If purchase is accepted
-                            if adv.addLevel():  # If adding a level was successful
+                            if adv.add_level():  # If adding a level was successful
                                 embed = discord.Embed(title='Level Up!', colour=ac.Colour.successColour,
                                                       description='**Congratulations!**\nYou have achieved level **{}**!\nDo not forget to choose a skill point.'.format(adv.level))
                                 embed.set_author(

@@ -103,7 +103,7 @@ class Character:
             elif self.charisma < eq.requirements.get('charisma', 0):
                 raise InvalidRequirements('{} does not have enough charisma to equip {}'.format(self.name, eq.name))
 
-            self.remInv(e)
+            self.rem_item(e)
             if eq.slot == 'mainhand':
                 uneq = self.mainhand
                 self.mainhand = eq
@@ -165,7 +165,7 @@ class Character:
             self.inventory.append(uneq)
         self.calculate()
 
-    def addInv(self, item):
+    def add_item(self, item):
         """Adds item to inventory
         Returns success in bool"""
         try:
@@ -177,9 +177,9 @@ class Character:
                 return False
         except AttributeError:
             self.calculate()
-            return self.addInv(item)
+            return self.add_item(item)
 
-    def remInv(self, index: int):
+    def rem_item(self, index: int):
         """Remove indexed item from inventory.
         Returns item removed or None"""
         try:
@@ -189,12 +189,12 @@ class Character:
         except ValueError:
             return None
 
-    def addXP(self, count: int):
+    def add_xp(self, count: int):
         amount_to_add = count * self.mods['xp_rate'].get_total()
         self.xp += amount_to_add
         return amount_to_add
 
-    def remXP(self, count: int, force=False):
+    def rem_xp(self, count: int, force=False):
         if self.xp - count >= 0:
             self.xp -= count
             return True
@@ -205,7 +205,7 @@ class Character:
             else:
                 return False
 
-    def getXPToLevel(self):
+    def get_xp_to_level(self):
         if self.level < PerLevel.level_cap:
             reqXP = self.baseXP * math.exp(self.xpRate * (self.level - 1))
         else:
@@ -299,12 +299,12 @@ class Character:
             self.health = self.max_health
         return value
 
-    def addLevel(self, count=1, force=False):
+    def add_level(self, count=1, force=False):
         xpToTake = 0
         levelToAdd = 0
         if not force:
             for _ in range(0, count):
-                reqXP = self.getXPToLevel()
+                reqXP = self.get_xp_to_level()
                 if self.xp - xpToTake >= reqXP:
                     xpToTake += reqXP
                     levelToAdd += 1
