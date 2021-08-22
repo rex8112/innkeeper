@@ -265,17 +265,18 @@ class EliteModifier:
             self.load(self.id)
 
     def load(self, ID):
-        data = db.get_elite_modifier(self.id)
-        self.id = int(data[0])
-        self.name = str(data[1])
-        self.title = str(data[2])
-        self.attributes = [float(x) for x in data[3].split('|')]
+        with Database() as db:
+            data = db.fetchone(db.get_elite_modifier(self.id))
+        self.id = data['indx']
+        self.name = str(data['name'])
+        self.title = str(data['title'])
+        self.attributes = [float(x) for x in data['attributes'].split('|')]
         self.modifiers = {}
-        modifier_string = data[4].split('|')
+        modifier_string = data['modifiers'].split('|')
         for mod in modifier_string:
             key, value = tuple(mod.split(':'))
             self.modifiers[key] = Modifier(key, float(value))
-        if data[5]:
-            self.skills = data[5].split('|')
+        if data['skills']:
+            self.skills = data['skills'].split('|')
         else:
             self.skills = []

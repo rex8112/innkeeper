@@ -742,7 +742,7 @@ class Enemy(Character):
         self.potential_elites = data['elite']
         attributes_string = data['attributes']
         modifiers_string = data['modifiers']
-        self.raw_skills = data['skills']
+        self.raw_skills = json.loads(data['skills'])
         self.combat_rank = float(data['combatRank'])
         self.level = lvl
         self.process_attributes_string(attributes_string)
