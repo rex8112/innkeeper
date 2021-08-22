@@ -195,7 +195,7 @@ class Database:
         return self.blueprint_cur.fetchall()
 
     def get_base_enemy(self, **kwargs):
-        sql = 'SELECT * FROM baseenemy WHERE '
+        sql = 'SELECT * FROM baseenemies WHERE '
         data = []
         for key, value in kwargs.items():
             sql += f'{key}=? AND '
@@ -206,7 +206,7 @@ class Database:
         return self.blueprint_cur.fetchall()
 
     def get_base_enemy_lvl(self, lvl: int, **kwargs):
-        sql = 'SELECT * FROM baseenemy WHERE minLevel <= ? AND maxLevel >= ? AND '
+        sql = 'SELECT * FROM baseenemies WHERE minLevel <= ? AND maxLevel >= ? AND '
         data = [lvl, lvl]
         for key, value in kwargs.items():
             if key == 'combatRank':
