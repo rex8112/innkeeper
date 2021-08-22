@@ -312,36 +312,38 @@ class Equipment:
         self.price = int((base_price + (price_per_level * self.level) + (price_per_mod * (len(self.starting_mods) + len(self.random_mods)))) * rarity_coefficient)
         self.sell_price = int(self.price * 0.5)
 
-    def generate_new(self, lvl: int, rarity: int, index = 0):
+    @classmethod
+    def generate_new(cls, lvl: int, rarity: int, index = 0):
+        equipment = cls()
         if index == 0:
-            self.base_equipment = BaseEquipment()
-            self.base_equipment.new(lvl, rarity)
+            equipment.base_equipment = BaseEquipment()
+            equipment.base_equipment.new(lvl, rarity)
         else:
-            self.base_equipment = BaseEquipment(index)
+            equipment.base_equipment = BaseEquipment(index)
 
-        self.id = None
-        self.name = self.base_equipment.name
-        self.level = lvl
-        self.flavor = self.base_equipment.flavor
-        if rarity < self.base_equipment.starting_rarity:
-            self.rarity = self.base_equipment.starting_rarity
+        equipment.id = None
+        equipment.name = equipment.base_equipment.name
+        equipment.level = lvl
+        equipment.flavor = equipment.base_equipment.flavor
+        if rarity < equipment.base_equipment.starting_rarity:
+            equipment.rarity = equipment.base_equipment.starting_rarity
         else:
-            self.rarity = rarity
-        self.slot = self.base_equipment.slot
-        self.raw_damage = self.process_damage_string(self.base_equipment.damage_string)
-        self.damage = {}
-        self.flags = self.base_equipment.flags.split('|')
-        self.starting_mods = self.process_mod_string(self.base_equipment.starting_mod_string)
-        self.random_mods = ModifierDict()
-        if self.rarity > 0 and self.base_equipment.random_mod_string: # Determine if new mods are needed
-            potential_mods = self.process_mod_string(self.base_equipment.random_mod_string)
-            new_mods = random.sample(list(potential_mods.values()), self.rarity) # Grab an amount based on rarity
+            equipment.rarity = rarity
+        equipment.slot = equipment.base_equipment.slot
+        equipment.raw_damage = equipment.process_damage_string(equipment.base_equipment.damage_string)
+        equipment.damage = {}
+        equipment.flags = equipment.base_equipment.flags.split('|')
+        equipment.starting_mods = equipment.process_mod_string(equipment.base_equipment.starting_mod_string)
+        equipment.random_mods = ModifierDict()
+        if equipment.rarity > 0 and equipment.base_equipment.random_mod_string: # Determine if new mods are needed
+            potential_mods = equipment.process_mod_string(equipment.base_equipment.random_mod_string)
+            new_mods = random.sample(list(potential_mods.values()), equipment.rarity) # Grab an amount based on rarity
             for mod in new_mods: # Add new mods
-                self.random_mods.add(mod)
+                equipment.random_mods.add(mod)
 
             highest_mod = max(new_mods) # Set title
             if highest_mod.title:
-                self.name += ' {}'.format(highest_mod.title)
+                equipment.name += ' {}'.format(highest_mod.title)
 
         # for key, value in self.starting_mods.items(): # Put starting_mods and random_mods together
         #     if self.mods.get(key, False):
@@ -355,18 +357,18 @@ class Equipment:
         #     else:
         #         self.mods[key] = value
 
-        if self.base_equipment.requirement_string:
-            self.requirements = self.process_requirement_string(self.base_equipment.requirement_string)
+        if equipment.base_equipment.requirement_string:
+            equipment.requirements = equipment.process_requirement_string(equipment.base_equipment.requirement_string)
         else:
-            self.requirements = {}
+            equipment.requirements = {}
 
-        if self.base_equipment.skills_string:
-            self.skills = self.process_skills_string(self.base_equipment.skills_string)
+        if equipment.base_equipment.skills_string:
+            equipment.skills = equipment.process_skills_string(equipment.base_equipment.skills_string)
         else:
-            self.skills = []
-        self.calculate_price()
-        self.loaded = True
-        return True
+            equipment.skills = []
+        equipment.calculate_price()
+        equipment.loaded = True
+        return equipment
 
     def load(self, data_list = None):
         try:

@@ -13,6 +13,5 @@ print('DONE')
 
 a.delete()
 
-e = adventure.Equipment()
-e.generate_new(5, 3)
+e = adventure.Equipment.generate_new(5, 3)
 print(dumps(e.save()))
