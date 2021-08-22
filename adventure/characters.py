@@ -729,22 +729,21 @@ class Enemy(Character):
     def generate_new(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
         with Database() as db:
             if index == 0:
-                data_pool = db.get_base_enemy_lvl(lvl, rng=rng, combat_rank=max_combat_rank)
-                data_pool = db.fetchone(data_pool)
+                data_pool = db.get_base_enemy_lvl(lvl, rng=rng, combatRank=max_combat_rank)
                 data = random.choice(data_pool)
             else:
                 data = db.get_base_enemy(indx = index)
                 data = db.fetchone(data)
 
-        self.id = int(data[0])
-        self.name = str(data[1])
-        # minLevel = int(data[2])
-        # maxLevel = int(data[3])
-        self.potential_elites = data[4].split('|')
-        attributes_string = data[5]
-        modifiers_string = data[6]
-        self.raw_skills = data[7].split('|')
-        self.combat_rank = data['combatRank']
+        self.id = int(data['indx'])
+        self.name = str(data['name'])
+        self.minLevel = int(data['minLevel'])
+        self.maxLevel = int(data['maxLevel'])
+        self.potential_elites = data['elite']
+        attributes_string = data['attributes']
+        modifiers_string = data['modifiers']
+        self.raw_skills = data['skills']
+        self.combat_rank = float(data['combatRank'])
         self.level = lvl
         self.process_attributes_string(attributes_string)
         self.raw_mods = self.process_mod_string(modifiers_string)
