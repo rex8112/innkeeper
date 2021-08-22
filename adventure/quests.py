@@ -6,7 +6,7 @@ import logging
 from .characters import Player, Enemy
 from .equipment import Equipment
 from .encounter import Encounter
-from .database import db
+from .database import Database
 
 logger = logging.getLogger('quests')
 logger.setLevel(logging.INFO)
@@ -31,10 +31,8 @@ class Quest:
 
     def new(self, aID: int, difficulty: int):
         self.adv = Player(aID)
-        self.adv.available = False
-        self.adv.save()
         self.stage = 1
-        self.active = True
+        self.active = False
         self.xp = 0
         self.calculateTime(Quest.stageTime)
         self.stages = difficulty
@@ -77,32 +75,40 @@ class Quest:
         self.encounter = self.buildEncounter(
             [self.adv], self.enemies[self.stage - 1])
 
-        self.save()
+        #self.save()
 
     def save(self):
         loot = dumps(self.loot)
         enemies = dumps(self.enemies)
+        time = self.time.strftime('%Y-%m-%d %H:%M:%S')
         save = {
-            'indx': self.id,
-            'adventurer': self.adv.id,
             'active': self.active,
             'stage': self.stage,
-            'stages': self.stages,
             'enemies': enemies,
             'loot': loot,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
             'xp': self.xp,
-            'combatInfo': '|'.join(self.combat_log)}
-        self.id = db.saveRNG(save)
+            'combatInfo': dumps(self.combat_log)}
+        with Database() as db:
+            if not self.id: # New Quest
+                self.id = db.insert_quest(self.adv.id, self.stages, time, **save)
+            else: # Update Quest
+                save['adventurer'] = self.adv.id
+                save['stages'] = self.stages
+                save['time'] = time
+                db.update_quest(self.id, **save)
+    @classmethod
+    def get_active(cls, adv_id):
+        c = cls()
+        with Database() as db:
+            save = db.get_quest(adventurer=adv_id, active=True)
+        c.load(save=save)
+        return c
 
-    def loadActive(self, aID):
-        save = db.getActiveRNG(aID)
-        return self.load(save=save)
-
-    def load(self, save = None):
+    def load(self, save = None) -> bool:
         try:
             if not save:
-                save = db.getRNG(self.id)
+                with Database() as db:
+                    save = db.fetchone(db.get_quest(indx=self.id))
             self.loot = []
             if save[6]:
                 loot_tmp = save[6].split('/')
@@ -179,6 +185,13 @@ class Quest:
                 self.calculateTime(Quest.stageTime)
         else:
             self.end(False)
+
+    def start(self):
+        self.adv.available = False
+        self.adv.save()
+        self.active = True
+        self.calculateTime(Quest.stageTime)
+        self.save()
 
     def end(self, result: bool):
         self.adv.load()
