@@ -519,17 +519,12 @@ class Player(Character):
         # Skills
         adv.raw_skills = ['attack']
         # Equipment
-        adv.mainhand = Equipment(0)
-        adv.mainhand.generate_new(1, 0, index=5)
+        adv.mainhand = Equipment.generate_new(1, 0, index=5)
         adv.offhand = Equipment('empty')
-        adv.helmet = Equipment(0)
-        adv.helmet.generate_new(1, 0, index=1)
-        adv.armor = Equipment(0)
-        adv.armor.generate_new(1, 0, index=2)
-        adv.gloves = Equipment(0)
-        adv.gloves.generate_new(1, 0, index=3)
-        adv.boots = Equipment(0)
-        adv.boots.generate_new(1, 0, index=4)
+        adv.helmet = Equipment.generate_new(1, 0, index=1)
+        adv.armor = Equipment.generate_new(1, 0, index=2)
+        adv.gloves = Equipment.generate_new(1, 0, index=3)
+        adv.boots = Equipment.generate_new(1, 0, index=4)
         adv.trinket = Equipment('empty')
 
         adv.inventory = []
@@ -685,7 +680,10 @@ class Enemy(Character):
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
-    def generate_new(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
+    @classmethod
+    def generate_new(cls, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
+        enemy = cls()
+
         with Database() as db:
             if index == 0:
                 data_pool = db.get_base_enemy_lvl(lvl, rng=rng, combatRank=max_combat_rank)
@@ -694,49 +692,52 @@ class Enemy(Character):
                 data = db.get_base_enemy(indx = index)
                 data = db.fetchone(data)
 
-        self.id = int(data['indx'])
-        self.name = str(data['name'])
-        self.minLevel = int(data['minLevel'])
-        self.maxLevel = int(data['maxLevel'])
-        self.potential_elites = data['elite']
+        enemy.id = int(data['indx'])
+        enemy.name = str(data['name'])
+        enemy.minLevel = int(data['minLevel'])
+        enemy.maxLevel = int(data['maxLevel'])
+        enemy.potential_elites = data['elite']
         attributes_string = data['attributes']
         modifiers_string = data['modifiers']
-        self.raw_skills = json.loads(data['skills'])
-        self.combat_rank = float(data['combatRank'])
-        self.level = lvl
-        self.process_attributes_string(attributes_string)
-        self.raw_mods = self.process_mod_string(modifiers_string)
+        enemy.raw_skills = json.loads(data['skills'])
+        enemy.combat_rank = float(data['combatRank'])
+        enemy.level = lvl
+        enemy.process_attributes_string(attributes_string)
+        enemy.raw_mods = enemy.process_mod_string(modifiers_string)
         if calculate:
-            self.calculate()
+            enemy.calculate()
+        return enemy
 
-    def generate_new_elite(self, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
-        self.generate_new(lvl, rng=rng, index=index, max_combat_rank=max_combat_rank, calculate=False)
-        elite = random.choice(self.potential_elites)
+    @classmethod
+    def generate_new_elite(cls, lvl: int, rng = True, index = 0, max_combat_rank = 1, calculate = True):
+        elite_enemy = cls.generate_new(lvl, rng=rng, index=index, max_combat_rank=max_combat_rank, calculate=False)
+        elite = random.choice(elite_enemy.potential_elites)
         try:
             elite = int(elite)
         except ValueError:
             pass
-        self.elite = EliteModifier(elite)
-        self.raw_skills += self.elite.skills
-        if self.elite.title:
-            if self.elite.title[0] == ' ':
-                self.name = '{}{}'.format(self.name, self.elite.title)
+        elite_enemy.elite = EliteModifier(elite)
+        elite_enemy.raw_skills += elite_enemy.elite.skills
+        if elite_enemy.elite.title:
+            if elite_enemy.elite.title[0] == ' ':
+                elite_enemy.name = '{}{}'.format(elite_enemy.name, elite_enemy.elite.title)
             else:
-                self.name = '{}{}'.format(self.elite.title, self.name)
-        length = len(self.elite.attributes)
-        for indx, attribute in enumerate([self.rawStrength, self.rawDexterity, self.rawConstitution, self.rawIntelligence, self.rawWisdom, self.rawCharisma]):
+                elite_enemy.name = '{}{}'.format(elite_enemy.elite.title, elite_enemy.name)
+        length = len(elite_enemy.elite.attributes)
+        for indx, attribute in enumerate([elite_enemy.rawStrength, elite_enemy.rawDexterity, elite_enemy.rawConstitution, elite_enemy.rawIntelligence, elite_enemy.rawWisdom, elite_enemy.rawCharisma]):
             if indx + 1 <= length:
-                attribute *= self.elite.attributes[indx]
+                attribute *= elite_enemy.elite.attributes[indx]
 
-        for mod in self.elite.modifiers.values():
-            if self.raw_mods.get(mod.id, False):
-                tmp = self.raw_mods.get(mod.id).value * mod.value
-                self.raw_mods.get(mod.id).value = int(tmp)
+        for mod in elite_enemy.elite.modifiers.values():
+            if elite_enemy.raw_mods.get(mod.id, False):
+                tmp = elite_enemy.raw_mods.get(mod.id).value * mod.value
+                elite_enemy.raw_mods.get(mod.id).value = int(tmp)
 
-        for skill in self.elite.skills:
-            self.raw_skills.append(skill)
+        for skill in elite_enemy.elite.skills:
+            elite_enemy.raw_skills.append(skill)
         if calculate:
-            self.calculate()
+            elite_enemy.calculate()
+        return elite_enemy
 
     def calculate(self):
         race = Race()
