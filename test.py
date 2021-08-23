@@ -5,13 +5,12 @@ from adventure.race import Race
 from adventure.character_class import CharacterClass
 import adventure
 
-d = {'test': 1, 'test2': 2}
-print('Creating Adventurer')
-a= adventure.Player.new(123, 'Erika', CharacterClass.get_class('fighter'), Race.get_race('human'), [1,2,3,4,5,6], 456)
-a = adventure.Player(123)
-print('DONE')
+# print('Creating Adventurer')
+# a= adventure.Player.new(123, 'Erika', CharacterClass.get_class('fighter'), Race.get_race('human'), [1,2,3,4,5,6], 456)
+# a = adventure.Player(123)
+# print('DONE')
 
-a.delete()
+# a.delete()
 
-e = adventure.Equipment.generate_new(5, 3)
+e = adventure.Equipment.generate_new(2, 3)
 print(dumps(e.save()))

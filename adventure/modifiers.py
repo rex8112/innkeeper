@@ -1,3 +1,6 @@
+import json
+import random
+
 from .database import Database
 
 class Effect:
@@ -310,6 +313,56 @@ class ModifierDict:
 
     def clear(self):
         self.modifiers.clear()
+
+
+class ModifierString:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get('id', None)
+
+        self.min_value = kwargs.get('min_value', 0)
+        self.max_value = kwargs.get('max_value', 0)
+        self.value = kwargs.get('value', 0)
+
+        self.min_value_scale = kwargs.get('min_value_scale', 0)
+        self.max_value_scale = kwargs.get('max_value_scale', 0)
+        self.value_scale = kwargs.get('value_scale', 0)
+
+    def __str__(self):
+        return self.get_string()
+
+    @classmethod
+    def from_str(cls, s: str):
+        d = json.loads(s)
+        return cls(**d)
+
+    def get_mod(self, level: int = 1) -> Modifier:
+        if self.value:
+            return Modifier(self.id, self.value + (self.value_scale * level))
+
+        value = random.uniform(
+            self.min_value + self.min_value_scale * level,
+            self.max_value + self.max_value_scale * level
+        )
+        value = round(value, 2)
+
+        return Modifier(self.id, value)
+
+    def get_dict(self) -> dict:
+        return {
+            'id': self.id,
+            'min_value': self.min_value,
+            'max_value': self.max_value,
+            'value': self.value,
+            'min_value_scale': self.min_value_scale,
+            'max_value_scale': self.max_value_scale,
+            'value_scale': self.value_scale
+        }
+
+    def serialize(self) -> dict: #An alias for get_dict
+        return self.get_dict()
+
+    def get_string(self) -> str:
+        return json.dumps(self.get_dict())
 
 
 class EliteModifier:

@@ -207,6 +207,17 @@ class Database:
         self._execute_static_sql(sql, data, False)
         return self.blueprint_cur.fetchall()
 
+    def update_base_equipment(self, id, **kwargs):
+        sql = 'UPDATE baseequipment SET '
+        data = []
+        for key, value in kwargs.items():
+            sql += f'{key}=?, '
+            data.append(value)
+        sql = sql[:-2]
+        sql += ' WHERE indx=?'
+        data = tuple(data + [id])
+        self._execute_static_sql(sql, data)
+
     def get_base_equipment(self, **kwargs):
         sql = 'SELECT * FROM baseequipment WHERE '
         data = []

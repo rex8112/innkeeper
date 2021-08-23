@@ -3,7 +3,7 @@ import random
 import logging
 import math
 
-from .modifiers import Modifier, Effect, ModifierDict
+from .modifiers import Modifier, Effect, ModifierDict, ModifierString
 from .skills import Skill
 from .database import Database
 from .exceptions import InvalidBaseEquipment, InvalidModString
@@ -69,9 +69,9 @@ class BaseEquipment:
         self.max_rarity = int(data['maxRarity'])
 
         if data['startingModString']:
-            self.starting_mod_string = str(data['startingModString']) + f'|{self.get_class()}'
+            self.starting_mod_string = data['startingModString'][:-1] + f',{self.get_class()}]'
         else:
-            self.starting_mod_string = self.get_class()
+            self.starting_mod_string = f'[{self.get_class()}]'
         self.random_mod_string = str(data['randomModString'])
         self.damage_string = str(data['damageString'])
         self.flags = str(data['flags'])
@@ -105,7 +105,14 @@ class BaseEquipment:
             class_string = 'wc'
         else:
             class_string = 'ac'
-        return f'{class_string}:{value_string}'
+        modString = ModifierString(
+            id=class_string,
+            min_value=current_min,
+            max_value=current_max,
+            min_value_scale=min_increase,
+            max_value_scale=max_increase
+        )
+        return modString.get_string()
 
         
 
@@ -230,18 +237,11 @@ class Equipment:
     def process_mod_string(self, mod_string: str): # May be moved to Equipment
         mods = ModifierDict()
         level = self.level - self.base_equipment.min_level
-        mod_string_list = mod_string.split('|')
+        mod_string_list = json.loads(mod_string)
         try:
-            for mod in mod_string_list:
-                key, value_string = tuple(mod.split(':'))
-                min_string, max_string = tuple(value_string.split('/'))
-                min_value, min_per_level = tuple(min_string.split('+'))
-                max_value, max_per_level = tuple(max_string.split('+'))
-                final_min_volume = float(min_value) + (float(min_per_level) * level)
-                final_max_volume = float(max_value) + (float(max_per_level) * level)
-                final_mod = Modifier(key, round(random.uniform(final_min_volume, final_max_volume), 1))
-                
-                mods.set(final_mod)
+            for mod_dict in mod_string_list:
+                ms = ModifierString(**mod_dict)
+                mods.set(ms.get_mod(level))
             return mods
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))

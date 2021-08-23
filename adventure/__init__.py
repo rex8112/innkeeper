@@ -20,7 +20,7 @@ from .equipment import BaseEquipment, Equipment
 # from .exceptions import *
 # from .events import EnemyEvent
 # from .formatting import Formatting
-from .modifiers import EliteModifier, Modifier, ModifierDict
+from .modifiers import EliteModifier, Modifier, ModifierDict, ModifierString
 # from .quests import Quest
 from .race import Race
 # from .raid import Raid
@@ -30,6 +30,7 @@ from .race import Race
 # from .statusEffects import StatusEffect
 # from .storage import Storage
 # from .trade import Trade
+from .tools.json_manager import dumps
 
 try:
     from logging import NullHandler
