@@ -39,12 +39,12 @@ class BaseEquipment:
                     'maxLevel': 1000,
                     'startingRarity': 0,
                     'maxRarity': 0,
-                    'startingModString': None,
-                    'randomModString': '',
-                    'requirementString': None,
+                    'startingModString': '[]',
+                    'randomModString': '[]',
+                    'requirementString': '[]',
                     'flags': 'empty|unsellable',
-                    'damageString': None,
-                    'skills': None,
+                    'damageString': '[]',
+                    'skills': '[]',
                     'rng': 0
                 }
             )
@@ -68,7 +68,7 @@ class BaseEquipment:
         self.starting_rarity = int(data['startingRarity'])
         self.max_rarity = int(data['maxRarity'])
 
-        if data['startingModString']:
+        if data['startingModString'] != '[]':
             self.starting_mod_string = data['startingModString'][:-1] + f',{self.get_class()}]'
         else:
             self.starting_mod_string = f'[{self.get_class()}]'
@@ -129,8 +129,8 @@ class Equipment:
                 'blueprint': 'empty',
                 'level': 1,
                 'rarity': 0,
-                'startingMods': '{}',
-                'randomMods': '{}'}
+                'startingMods': '[]',
+                'randomMods': '[]'}
             self.load(data_list=data_list)
         elif isinstance(self.id, (list, tuple, dict)):
             self.load(data_list=self.id)
@@ -247,39 +247,26 @@ class Equipment:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
 
     def process_requirement_string(self, requirement_string: str):
-        requirements = {}
+        requirements = ModifierDict()
         level = self.level - self.base_equipment.min_level
-        requirement_string_list = requirement_string.split('|')
-        for requirement in requirement_string_list:
-            key, value_string = tuple(requirement.split(':'))
-            value, per_level = tuple(value_string.split('+'))
-            final_value = int(value) + math.floor(float(per_level) * level)
-            final_requirement = Modifier(key, final_value)
-            requirements[key] = final_requirement
+        requirement_string_list = json.loads(requirement_string)
+        for req_dict in requirement_string_list:
+            ms = ModifierString(**req_dict)
+            requirements.set(ms.get_mod(level))
         return requirements
 
     def process_skills_string(self, skills_string: str):
-        skills = skills_string.split('|')
+        skills = json.loads(skills_string)
         return skills
 
     def process_damage_string(self, damage_string: str):
         # 'dmg:20+5,str_scale.1,dex_scale.1|...'
         damage = {}
-        if not damage_string or damage_string == 'None':
-            return damage
-        damage_list = damage_string.split('|')
-        for d in damage_list:
-            scalars = {}
-            damage_type, values = tuple(d.split(':'))
-            values_list = values.split(',')
-            base, per_level = values_list[0].split('+')
-            base_damage = int(base) + (self.level - self.base_equipment.min_level) * int(per_level)
-            if len(values_list) > 1:
-                scales = values_list[1:]
-                for s in scales:
-                    attribute, amount = tuple(s.split('.'))
-                    scalars[attribute] = int(amount)
-            damage[damage_type] = (Modifier(damage_type, value=base_damage), scalars)
+        level = self.level - self.base_equipment.min_level
+        damage_string_list = json.loads(damage_string)
+        for dmg_dict in damage_string_list:
+            dmg = ModifierString(**dmg_dict)
+            damage[dmg.id] = dmg.get_dmg(level)
         return damage
 
     def generate_damage(self, adv):
@@ -287,17 +274,17 @@ class Equipment:
         for key, value in self.raw_damage.items():
             mod, scalars = value
             for attribute, amount in scalars.items():
-                if attribute == 'str_scale':
+                if attribute == 'str':
                     a = adv.strength
-                elif attribute == 'dex_scale':
+                elif attribute == 'dex':
                     a = adv.dexterity
-                elif attribute == 'con_scale':
+                elif attribute == 'con':
                     a = adv.constitution
-                elif attribute == 'int_scale':
+                elif attribute == 'int':
                     a = adv.intelligence
-                elif attribute == 'wis_scale':
+                elif attribute == 'wis':
                     a = adv.wisdom
-                elif attribute == 'cha_scale':
+                elif attribute == 'cha':
                     a = adv.charisma
                 amount_to_add = ((a * amount) / 200) * mod.value
                 e = Effect(attribute, key, amount_to_add)

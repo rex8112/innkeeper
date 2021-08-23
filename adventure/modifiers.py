@@ -1,5 +1,6 @@
 import json
 import random
+from typing import Dict, Tuple, Union
 
 from .database import Database
 
@@ -319,13 +320,20 @@ class ModifierString:
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', None)
 
-        self.min_value = kwargs.get('min_value', 0)
-        self.max_value = kwargs.get('max_value', 0)
-        self.value = kwargs.get('value', 0)
+        self.min_value: float = kwargs.get('min_value', 0.0)
+        self.max_value: float = kwargs.get('max_value', 0.0)
+        self.value: float = kwargs.get('value', 0.0)
 
-        self.min_value_scale = kwargs.get('min_value_scale', 0)
-        self.max_value_scale = kwargs.get('max_value_scale', 0)
-        self.value_scale = kwargs.get('value_scale', 0)
+        self.min_value_scale: float = kwargs.get('min_value_scale', 0.0)
+        self.max_value_scale: float = kwargs.get('max_value_scale', 0.0)
+        self.value_scale: float = kwargs.get('value_scale', 0.0)
+
+        self.str_scale: float = kwargs.get('str_scale', 0.0)
+        self.dex_scale: float = kwargs.get('dex_scale', 0.0)
+        self.int_scale: float = kwargs.get('int_scale', 0.0)
+        self.con_scale: float = kwargs.get('con_scale', 0.0)
+        self.wis_scale: float = kwargs.get('wis_scale', 0.0)
+        self.cha_scale: float = kwargs.get('cha_scale', 0.0)
 
     def __str__(self):
         return self.get_string()
@@ -347,16 +355,51 @@ class ModifierString:
 
         return Modifier(self.id, value)
 
+    def get_dmg(self, level: int = 1) -> Tuple[Union[Modifier, Dict[str, float]]]:
+        mod = self.get_mod(level)
+        scalars = {}
+        if self.str_scale:
+            scalars['str'] = self.str_scale
+        if self.dex_scale:
+            scalars['dex'] = self.dex_scale
+        if self.int_scale:
+            scalars['int'] = self.int_scale
+        if self.con_scale:
+            scalars['con'] = self.con_scale
+        if self.wis_scale:
+            scalars['wis'] = self.wis_scale
+        if self.cha_scale:
+            scalars['cha'] = self.cha_scale
+
+        return (mod, scalars)
+
     def get_dict(self) -> dict:
-        return {
+        d = {
             'id': self.id,
-            'min_value': self.min_value,
-            'max_value': self.max_value,
-            'value': self.value,
-            'min_value_scale': self.min_value_scale,
-            'max_value_scale': self.max_value_scale,
-            'value_scale': self.value_scale
         }
+        if self.value:
+            d['value'] = self.value
+            d['value_scale'] = self.value_scale
+        else:
+            d['min_value'] = self.min_value
+            d['max_value'] = self.max_value
+            d['min_value_scale'] = self.min_value_scale
+            d['max_value_scale'] = self.max_value_scale
+        
+        if self.str_scale: # Stat scaling for damage
+            d['str_scale'] = self.str_scale
+        if self.dex_scale:
+            d['dex_scale'] = self.dex_scale
+        if self.int_scale:
+            d['int_scale'] = self.int_scale
+        if self.con_scale:
+            d['con_scale'] = self.con_scale
+        if self.wis_scale:
+            d['wis_scale'] = self.wis_scale
+        if self.cha_scale:
+            d['cha_scale'] = self.cha_scale
+
+        return d
 
     def serialize(self) -> dict: #An alias for get_dict
         return self.get_dict()
