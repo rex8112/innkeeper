@@ -328,13 +328,6 @@ class ModifierString:
         self.max_value_scale: float = kwargs.get('max_value_scale', 0.0)
         self.value_scale: float = kwargs.get('value_scale', 0.0)
 
-        self.str_scale: float = kwargs.get('str_scale', 0.0)
-        self.dex_scale: float = kwargs.get('dex_scale', 0.0)
-        self.int_scale: float = kwargs.get('int_scale', 0.0)
-        self.con_scale: float = kwargs.get('con_scale', 0.0)
-        self.wis_scale: float = kwargs.get('wis_scale', 0.0)
-        self.cha_scale: float = kwargs.get('cha_scale', 0.0)
-
     def __str__(self):
         return self.get_string()
 
@@ -355,6 +348,56 @@ class ModifierString:
 
         return Modifier(self.id, value)
 
+    def get_dict(self) -> dict:
+        d = {
+            'id': self.id,
+        }
+        if self.value:
+            d['value'] = self.value
+            d['value_scale'] = self.value_scale
+        else:
+            d['min_value'] = self.min_value
+            d['max_value'] = self.max_value
+            d['min_value_scale'] = self.min_value_scale
+            d['max_value_scale'] = self.max_value_scale
+
+        return d
+
+    def serialize(self) -> dict: #An alias for get_dict
+        return self.get_dict()
+
+    def get_string(self) -> str:
+        return json.dumps(self.get_dict())
+
+
+class DamageString(ModifierString):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.str_scale: float = kwargs.get('str_scale', 0.0)
+        self.dex_scale: float = kwargs.get('dex_scale', 0.0)
+        self.int_scale: float = kwargs.get('int_scale', 0.0)
+        self.con_scale: float = kwargs.get('con_scale', 0.0)
+        self.wis_scale: float = kwargs.get('wis_scale', 0.0)
+        self.cha_scale: float = kwargs.get('cha_scale', 0.0)
+
+    def get_mod(self, level: int) -> Modifier:
+        d = super().get_mod(level=level)
+        if self.str_scale: # Stat scaling for damage
+            d['str_scale'] = self.str_scale
+        if self.dex_scale:
+            d['dex_scale'] = self.dex_scale
+        if self.int_scale:
+            d['int_scale'] = self.int_scale
+        if self.con_scale:
+            d['con_scale'] = self.con_scale
+        if self.wis_scale:
+            d['wis_scale'] = self.wis_scale
+        if self.cha_scale:
+            d['cha_scale'] = self.cha_scale
+
+        return d
+
     def get_dmg(self, level: int = 1) -> Tuple[Union[Modifier, Dict[str, float]]]:
         mod = self.get_mod(level)
         scalars = {}
@@ -373,39 +416,9 @@ class ModifierString:
 
         return (mod, scalars)
 
-    def get_dict(self) -> dict:
-        d = {
-            'id': self.id,
-        }
-        if self.value:
-            d['value'] = self.value
-            d['value_scale'] = self.value_scale
-        else:
-            d['min_value'] = self.min_value
-            d['max_value'] = self.max_value
-            d['min_value_scale'] = self.min_value_scale
-            d['max_value_scale'] = self.max_value_scale
-        
-        if self.str_scale: # Stat scaling for damage
-            d['str_scale'] = self.str_scale
-        if self.dex_scale:
-            d['dex_scale'] = self.dex_scale
-        if self.int_scale:
-            d['int_scale'] = self.int_scale
-        if self.con_scale:
-            d['con_scale'] = self.con_scale
-        if self.wis_scale:
-            d['wis_scale'] = self.wis_scale
-        if self.cha_scale:
-            d['cha_scale'] = self.cha_scale
-
-        return d
-
-    def serialize(self) -> dict: #An alias for get_dict
-        return self.get_dict()
-
-    def get_string(self) -> str:
-        return json.dumps(self.get_dict())
+    
+class AttributeString(ModifierString):
+    pass
 
 
 class EliteModifier:

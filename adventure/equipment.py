@@ -3,7 +3,7 @@ import random
 import logging
 import math
 
-from .modifiers import Modifier, Effect, ModifierDict, ModifierString
+from .modifiers import DamageString, Modifier, Effect, ModifierDict, ModifierString
 from .skills import Skill
 from .database import Database
 from .exceptions import InvalidBaseEquipment, InvalidModString
@@ -42,7 +42,7 @@ class BaseEquipment:
                     'startingModString': '[]',
                     'randomModString': '[]',
                     'requirementString': '[]',
-                    'flags': 'empty|unsellable',
+                    'flags': '["empty","unsellable"]',
                     'damageString': '[]',
                     'skills': '[]',
                     'rng': 0
@@ -265,7 +265,7 @@ class Equipment:
         level = self.level - self.base_equipment.min_level
         damage_string_list = json.loads(damage_string)
         for dmg_dict in damage_string_list:
-            dmg = ModifierString(**dmg_dict)
+            dmg = DamageString(**dmg_dict)
             damage[dmg.id] = dmg.get_dmg(level)
         return damage
 
@@ -319,7 +319,7 @@ class Equipment:
         equipment.slot = equipment.base_equipment.slot
         equipment.raw_damage = equipment.process_damage_string(equipment.base_equipment.damage_string)
         equipment.damage = {}
-        equipment.flags = equipment.base_equipment.flags.split('|')
+        equipment.flags = json.loads(equipment.base_equipment.flags)
         equipment.starting_mods = equipment.process_mod_string(equipment.base_equipment.starting_mod_string)
         equipment.random_mods = ModifierDict()
         if equipment.rarity > 0 and equipment.base_equipment.random_mod_string: # Determine if new mods are needed
@@ -399,6 +399,8 @@ class Equipment:
                 self.skills = self.process_skills_string(self.base_equipment.skills_string)
             else:
                 self.skills = []
+
+            self.flags = json.loads(self.base_equipment.flags)
 
             for mod_data in starting_mods:
                 mod = Modifier.from_dict(mod_data)
