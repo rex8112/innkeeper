@@ -11,7 +11,7 @@ from .skills import get_skill
 from .statusEffects import PassiveEffect
 from .exceptions import InvalidLevel, InvalidRequirements, InvalidModString
 from .equipment import Equipment
-from .modifiers import Modifier, EliteModifier, ModifierDict
+from .modifiers import Modifier, EliteModifier, ModifierDict, ModifierString
 from .database import Database
 from .character_class import CharacterClass
 from .race import Race
@@ -646,18 +646,19 @@ class Enemy(Character):
             self.load(raw_data)
 
     def process_attributes_string(self, attributes_string: str):
-        attributes_list = attributes_string.split('|')
-        final_list = []
-        for a in attributes_list:
-            base_value, per_level = tuple(a.split('+'))
-            final_value = math.floor(float(base_value) + (float(per_level) * self.level))
-            final_list.append(final_value)
         self.rawStrength = 0
         self.rawDexterity = 0
         self.rawConstitution = 0
         self.rawIntelligence = 0
         self.rawWisdom = 0
         self.rawCharisma = 0
+        
+        attributes_list = attributes_string.split('|')
+        final_list = []
+        for a in attributes_list:
+            base_value, per_level = tuple(a.split('+'))
+            final_value = math.floor(float(base_value) + (float(per_level) * self.level))
+            final_list.append(final_value)
         try:
             self.rawStrength = final_list[0]
             self.rawDexterity = final_list[1]
@@ -669,13 +670,12 @@ class Enemy(Character):
             pass
 
     def process_mod_string(self, mod_string: str):
-        mods = {}
-        mod_string_list = mod_string.split('|')
+        mods = ModifierDict()
+        mod_string_list = json.loads(mod_string)
         try:
             for mod in mod_string_list:
-                key, value = tuple(mod.split(':'))
-                base_value, per_level = tuple(value.split('+'))
-                mods[key] = Modifier(key, math.floor(float(base_value) + (float(per_level) * self.level)))
+                ms = ModifierString(mod)
+                mods.add(ms.get_mod(level=self.level))
             return mods
         except ValueError as e:
             raise InvalidModString('Invalid Mod String: `{}` {}'.format(mod_string, e))
